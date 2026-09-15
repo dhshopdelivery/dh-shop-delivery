@@ -1,0 +1,1 @@
+const C="dh-shop-v1";self.addEventListener("install",e=>e.waitUntil(caches.open(C).then(c=>c.addAll(["./","./index.html","./style.css?v=1","./app.js?v=1","./manifest.json"]))));self.addEventListener("fetch",e=>e.respondWith(fetch(e.request).catch(()=>caches.match(e.request))));
