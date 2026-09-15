@@ -28,18 +28,52 @@ const productMessage = document.getElementById("productMessage");
 let accessToken = null;
 let editingProductId = null;
 
+/* =========================
+   OUTILS SUPABASE
+========================= */
+
+async function api(endpoint, options = {}) {
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/${endpoint}`,
+    {
+      ...options,
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        ...options.headers
+      }
+    }
+  );
+
+  const text = await response.text();
+
+  if (!response.ok) {
+    throw new Error(text || `Erreur HTTP ${response.status}`);
+  }
+
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    return text;
+  }
+}
+
+/* =========================
+   CONNEXION
+========================= */
+
 loginBtn.addEventListener("click", login);
-logoutBtn.addEventListener("click", logout);
-addProductBtn.addEventListener("click", openAddForm);
-cancelProductBtn.addEventListener("click", closeProductForm);
-saveProductBtn.addEventListener("click", saveProduct);
 
 async function login() {
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value;
 
   if (!email || !password) {
-    loginMessage.textContent = "Veuillez remplir les deux champs.";
+    loginMessage.textContent =
+      "Veuillez remplir les deux champs.";
     return;
   }
 
@@ -51,17 +85,25 @@ async function login() {
       {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
-          "apikey": SUPABASE_KEY
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json"
         },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
       }
     );
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error_description || "Connexion impossible");
+      throw new Error(
+        data.error_description ||
+        data.msg ||
+        data.message ||
+        "Connexion impossible."
+      );
     }
 
     accessToken = data.access_token;
@@ -69,42 +111,34 @@ async function login() {
     loginBox.classList.add("hidden");
     dashboard.classList.remove("hidden");
 
+    loginMessage.textContent = "";
+
     await loadDashboard();
 
   } catch (error) {
-    loginMessage.textContent = "Erreur : " + error.message;
+    loginMessage.textContent =
+      "Erreur : " + error.message;
   }
 }
+
+/* =========================
+   DECONNEXION
+========================= */
+
+logoutBtn.addEventListener("click", logout);
 
 function logout() {
   accessToken = null;
+
   dashboard.classList.add("hidden");
   loginBox.classList.remove("hidden");
+
   document.getElementById("password").value = "";
 }
 
-async function api(path, options = {}) {
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/${path}`,
-    {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${accessToken}`,
-        ...(options.headers || {})
-      }
-    }
-  );
-
-  const text = await response.text();
-
-  if (!response.ok) {
-    throw new Error(text || "Erreur Supabase");
-  }
-
-  return text ? JSON.parse(text) : null;
-}
+/* =========================
+   TABLEAU DE BORD
+========================= */
 
 async function loadDashboard() {
   try {
@@ -112,155 +146,261 @@ async function loadDashboard() {
       "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
     );
 
-    const orders = await api("orders?select=id");
+    document.getElementById("productCount").textContent =
+      products.length;
 
-    document.getElementById("productCount").textContent = products.length;
-    document.getElementById("orderCount").textContent = orders.length;
+    const availableProducts =
+      products.filter(product => product.available === true);
+
+    const outProducts =
+      products.filter(
+        product =>
+          product.available === false ||
+          Number(product.stock) <= 0
+      );
 
     document.getElementById("availableCount").textContent =
-      products.filter(p => p.available).length;
+      availableProducts.length;
 
     document.getElementById("outCount").textContent =
-      products.filter(p => !p.available).length;
+      outProducts.length;
 
     renderProducts(products);
 
+    /* Les commandes sont chargées séparément.
+       Une erreur ici ne doit PAS empêcher
+       l'affichage des produits. */
+
+    try {
+      const orders = await api(
+        "orders?select=id"
+      );
+
+      document.getElementById("orderCount").textContent =
+        orders.length;
+
+    } catch (error) {
+      document.getElementById("orderCount").textContent = "0";
+      console.log(
+        "Commandes non disponibles :",
+        error.message
+      );
+    }
+
   } catch (error) {
     productsList.innerHTML =
-      `<p>Erreur : ${escapeHtml(error.message)}</p>`;
+      `<p class="error">Erreur lors du chargement des produits : ${escapeHtml(error.message)}</p>`;
   }
 }
 
+/* =========================
+   AFFICHAGE PRODUITS
+========================= */
+
 function renderProducts(products) {
-  if (!products.length) {
-    productsList.innerHTML = "<p>Aucun produit.</p>";
+  if (!products || products.length === 0) {
+    productsList.innerHTML =
+      "<p>Aucun produit trouvé.</p>";
     return;
   }
 
-  productsList.innerHTML = products.map(product => `
-    <div class="product">
+  productsList.innerHTML = products.map(product => {
 
-      <div class="product-top">
+    const availability =
+      product.available
+        ? "Disponible"
+        : "Indisponible";
 
-        <div>
+    const image =
+      product.image_url
+        ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">`
+        : "";
+
+    return `
+      <div class="admin-product">
+
+        ${image}
+
+        <div class="admin-product-info">
+
           <h3>${escapeHtml(product.name)}</h3>
 
           <p>
-            <strong>${Number(product.price).toLocaleString("fr-FR")} FCFA</strong>
+            Prix :
+            <strong>
+              ${Number(product.price).toLocaleString("fr-FR")}
+              FCFA
+            </strong>
           </p>
 
-          <p>Stock : ${product.stock}</p>
+          <p>
+            Stock :
+            <strong>${product.stock ?? 0}</strong>
+          </p>
 
-          ${
-            product.available
-            ? '<span class="available">● Disponible</span>'
-            : '<span class="unavailable">● Rupture de stock</span>'
-          }
+          <p>
+            Statut :
+            <strong>${availability}</strong>
+          </p>
 
           ${
             product.badge
-            ? `<p><span class="badge">${escapeHtml(product.badge)}</span></p>`
-            : ""
+              ? `<p>Badge : ${escapeHtml(product.badge)}</p>`
+              : ""
           }
+
         </div>
 
-        <div>
-          <button class="secondary"
-            onclick="editProduct(${product.id})">
-            ✏️ Modifier
+        <div class="admin-product-actions">
+
+          <button
+            type="button"
+            onclick="editProduct(${product.id})"
+          >
+            Modifier
           </button>
 
-          <button class="danger"
-            onclick="deleteProduct(${product.id})">
-            🗑️ Supprimer
+          <button
+            type="button"
+            onclick="deleteProduct(${product.id})"
+          >
+            Supprimer
           </button>
+
         </div>
 
       </div>
-
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
+
+/* =========================
+   AJOUT PRODUIT
+========================= */
+
+addProductBtn.addEventListener(
+  "click",
+  openAddForm
+);
 
 function openAddForm() {
   editingProductId = null;
-  productFormTitle.textContent = "Ajouter un produit";
+
+  productFormTitle.textContent =
+    "Ajouter un produit";
 
   clearForm();
 
   productFormCard.classList.remove("hidden");
-  window.scrollTo({
-    top: productFormCard.offsetTop,
-    behavior: "smooth"
-  });
+
+  productMessage.textContent = "";
 }
+
+/* =========================
+   MODIFICATION PRODUIT
+========================= */
 
 async function editProduct(id) {
   try {
+
     const products = await api(
       `products?id=eq.${id}&select=*`
     );
 
-    if (!products.length) return;
+    if (!products || products.length === 0) {
+      alert("Produit introuvable.");
+      return;
+    }
 
-    const p = products[0];
+    const product = products[0];
 
     editingProductId = id;
-    productFormTitle.textContent = "Modifier le produit";
 
-    productName.value = p.name || "";
-    productCategory.value = p.category || "";
-    productPrice.value = p.price || "";
-    productStock.value = p.stock || "";
-    productImage.value = p.image_url || "";
-    productBadge.value = p.badge || "";
-    productDescription.value = p.description || "";
-    productAvailable.value = String(p.available);
+    productFormTitle.textContent =
+      "Modifier le produit";
+
+    productName.value =
+      product.name || "";
+
+    productCategory.value =
+      product.category || "";
+
+    productPrice.value =
+      product.price || "";
+
+    productStock.value =
+      product.stock || "";
+
+    productImage.value =
+      product.image_url || "";
+
+    productBadge.value =
+      product.badge || "";
+
+    productDescription.value =
+      product.description || "";
+
+    productAvailable.value =
+      product.available ? "true" : "false";
 
     productFormCard.classList.remove("hidden");
 
-    window.scrollTo({
-      top: productFormCard.offsetTop,
-      behavior: "smooth"
-    });
+    productMessage.textContent = "";
 
   } catch (error) {
-    alert("Erreur : " + error.message);
+    alert(
+      "Erreur : " + error.message
+    );
   }
 }
 
-async function saveProduct() {
-  const name = productName.value.trim();
-  const category = productCategory.value.trim();
-  const price = Number(productPrice.value);
-  const stock = Number(productStock.value);
-  const image_url = productImage.value.trim();
-  const badge = productBadge.value.trim();
-  const description = productDescription.value.trim();
-  const available = productAvailable.value === "true";
+/* =========================
+   ENREGISTREMENT
+========================= */
 
-  if (!name || !category || !price) {
+saveProductBtn.addEventListener(
+  "click",
+  saveProduct
+);
+
+async function saveProduct() {
+
+  const body = {
+    name: productName.value.trim(),
+    category: productCategory.value.trim(),
+    price: Number(productPrice.value),
+    stock: Number(productStock.value),
+    image_url: productImage.value.trim(),
+    badge: productBadge.value.trim(),
+    description: productDescription.value.trim(),
+    available:
+      productAvailable.value === "true"
+  };
+
+  if (!body.name) {
     productMessage.textContent =
-      "Nom, catégorie et prix sont obligatoires.";
+      "Veuillez entrer le nom du produit.";
+    return;
+  }
+
+  if (!body.price || body.price < 0) {
+    productMessage.textContent =
+      "Veuillez entrer un prix valide.";
+    return;
+  }
+
+  if (body.stock < 0 || Number.isNaN(body.stock)) {
+    productMessage.textContent =
+      "Veuillez entrer un stock valide.";
     return;
   }
 
   saveProductBtn.disabled = true;
-  productMessage.textContent = "Enregistrement...";
 
   try {
-    const body = {
-      name,
-      category,
-      price,
-      stock,
-      image_url,
-      badge,
-      description,
-      available
-    };
 
     if (editingProductId) {
+
       await api(
         `products?id=eq.${editingProductId}`,
         {
@@ -272,9 +412,11 @@ async function saveProduct() {
         }
       );
 
-      productMessage.textContent = "Produit modifié avec succès ✅";
+      productMessage.textContent =
+        "Produit modifié avec succès ✅";
 
     } else {
+
       await api(
         "products",
         {
@@ -286,7 +428,8 @@ async function saveProduct() {
         }
       );
 
-      productMessage.textContent = "Produit ajouté avec succès ✅";
+      productMessage.textContent =
+        "Produit ajouté avec succès ✅";
     }
 
     await loadDashboard();
@@ -296,20 +439,32 @@ async function saveProduct() {
     }, 800);
 
   } catch (error) {
+
     productMessage.textContent =
       "Erreur : " + error.message;
 
   } finally {
+
     saveProductBtn.disabled = false;
   }
 }
 
+/* =========================
+   SUPPRESSION
+========================= */
+
 async function deleteProduct(id) {
-  if (!confirm("Voulez-vous vraiment supprimer ce produit ?")) {
+
+  if (
+    !confirm(
+      "Voulez-vous vraiment supprimer ce produit ?"
+    )
+  ) {
     return;
   }
 
   try {
+
     await api(
       `products?id=eq.${id}`,
       {
@@ -320,18 +475,39 @@ async function deleteProduct(id) {
     await loadDashboard();
 
   } catch (error) {
-    alert("Erreur : " + error.message);
+
+    alert(
+      "Erreur : " + error.message
+    );
   }
 }
 
+/* =========================
+   FERMER FORMULAIRE
+========================= */
+
+cancelProductBtn.addEventListener(
+  "click",
+  closeProductForm
+);
+
 function closeProductForm() {
+
   productFormCard.classList.add("hidden");
+
   productMessage.textContent = "";
+
   editingProductId = null;
+
   clearForm();
 }
 
+/* =========================
+   VIDER FORMULAIRE
+========================= */
+
 function clearForm() {
+
   productName.value = "";
   productCategory.value = "";
   productPrice.value = "";
@@ -342,7 +518,12 @@ function clearForm() {
   productAvailable.value = "true";
 }
 
+/* =========================
+   SECURITE AFFICHAGE
+========================= */
+
 function escapeHtml(value) {
+
   return String(value ?? "")
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
