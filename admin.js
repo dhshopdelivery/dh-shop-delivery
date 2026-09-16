@@ -145,7 +145,8 @@ async function loadDashboard() {
     const products = await api(
       "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
     );
-
+console.log("PRODUITS RECUS :", products);
+console.log("NOMBRE DE PRODUITS :", products.length);
     document.getElementById("productCount").textContent =
       products.length;
 
