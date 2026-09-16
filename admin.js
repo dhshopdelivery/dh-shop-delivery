@@ -166,7 +166,12 @@ console.log("NOMBRE DE PRODUITS :", products.length);
     document.getElementById("outCount").textContent =
       outProducts.length;
 
-    renderProducts(products);
+    productsList.innerHTML =
+  "<pre style='white-space:pre-wrap'>" +
+  JSON.stringify(products, null, 2) +
+  "</pre>";
+
+return;
 
     /* Les commandes sont chargées séparément.
        Une erreur ici ne doit PAS empêcher
