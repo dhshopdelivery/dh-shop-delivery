@@ -40,6 +40,7 @@ async function api(endpoint, options = {}) {
       headers: {
         "apikey": SUPABASE_KEY,
         "Authorization": `Bearer ${accessToken}`,
+"Prefer": "return=representation",
         "Content-Type": "application/json",
         ...options.headers
       }
