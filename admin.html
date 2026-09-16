@@ -7,7 +7,6 @@
   <title>DH Shop & Delivery — Administration</title>
 
   <style>
-
     *{
       box-sizing:border-box;
     }
@@ -59,6 +58,7 @@
       border:1px solid #ddd;
       border-radius:10px;
       font-size:16px;
+      background:#fff;
     }
 
     textarea{
@@ -73,6 +73,12 @@
       font-weight:700;
       cursor:pointer;
       margin:4px;
+      font-size:15px;
+    }
+
+    button:disabled{
+      opacity:.5;
+      cursor:not-allowed;
     }
 
     .primary{
@@ -109,14 +115,6 @@
       margin-top:7px;
     }
 
-    .hidden{
-      display:none !important;
-    }
-
-    /* =========================
-       PRODUITS
-    ========================= */
-
     .product{
       border:1px solid #eee;
       border-radius:15px;
@@ -129,6 +127,14 @@
       justify-content:space-between;
       gap:12px;
       align-items:center;
+    }
+
+    .product-image{
+      width:90px;
+      height:90px;
+      object-fit:cover;
+      border-radius:12px;
+      margin-bottom:10px;
     }
 
     .badge{
@@ -150,29 +156,22 @@
       font-weight:700;
     }
 
-    /* =========================
-       COMMANDES
-    ========================= */
-
-    .orders-toolbar{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      flex-wrap:wrap;
-      margin-bottom:15px;
+    .hidden{
+      display:none !important;
     }
 
-    .orders-toolbar select{
-      flex:1;
-      min-width:180px;
-      margin:0;
+    .message{
+      margin-top:10px;
+      font-weight:700;
     }
+
+    /* COMMANDES */
 
     .order{
       border:1px solid #e5e5e5;
-      border-radius:15px;
-      padding:16px;
-      margin:12px 0;
+      border-radius:16px;
+      padding:18px;
+      margin:14px 0;
       background:#fff;
     }
 
@@ -180,9 +179,11 @@
       display:flex;
       justify-content:space-between;
       align-items:center;
-      gap:10px;
+      gap:12px;
       flex-wrap:wrap;
-      margin-bottom:12px;
+      border-bottom:1px solid #eee;
+      padding-bottom:12px;
+      margin-bottom:14px;
     }
 
     .order-number{
@@ -190,87 +191,85 @@
       font-weight:700;
     }
 
-    .order-status{
-      display:inline-block;
-      padding:7px 11px;
-      border-radius:20px;
-      font-size:13px;
-      font-weight:700;
-      background:#eee;
-    }
-
-    .status-nouvelle{
-      background:#e8f1ff;
-      color:#1456a0;
-    }
-
-    .status-preparation{
-      background:#fff3d6;
-      color:#8a5a00;
-    }
-
-    .status-livraison{
-      background:#e9e0ff;
-      color:#5b2ca0;
-    }
-
-    .status-livree{
-      background:#def7e8;
-      color:#16803c;
-    }
-
-    .status-annulee{
-      background:#ffe3e3;
-      color:#b00020;
+    .order-date{
+      color:#777;
+      font-size:14px;
     }
 
     .order-info{
-      margin:8px 0;
+      line-height:1.7;
     }
 
     .order-items{
       background:#f7f7f7;
-      border-radius:10px;
+      border-radius:12px;
       padding:12px;
       margin:12px 0;
     }
 
+    .order-item{
+      padding:7px 0;
+      border-bottom:1px solid #ddd;
+    }
+
+    .order-item:last-child{
+      border-bottom:0;
+    }
+
     .order-total{
-      font-size:19px;
+      font-size:20px;
       font-weight:700;
-      margin-top:12px;
+      margin:12px 0;
     }
 
-    .order-actions{
-      margin-top:12px;
-      padding-top:12px;
-      border-top:1px solid #eee;
+    .status-row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
     }
 
-    .order-actions select{
-      width:auto;
-      min-width:190px;
-      margin:4px;
+    .status-select{
+      max-width:300px;
+      margin:0;
     }
 
-    .order-date{
-      color:#777;
-      font-size:13px;
+    .status-nouvelle{
+      color:#b26a00;
+      font-weight:700;
     }
 
-    .empty{
-      padding:20px 0;
-      color:#777;
+    .status-preparation{
+      color:#8a5a00;
+      font-weight:700;
     }
 
-    .error{
+    .status-livraison{
+      color:#1769aa;
+      font-weight:700;
+    }
+
+    .status-livree{
+      color:#16803c;
+      font-weight:700;
+    }
+
+    .status-annulee{
       color:#b00020;
       font-weight:700;
     }
 
-    /* =========================
-       MOBILE
-    ========================= */
+    .orders-toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:15px;
+    }
+
+    .orders-toolbar select{
+      max-width:300px;
+      margin:0;
+    }
 
     @media(max-width:700px){
 
@@ -282,37 +281,22 @@
         display:block;
       }
 
-      .order-header{
-        display:block;
+      .status-select{
+        max-width:100%;
       }
 
-      .order-status{
-        margin-top:8px;
+      .orders-toolbar select{
+        max-width:100%;
       }
-
-      .order-actions select{
-        width:100%;
-        margin:4px 0;
-      }
-
-      .order-actions button{
-        width:100%;
-        margin:4px 0;
-      }
-
     }
-
   </style>
-
 </head>
 
 <body>
 
 <div class="container">
 
-  <!-- =========================
-       CONNEXION
-  ========================== -->
+  <!-- CONNEXION -->
 
   <div class="card" id="loginBox">
 
@@ -346,26 +330,21 @@
   </div>
 
 
-  <!-- =========================
-       TABLEAU DE BORD
-  ========================== -->
+  <!-- TABLEAU DE BORD -->
 
   <div id="dashboard" class="hidden">
-
 
     <!-- EN-TÊTE -->
 
     <div class="card">
 
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          flex-wrap:wrap;
-        "
-      >
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+      ">
 
         <div>
 
@@ -391,58 +370,64 @@
     </div>
 
 
-    <!-- =========================
-         STATISTIQUES
-    ========================== -->
+    <!-- STATISTIQUES -->
 
     <div class="stats">
 
       <div class="stat">
+
         Produits
+
         <strong id="productCount">
           0
         </strong>
+
       </div>
 
       <div class="stat">
+
         Commandes
+
         <strong id="orderCount">
           0
         </strong>
+
       </div>
 
       <div class="stat">
+
         Disponibles
+
         <strong id="availableCount">
           0
         </strong>
+
       </div>
 
       <div class="stat">
+
         Ruptures
+
         <strong id="outCount">
           0
         </strong>
+
       </div>
 
     </div>
 
 
-    <!-- =========================
-         PRODUITS
-    ========================== -->
+    <!-- PRODUITS -->
 
     <div class="card">
 
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          flex-wrap:wrap;
-        "
-      >
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+      ">
 
         <div>
 
@@ -472,9 +457,7 @@
     </div>
 
 
-    <!-- =========================
-         FORMULAIRE PRODUIT
-    ========================== -->
+    <!-- FORMULAIRE PRODUIT -->
 
     <div
       class="card hidden"
@@ -556,26 +539,25 @@
 
       </div>
 
-      <p id="productMessage"></p>
+      <p
+        id="productMessage"
+        class="message"
+      ></p>
 
     </div>
 
 
-    <!-- =========================
-         COMMANDES
-    ========================== -->
+    <!-- COMMANDES -->
 
     <div class="card">
 
-      <div
-        style="
-          display:flex;
-          justify-content:space-between;
-          align-items:center;
-          gap:10px;
-          flex-wrap:wrap;
-        "
-      >
+      <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+      ">
 
         <div>
 
@@ -584,7 +566,7 @@
           </h2>
 
           <p class="muted">
-            Consulte et gère les commandes de tes clients.
+            Consulte et gère toutes les commandes de ta boutique.
           </p>
 
         </div>
@@ -603,38 +585,36 @@
 
       <div class="orders-toolbar">
 
-        <select id="orderStatusFilter">
+        <select id="orderFilter">
 
           <option value="all">
             Toutes les commandes
           </option>
 
           <option value="nouvelle">
-            Nouvelles
+            🟠 Nouvelles
           </option>
 
           <option value="preparation">
-            En préparation
+            🟡 En préparation
           </option>
 
           <option value="livraison">
-            En livraison
+            🔵 En livraison
           </option>
 
           <option value="livree">
-            Livrées
+            🟢 Livrées
           </option>
 
           <option value="annulee">
-            Annulées
+            🔴 Annulées
           </option>
 
         </select>
 
       </div>
 
-
-      <!-- LISTE DES COMMANDES -->
 
       <div id="ordersList">
 
@@ -645,9 +625,7 @@
     </div>
 
 
-    <!-- =========================
-         PARAMÈTRES
-    ========================== -->
+    <!-- PARAMÈTRES -->
 
     <div class="card">
 
@@ -683,7 +661,7 @@
 </div>
 
 
-<script src="admin.js"></script>
+<script src="admin.js?v=10"></script>
 
 </body>
-          </html>
+  </html>
