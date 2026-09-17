@@ -3,290 +3,176 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>DH Shop & Delivery — Administration</title>
 
   <style>
-    *{
-      box-sizing:border-box;
+    * {
+      box-sizing: border-box;
     }
 
-    body{
-      margin:0;
-      font-family:Arial,sans-serif;
-      background:#f5f5f5;
-      color:#111;
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #111;
     }
 
-    .container{
-      max-width:1100px;
-      margin:auto;
-      padding:18px;
+    header {
+      background: #111;
+      color: white;
+      padding: 20px;
+      text-align: center;
     }
 
-    .card{
-      background:#fff;
-      border-radius:18px;
-      padding:20px;
-      margin-bottom:18px;
-      box-shadow:0 4px 18px rgba(0,0,0,.07);
+    header h1 {
+      margin: 0;
+      font-size: 24px;
     }
 
-    h1{
-      margin:0 0 6px;
-      font-size:27px;
+    header p {
+      margin: 6px 0 0;
+      color: #ccc;
     }
 
-    h2{
-      margin-top:0;
+    .container {
+      max-width: 900px;
+      margin: 25px auto;
+      padding: 0 15px;
     }
 
-    h3{
-      margin-top:0;
+    .card {
+      background: white;
+      border-radius: 15px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.08);
     }
 
-    .muted{
-      color:#777;
+    h2 {
+      margin-top: 0;
+    }
+
+    label {
+      display: block;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      font-weight: bold;
     }
 
     input,
     textarea,
-    select{
-      width:100%;
-      padding:13px;
-      margin:7px 0;
-      border:1px solid #ddd;
-      border-radius:10px;
-      font-size:16px;
-      background:#fff;
+    select {
+      width: 100%;
+      padding: 13px;
+      border: 1px solid #ccc;
+      border-radius: 9px;
+      font-size: 16px;
     }
 
-    textarea{
-      min-height:90px;
-      resize:vertical;
+    textarea {
+      min-height: 100px;
+      resize: vertical;
     }
 
-    button{
-      border:0;
-      border-radius:10px;
-      padding:12px 16px;
-      font-weight:700;
-      cursor:pointer;
-      margin:4px;
-      font-size:15px;
+    button {
+      border: 0;
+      border-radius: 9px;
+      padding: 12px 18px;
+      font-size: 15px;
+      font-weight: bold;
+      cursor: pointer;
+      margin-top: 12px;
+      background: #111;
+      color: white;
     }
 
-    button:disabled{
-      opacity:.5;
-      cursor:not-allowed;
+    button:hover {
+      opacity: .9;
     }
 
-    .primary{
-      background:#111;
-      color:#fff;
+    button:disabled {
+      opacity: .5;
+      cursor: not-allowed;
     }
 
-    .secondary{
-      background:#eee;
-      color:#111;
+    .secondary {
+      background: #777;
     }
 
-    .danger{
-      background:#b00020;
-      color:#fff;
+    .danger {
+      background: #c62828;
     }
 
-    .stats{
-      display:grid;
-      grid-template-columns:repeat(4,1fr);
-      gap:12px;
-      margin-bottom:18px;
+    .success {
+      background: #16803c;
     }
 
-    .stat{
-      background:#fff;
-      padding:18px;
-      border-radius:15px;
+    .hidden {
+      display: none !important;
     }
 
-    .stat strong{
-      display:block;
-      font-size:28px;
-      margin-top:7px;
+    .message {
+      margin-top: 12px;
+      font-weight: bold;
     }
 
-    .product{
-      border:1px solid #eee;
-      border-radius:15px;
-      padding:16px;
-      margin:12px 0;
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
     }
 
-    .product-top{
-      display:flex;
-      justify-content:space-between;
-      gap:12px;
-      align-items:center;
+    .stat {
+      background: white;
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,.06);
     }
 
-    .product-image{
-      width:90px;
-      height:90px;
-      object-fit:cover;
-      border-radius:12px;
-      margin-bottom:10px;
+    .stat strong {
+      display: block;
+      font-size: 28px;
+      margin-bottom: 5px;
     }
 
-    .badge{
-      display:inline-block;
-      background:#111;
-      color:#fff;
-      padding:5px 9px;
-      border-radius:20px;
-      font-size:12px;
+    .product-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
     }
 
-    .available{
-      color:#16803c;
-      font-weight:700;
+    .logout {
+      float: right;
+      background: #c62828;
+      margin-top: -8px;
     }
 
-    .unavailable{
-      color:#b00020;
-      font-weight:700;
+    .check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 15px;
     }
 
-    .hidden{
-      display:none !important;
+    .check input {
+      width: auto;
     }
 
-    .message{
-      margin-top:10px;
-      font-weight:700;
+    .error {
+      color: #b00020;
+      font-weight: bold;
     }
 
-    /* COMMANDES */
-
-    .order{
-      border:1px solid #e5e5e5;
-      border-radius:16px;
-      padding:18px;
-      margin:14px 0;
-      background:#fff;
-    }
-
-    .order-header{
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:12px;
-      flex-wrap:wrap;
-      border-bottom:1px solid #eee;
-      padding-bottom:12px;
-      margin-bottom:14px;
-    }
-
-    .order-number{
-      font-size:18px;
-      font-weight:700;
-    }
-
-    .order-date{
-      color:#777;
-      font-size:14px;
-    }
-
-    .order-info{
-      line-height:1.7;
-    }
-
-    .order-items{
-      background:#f7f7f7;
-      border-radius:12px;
-      padding:12px;
-      margin:12px 0;
-    }
-
-    .order-item{
-      padding:7px 0;
-      border-bottom:1px solid #ddd;
-    }
-
-    .order-item:last-child{
-      border-bottom:0;
-    }
-
-    .order-total{
-      font-size:20px;
-      font-weight:700;
-      margin:12px 0;
-    }
-
-    .status-row{
-      display:flex;
-      gap:8px;
-      align-items:center;
-      flex-wrap:wrap;
-    }
-
-    .status-select{
-      max-width:300px;
-      margin:0;
-    }
-
-    .status-nouvelle{
-      color:#b26a00;
-      font-weight:700;
-    }
-
-    .status-preparation{
-      color:#8a5a00;
-      font-weight:700;
-    }
-
-    .status-livraison{
-      color:#1769aa;
-      font-weight:700;
-    }
-
-    .status-livree{
-      color:#16803c;
-      font-weight:700;
-    }
-
-    .status-annulee{
-      color:#b00020;
-      font-weight:700;
-    }
-
-    .orders-toolbar{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-bottom:15px;
-    }
-
-    .orders-toolbar select{
-      max-width:300px;
-      margin:0;
-    }
-
-    @media(max-width:700px){
-
-      .stats{
-        grid-template-columns:repeat(2,1fr);
+    @media (max-width: 700px) {
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
       }
 
-      .product-top{
-        display:block;
-      }
-
-      .status-select{
-        max-width:100%;
-      }
-
-      .orders-toolbar select{
-        max-width:100%;
+      .logout {
+        float: none;
+        margin-top: 15px;
       }
     }
   </style>
@@ -294,364 +180,269 @@
 
 <body>
 
+<header>
+  <h1>DH Shop & Delivery</h1>
+  <p>Panneau d'administration</p>
+</header>
+
 <div class="container">
 
   <!-- CONNEXION -->
+  <div id="loginBox" class="card">
 
-  <div class="card" id="loginBox">
+    <h2>🔐 Connexion administrateur</h2>
 
-    <h1>DH Shop & Delivery</h1>
-
-    <p class="muted">
-      Espace administrateur
-    </p>
-
+    <label for="email">Email</label>
     <input
-      id="email"
       type="email"
-      placeholder="Adresse e-mail"
+      id="email"
+      placeholder="Votre email"
+      autocomplete="email"
     >
 
+    <label for="password">Mot de passe</label>
     <input
-      id="password"
       type="password"
-      placeholder="Mot de passe"
+      id="password"
+      placeholder="Votre mot de passe"
+      autocomplete="current-password"
     >
 
-    <button
-      id="loginBtn"
-      class="primary"
-    >
-      Se connecter
+    <button id="loginBtn" type="button">
+      Connexion
     </button>
 
-    <p id="loginMessage"></p>
+    <div id="loginMessage" class="message"></div>
 
   </div>
 
 
-  <!-- TABLEAU DE BORD -->
-
+  <!-- DASHBOARD -->
   <div id="dashboard" class="hidden">
 
-    <!-- EN-TÊTE -->
-
     <div class="card">
-
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:10px;
-        flex-wrap:wrap;
-      ">
-
-        <div>
-
-          <h1>
-            Tableau de bord
-          </h1>
-
-          <p class="muted">
-            Gestion de DH Shop & Delivery
-          </p>
-
-        </div>
-
-        <button
-          id="logoutBtn"
-          class="secondary"
-        >
-          Se déconnecter
-        </button>
-
-      </div>
-
+      <h2>📊 Tableau de bord</h2>
+      <button id="logoutBtn" class="logout" type="button">
+        Déconnexion
+      </button>
+      <div style="clear:both;"></div>
     </div>
 
 
     <!-- STATISTIQUES -->
-
     <div class="stats">
 
       <div class="stat">
-
+        <strong id="productCount">0</strong>
         Produits
-
-        <strong id="productCount">
-          0
-        </strong>
-
       </div>
 
       <div class="stat">
-
-        Commandes
-
-        <strong id="orderCount">
-          0
-        </strong>
-
-      </div>
-
-      <div class="stat">
-
+        <strong id="availableCount">0</strong>
         Disponibles
-
-        <strong id="availableCount">
-          0
-        </strong>
-
       </div>
 
       <div class="stat">
+        <strong id="outCount">0</strong>
+        Épuisés
+      </div>
 
-        Ruptures
-
-        <strong id="outCount">
-          0
-        </strong>
-
+      <div class="stat">
+        <strong id="orderCount">0</strong>
+        Commandes
       </div>
 
     </div>
 
 
     <!-- PRODUITS -->
-
     <div class="card">
 
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:10px;
-        flex-wrap:wrap;
-      ">
+      <h2>🛍️ Produits</h2>
 
-        <div>
+      <button
+        id="addProductBtn"
+        class="success"
+        type="button"
+      >
+        + Ajouter un produit
+      </button>
 
-          <h2>
-            📦 Produits
-          </h2>
-
-          <p class="muted">
-            Ajoute et gère les produits de ta boutique.
-          </p>
-
-        </div>
-
-        <button
-          id="addProductBtn"
-          class="primary"
-        >
-          + Ajouter un produit
-        </button>
-
-      </div>
-
-      <div id="productsList">
-        Chargement des produits...
+      <div id="productsList" style="margin-top:20px;">
+        Chargement...
       </div>
 
     </div>
 
 
     <!-- FORMULAIRE PRODUIT -->
-
-    <div
-      class="card hidden"
-      id="productFormCard"
-    >
+    <div id="productFormCard" class="card hidden">
 
       <h2 id="productFormTitle">
         Ajouter un produit
       </h2>
 
+      <label for="productName">
+        Nom du produit
+      </label>
+
       <input
         id="productName"
         type="text"
-        placeholder="Nom du produit"
+        placeholder="Ex : Portefeuille Grand"
       >
+
+
+      <label for="productCategory">
+        Catégorie
+      </label>
 
       <input
         id="productCategory"
         type="text"
-        placeholder="Catégorie"
+        value="accessoires"
+        placeholder="Ex : accessoires"
       >
+
+
+      <label for="productPrice">
+        Prix (FCFA)
+      </label>
 
       <input
         id="productPrice"
         type="number"
-        placeholder="Prix en FCFA"
+        min="0"
+        placeholder="6000"
       >
+
+
+      <label for="productStock">
+        Stock
+      </label>
 
       <input
         id="productStock"
         type="number"
-        placeholder="Stock"
+        min="0"
+        value="0"
       >
+
+
+      <label for="productImage">
+        URL de l'image
+      </label>
 
       <input
         id="productImage"
         type="text"
-        placeholder="Lien de l'image du produit"
+        placeholder="https://..."
       >
+
+
+      <label for="productBadge">
+        Badge
+      </label>
 
       <input
         id="productBadge"
         type="text"
-        placeholder="Badge : NOUVEAU, POPULAIRE..."
+        placeholder="NOUVEAU, POPULAIRE..."
       >
+
+
+      <label for="productDescription">
+        Description
+      </label>
 
       <textarea
         id="productDescription"
-        placeholder="Description du produit"
+        placeholder="Description du produit..."
       ></textarea>
 
-      <select id="productAvailable">
 
-        <option value="true">
-          Produit disponible
-        </option>
-
-        <option value="false">
-          Rupture de stock
-        </option>
-
-      </select>
-
-      <div>
-
-        <button
-          id="saveProductBtn"
-          class="primary"
+      <label class="check">
+        <input
+          id="productAvailable"
+          type="checkbox"
+          checked
         >
-          Enregistrer
-        </button>
+        Produit disponible
+      </label>
 
-        <button
-          id="cancelProductBtn"
-          class="secondary"
-        >
-          Annuler
-        </button>
 
-      </div>
+      <button
+        id="saveProductBtn"
+        class="success"
+        type="button"
+      >
+        Enregistrer
+      </button>
 
-      <p
-        id="productMessage"
-        class="message"
-      ></p>
+      <button
+        id="cancelProductBtn"
+        class="secondary"
+        type="button"
+      >
+        Annuler
+      </button>
+
+      <div id="productMessage" class="message"></div>
 
     </div>
 
 
     <!-- COMMANDES -->
-
     <div class="card">
 
-      <div style="
-        display:flex;
-        justify-content:space-between;
-        align-items:center;
-        gap:10px;
-        flex-wrap:wrap;
-      ">
+      <h2>📦 Commandes</h2>
 
-        <div>
+      <button
+        id="refreshOrdersBtn"
+        type="button"
+        onclick="loadOrders()"
+      >
+        🔄 Actualiser les commandes
+      </button>
 
-          <h2>
-            🛒 Commandes
-          </h2>
+      <select id="orderFilter" style="margin-top:12px;">
+        <option value="all">Toutes les commandes</option>
+        <option value="nouvelle">Nouvelles</option>
+        <option value="confirmee">Confirmées</option>
+        <option value="livree">Livrées</option>
+        <option value="annulee">Annulées</option>
+      </select>
 
-          <p class="muted">
-            Consulte et gère toutes les commandes de ta boutique.
-          </p>
-
-        </div>
-
-        <button
-          id="refreshOrdersBtn"
-          class="primary"
-        >
-          🔄 Actualiser
-        </button>
-
-      </div>
-
-
-      <!-- FILTRE -->
-
-      <div class="orders-toolbar">
-
-        <select id="orderFilter">
-
-          <option value="all">
-            Toutes les commandes
-          </option>
-
-          <option value="nouvelle">
-            🟠 Nouvelles
-          </option>
-
-          <option value="preparation">
-            🟡 En préparation
-          </option>
-
-          <option value="livraison">
-            🔵 En livraison
-          </option>
-
-          <option value="livree">
-            🟢 Livrées
-          </option>
-
-          <option value="annulee">
-            🔴 Annulées
-          </option>
-
-        </select>
-
-      </div>
-
-
-      <div id="ordersList">
-
-        Chargement des commandes...
-
+      <div id="ordersList" style="margin-top:20px;">
+        Chargement...
       </div>
 
     </div>
 
 
     <!-- PARAMÈTRES -->
-
     <div class="card">
 
-      <h2>
-        ⚙️ Paramètres
-      </h2>
+      <h2>⚙️ Paramètres de la boutique</h2>
 
       <p>
-        Boutique :
-        <strong>
-          DH Shop & Delivery
-        </strong>
+        <strong>Boutique :</strong>
+        DH Shop & Delivery
       </p>
 
       <p>
-        Paiement :
-        <strong>
-          À la livraison
-        </strong>
+        <strong>Pays :</strong>
+        Niger
       </p>
 
       <p>
-        WhatsApp :
-        <strong>
-          22792617092
-        </strong>
+        <strong>Devise :</strong>
+        FCFA
+      </p>
+
+      <p>
+        <strong>WhatsApp :</strong>
+        +227 92 67 09 2
       </p>
 
     </div>
@@ -661,7 +452,8 @@
 </div>
 
 
-<script src="./admin.js?v=11"></script>
+<!-- IMPORTANT : ADMIN JS -->
+<script src="./admin.js?v=20"></script>
 
 </body>
-  </html>
+      </html>
