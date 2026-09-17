@@ -1,101 +1,51 @@
-/* =========================================================
-   DH SHOP & DELIVERY — ADMIN
-   VERSION 20
-   ========================================================= */
+const SUPABASE_URL = "https://ocmvthymdjkrhmdyieim.supabase.co";
+const SUPABASE_KEY = "sb_publishable_OnchBsvLE3RVA-EualXSSA_pfVvFpTW";
 
-const SUPABASE_URL =
-  "https://ocmvthymdjkrhmdyieim.supabase.co";
+const loginBox = document.getElementById("loginBox");
+const dashboard = document.getElementById("dashboard");
+const loginBtn = document.getElementById("loginBtn");
+const logoutBtn = document.getElementById("logoutBtn");
+const loginMessage = document.getElementById("loginMessage");
 
-const SUPABASE_KEY =
-  "sb_publishable_OnchBsvLE3RVA-EualXSSA_pfVvFpTW";
+const productsList = document.getElementById("productsList");
+const addProductBtn = document.getElementById("addProductBtn");
+const productFormCard = document.getElementById("productFormCard");
+const productFormTitle = document.getElementById("productFormTitle");
 
-let accessToken = "";
+const productName = document.getElementById("productName");
+const productCategory = document.getElementById("productCategory");
+const productPrice = document.getElementById("productPrice");
+const productStock = document.getElementById("productStock");
+const productImage = document.getElementById("productImage");
+const productBadge = document.getElementById("productBadge");
+const productDescription = document.getElementById("productDescription");
+const productAvailable = document.getElementById("productAvailable");
+
+const saveProductBtn = document.getElementById("saveProductBtn");
+const cancelProductBtn = document.getElementById("cancelProductBtn");
+const productMessage = document.getElementById("productMessage");
+
+let accessToken = null;
 let editingProductId = null;
 
 
-/* =========================================================
-   OUTILS
-   ========================================================= */
-
-function $(id) {
-  return document.getElementById(id);
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-function formatPrice(value) {
-  return Number(value || 0).toLocaleString("fr-FR") + " FCFA";
-}
-
-function message(element, text, error = false) {
-  if (!element) return;
-
-  element.textContent = text;
-  element.style.color = error ? "#b00020" : "#087f23";
-}
-
-
-/* =========================================================
-   ELEMENTS
-   ========================================================= */
-
-const loginBox = $("loginBox");
-const dashboard = $("dashboard");
-
-const loginBtn = $("loginBtn");
-const logoutBtn = $("logoutBtn");
-
-const loginMessage = $("loginMessage");
-
-const productsList = $("productsList");
-const addProductBtn = $("addProductBtn");
-
-const productFormCard = $("productFormCard");
-const productFormTitle = $("productFormTitle");
-
-const productName = $("productName");
-const productCategory = $("productCategory");
-const productPrice = $("productPrice");
-const productStock = $("productStock");
-const productImage = $("productImage");
-const productBadge = $("productBadge");
-const productDescription = $("productDescription");
-const productAvailable = $("productAvailable");
-
-const saveProductBtn = $("saveProductBtn");
-const cancelProductBtn = $("cancelProductBtn");
-const productMessage = $("productMessage");
-
-
-/* =========================================================
-   SUPABASE API
-   ========================================================= */
+/* =========================
+   OUTILS SUPABASE
+========================= */
 
 async function api(endpoint, options = {}) {
 
-  const headers = {
-    "apikey": SUPABASE_KEY,
-    "Content-Type": "application/json",
-    ...options.headers
-  };
-
-  if (accessToken) {
-    headers["Authorization"] =
-      "Bearer " + accessToken;
-  }
-
   const response = await fetch(
-    SUPABASE_URL + "/rest/v1/" + endpoint,
+    `${SUPABASE_URL}/rest/v1/${endpoint}`,
     {
       ...options,
-      headers
+
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        ...options.headers
+      }
     }
   );
 
@@ -103,13 +53,11 @@ async function api(endpoint, options = {}) {
 
   if (!response.ok) {
     throw new Error(
-      text || "Erreur Supabase HTTP " + response.status
+      text || `Erreur HTTP ${response.status}`
     );
   }
 
-  if (!text) {
-    return null;
-  }
+  if (!text) return null;
 
   try {
     return JSON.parse(text);
@@ -119,72 +67,38 @@ async function api(endpoint, options = {}) {
 }
 
 
-/* =========================================================
-   CONNEXION ADMINISTRATEUR
-   ========================================================= */
+/* =========================
+   CONNEXION
+========================= */
+
+loginBtn.addEventListener(
+  "click",
+  login
+);
 
 async function login() {
 
-  const emailElement = $("email");
-  const passwordElement = $("password");
-
   const email =
-    emailElement
-      ? emailElement.value.trim()
-      : "";
+    document.getElementById("email").value.trim();
 
   const password =
-    passwordElement
-      ? passwordElement.value
-      : "";
+    document.getElementById("password").value;
 
+  if (!email || !password) {
 
-  if (!email) {
-
-    message(
-      loginMessage,
-      "Entre ton adresse email.",
-      true
-    );
+    loginMessage.textContent =
+      "Veuillez remplir les deux champs.";
 
     return;
   }
 
-
-  if (!password) {
-
-    message(
-      loginMessage,
-      "Entre ton mot de passe.",
-      true
-    );
-
-    return;
-  }
-
-
-  if (loginBtn) {
-
-    loginBtn.disabled = true;
-    loginBtn.textContent = "Connexion...";
-  }
-
-
-  message(
-    loginMessage,
-    "Connexion en cours..."
-  );
-
+  loginMessage.textContent =
+    "Connexion...";
 
   try {
 
-    /*
-      Connexion directe à Supabase Auth
-    */
-
     const response = await fetch(
-      SUPABASE_URL +
-      "/auth/v1/token?grant_type=password",
+      `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
       {
         method: "POST",
 
@@ -200,170 +114,110 @@ async function login() {
       }
     );
 
-
-    const text =
-      await response.text();
-
-
-    let data = {};
-
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = {};
-    }
-
-
-    /*
-      Si Supabase refuse la connexion,
-      on affiche exactement son message.
-    */
+    const data =
+      await response.json();
 
     if (!response.ok) {
 
-      const errorMessage =
+      throw new Error(
         data.error_description ||
         data.msg ||
         data.message ||
-        data.error ||
-        "Connexion refusée par Supabase.";
-
-      throw new Error(errorMessage);
-    }
-
-
-    /*
-      Récupération du token
-    */
-
-    if (!data.access_token) {
-
-      throw new Error(
-        "Connexion reçue mais aucun token de session n'a été envoyé."
+        "Connexion impossible."
       );
     }
-
 
     accessToken =
       data.access_token;
 
+    if (!accessToken) {
+      throw new Error(
+        "Aucun token de connexion reçu."
+      );
+    }
 
     /*
-      Vérification de l'accès à la table products.
-      Si cela fonctionne, le compte peut accéder
-      au tableau de bord.
+      TEST SESSION
+      On vérifie le rôle présent
+      dans le token sans afficher
+      le token lui-même.
     */
-
-    message(
-      loginMessage,
-      "Connexion réussie. Chargement du tableau de bord..."
-    );
-
 
     try {
 
-      await api(
-        "products?select=id&limit=1"
-      );
-
-    } catch (error) {
-
-      /*
-        Ici on ne bloque pas immédiatement la connexion.
-        On affiche l'erreur réelle dans le tableau.
-      */
+      const payload =
+        JSON.parse(
+          atob(
+            accessToken.split(".")[1]
+          )
+        );
 
       console.log(
-        "Vérification produits :",
-        error.message
+        "SESSION SUPABASE :",
+        payload
       );
+
+      loginMessage.textContent =
+        "Session active — rôle : " +
+        payload.role;
+
+    } catch {
+
+      loginMessage.textContent =
+        "Connexion réussie — session active ✅";
     }
 
+    loginBox.classList.add(
+      "hidden"
+    );
 
-    /*
-      Afficher le tableau de bord
-    */
-
-    if (loginBox) {
-      loginBox.classList.add("hidden");
-    }
-
-    if (dashboard) {
-      dashboard.classList.remove("hidden");
-    }
-
-
-    /*
-      Charger les données
-    */
+    dashboard.classList.remove(
+      "hidden"
+    );
 
     await loadDashboard();
 
-
   } catch (error) {
 
-    accessToken = "";
-
-    console.error(
-      "ERREUR CONNEXION :",
-      error
-    );
-
-
-    message(
-      loginMessage,
-      "Erreur : " + error.message,
-      true
-    );
-
-
-  } finally {
-
-    if (loginBtn) {
-
-      loginBtn.disabled = false;
-      loginBtn.textContent = "Connexion";
-    }
+    loginMessage.textContent =
+      "Erreur : " +
+      error.message;
   }
 }
 
 
-/* =========================================================
+/* =========================
    DECONNEXION
-   ========================================================= */
+========================= */
+
+logoutBtn.addEventListener(
+  "click",
+  logout
+);
 
 function logout() {
 
-  accessToken = "";
-  editingProductId = null;
+  accessToken = null;
 
-  if (dashboard) {
-    dashboard.classList.add("hidden");
-  }
+  dashboard.classList.add(
+    "hidden"
+  );
 
-  if (loginBox) {
-    loginBox.classList.remove("hidden");
-  }
+  loginBox.classList.remove(
+    "hidden"
+  );
 
-  if (productFormCard) {
-    productFormCard.classList.add("hidden");
-  }
+  document.getElementById(
+    "password"
+  ).value = "";
 
-  if (loginMessage) {
-    loginMessage.textContent = "";
-  }
-
-  const password = $("password");
-
-  if (password) {
-    password.value = "";
-  }
+  loginMessage.textContent = "";
 }
 
 
-/* =========================================================
+/* =========================
    TABLEAU DE BORD
-   ========================================================= */
+========================= */
 
 async function loadDashboard() {
 
@@ -374,296 +228,265 @@ async function loadDashboard() {
         "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
       );
 
+    console.log(
+      "PRODUITS RECUS :",
+      products
+    );
 
-    const safeProducts =
-      Array.isArray(products)
-        ? products
-        : [];
-
-
-    const productCount =
-      $("productCount");
-
-    const availableCount =
-      $("availableCount");
-
-    const outCount =
-      $("outCount");
+    console.log(
+      "NOMBRE DE PRODUITS :",
+      products.length
+    );
 
 
-    if (productCount) {
-      productCount.textContent =
-        safeProducts.length;
-    }
+    /* =====================
+       STATISTIQUES
+    ===================== */
+
+    document.getElementById(
+      "productCount"
+    ).textContent =
+      products.length;
 
 
     const availableProducts =
-      safeProducts.filter(
-        p =>
-          p.available === true &&
-          Number(p.stock) > 0
+      products.filter(
+        product =>
+          product.available === true &&
+          Number(product.stock) > 0
       );
 
 
     const outProducts =
-      safeProducts.filter(
-        p =>
-          p.available === false ||
-          Number(p.stock) <= 0
+      products.filter(
+        product =>
+          product.available === false ||
+          Number(product.stock) <= 0
       );
 
 
-    if (availableCount) {
-      availableCount.textContent =
-        availableProducts.length;
+    document.getElementById(
+      "availableCount"
+    ).textContent =
+      availableProducts.length;
+
+
+    document.getElementById(
+      "outCount"
+    ).textContent =
+      outProducts.length;
+
+
+    /* =====================
+       AFFICHER LES PRODUITS
+    ===================== */
+
+    renderProducts(products);
+
+
+    /* =====================
+       COMMANDES
+    ===================== */
+
+    try {
+
+      const orders =
+        await api(
+          "orders?select=id"
+        );
+
+      document.getElementById(
+        "orderCount"
+      ).textContent =
+        orders.length;
+
+    } catch (error) {
+
+      document.getElementById(
+        "orderCount"
+      ).textContent =
+        "0";
+
+      console.log(
+        "Commandes non disponibles :",
+        error.message
+      );
     }
-
-
-    if (outCount) {
-      outCount.textContent =
-        outProducts.length;
-    }
-
-
-    renderProducts(
-      safeProducts
-    );
-
-
-    await loadOrders();
-
 
   } catch (error) {
 
     console.error(
-      "Erreur dashboard :",
+      "ERREUR PRODUITS :",
       error
     );
 
-
-    if (productsList) {
-
-      productsList.innerHTML = `
-        <div style="
-          padding:20px;
-          border:1px solid #ddd;
-          border-radius:12px;
-        ">
-          <strong>Erreur de chargement</strong>
-          <br><br>
-          ${escapeHtml(error.message)}
-        </div>
-      `;
-    }
+    productsList.innerHTML =
+      `<p class="error">
+        Erreur lors du chargement des produits :
+        ${escapeHtml(error.message)}
+      </p>`;
   }
 }
 
 
-/* =========================================================
-   AFFICHER PRODUITS
-   ========================================================= */
+/* =========================
+   AFFICHAGE PRODUITS
+========================= */
 
 function renderProducts(products) {
 
-  if (!productsList) {
-    return;
-  }
+  if (
+    !products ||
+    products.length === 0
+  ) {
 
-
-  if (!products.length) {
-
-    productsList.innerHTML = `
-      <div style="
-        padding:20px;
-        border:1px solid #ddd;
-        border-radius:12px;
-        text-align:center;
-      ">
-        <strong>Aucun produit.</strong>
-      </div>
-    `;
+    productsList.innerHTML =
+      "<p>Aucun produit trouvé.</p>";
 
     return;
   }
 
 
   productsList.innerHTML =
-    products.map(product => {
+    products.map(
+      product => {
 
-      const available =
-        product.available === true &&
-        Number(product.stock) > 0;
-
-
-      return `
-        <div style="
-          border:1px solid #ddd;
-          border-radius:14px;
-          padding:16px;
-          margin-bottom:14px;
-          background:white;
-        ">
-
-          <div style="
-            display:flex;
-            gap:15px;
-            align-items:center;
-          ">
-
-            <div style="
-              width:80px;
-              height:80px;
-              border-radius:10px;
-              background:#f2f2f2;
-              display:flex;
-              align-items:center;
-              justify-content:center;
-              overflow:hidden;
-              flex-shrink:0;
-            ">
-
-              ${
-                product.image_url
-                ?
-                `
-                  <img
-                    src="${escapeHtml(product.image_url)}"
-                    alt="${escapeHtml(product.name)}"
-                    style="
-                      width:100%;
-                      height:100%;
-                      object-fit:cover;
-                    "
-                  >
-                `
-                :
-                `<span style="font-size:30px">📦</span>`
-              }
-
-            </div>
+        const availability =
+          product.available &&
+          Number(product.stock) > 0
+            ? "Disponible"
+            : "Indisponible";
 
 
-            <div style="flex:1">
+        const image =
+          product.image_url
+            ? `
+              <img
+                src="${escapeHtml(product.image_url)}"
+                alt="${escapeHtml(product.name)}"
+              >
+            `
+            : "";
 
-              <h3 style="
-                margin:0 0 6px;
-              ">
+
+        return `
+          <div class="admin-product">
+
+            ${image}
+
+            <div class="admin-product-info">
+
+              <h3>
                 ${escapeHtml(product.name)}
               </h3>
 
-              <strong>
-                ${formatPrice(product.price)}
-              </strong>
+              <p>
+                Prix :
+                <strong>
+                  ${Number(product.price)
+                    .toLocaleString("fr-FR")}
+                  FCFA
+                </strong>
+              </p>
 
-              <br>
+              <p>
+                Stock :
+                <strong>
+                  ${product.stock ?? 0}
+                </strong>
+              </p>
 
-              <small>
-                Stock : ${Number(product.stock || 0)}
-              </small>
+              <p>
+                Statut :
+                <strong>
+                  ${availability}
+                </strong>
+              </p>
 
-              <br>
+              ${
+                product.badge
+                  ? `
+                    <p>
+                      Badge :
+                      ${escapeHtml(product.badge)}
+                    </p>
+                  `
+                  : ""
+              }
 
-              <small>
-                ${
-                  available
-                  ? "🟢 Disponible"
-                  : "🔴 Épuisé"
-                }
-              </small>
+            </div>
+
+
+            <div class="admin-product-actions">
+
+              <button
+                type="button"
+                onclick="editProduct(${product.id})"
+              >
+                Modifier
+              </button>
+
+
+              <button
+                type="button"
+                onclick="deleteProduct(${product.id})"
+              >
+                Supprimer
+              </button>
 
             </div>
 
           </div>
-
-
-          <div style="
-            display:flex;
-            gap:8px;
-            flex-wrap:wrap;
-            margin-top:14px;
-          ">
-
-            <button
-              type="button"
-              onclick="editProduct(${product.id})"
-            >
-              Modifier
-            </button>
-
-
-            <button
-              type="button"
-              onclick="toggleProduct(
-                ${product.id},
-                ${available}
-              )"
-            >
-              ${
-                available
-                ? "Mettre épuisé"
-                : "Rendre disponible"
-              }
-            </button>
-
-
-            <button
-              type="button"
-              onclick="deleteProduct(${product.id})"
-            >
-              Supprimer
-            </button>
-
-          </div>
-
-        </div>
-      `;
-
-    }).join("");
+        `;
+      }
+    ).join("");
 }
 
 
-/* =========================================================
+/* =========================
    AJOUT PRODUIT
-   ========================================================= */
+========================= */
 
-function openAddProductForm() {
+addProductBtn.addEventListener(
+  "click",
+  openAddForm
+);
+
+function openAddForm() {
 
   editingProductId = null;
 
-  if (productFormTitle) {
-    productFormTitle.textContent =
-      "Ajouter un produit";
-  }
+  productFormTitle.textContent =
+    "Ajouter un produit";
 
-  clearProductForm();
+  clearForm();
 
-  if (productFormCard) {
-    productFormCard.classList.remove("hidden");
-  }
+  productFormCard.classList.remove(
+    "hidden"
+  );
 
-  if (productName) {
-    productName.focus();
-  }
+  productMessage.textContent = "";
 }
 
 
-/* =========================================================
-   MODIFIER PRODUIT
-   ========================================================= */
+/* =========================
+   MODIFICATION PRODUIT
+========================= */
 
 async function editProduct(id) {
 
   try {
 
-    const result =
+    const products =
       await api(
-        "products?id=eq." +
-        encodeURIComponent(id) +
-        "&select=*"
+        `products?id=eq.${id}&select=*`
       );
 
 
-    if (!result || !result.length) {
+    if (
+      !products ||
+      products.length === 0
+    ) {
 
       alert(
         "Produit introuvable."
@@ -674,193 +497,140 @@ async function editProduct(id) {
 
 
     const product =
-      result[0];
-
+      products[0];
 
     editingProductId =
-      product.id;
+      id;
 
 
-    if (productFormTitle) {
-      productFormTitle.textContent =
-        "Modifier le produit";
-    }
+    productFormTitle.textContent =
+      "Modifier le produit";
 
 
-    if (productName) {
-      productName.value =
-        product.name || "";
-    }
+    productName.value =
+      product.name || "";
 
 
-    if (productCategory) {
-      productCategory.value =
-        product.category || "";
-    }
+    productCategory.value =
+      product.category || "";
 
 
-    if (productPrice) {
-      productPrice.value =
-        product.price || "";
-    }
+    productPrice.value =
+      product.price || "";
 
 
-    if (productStock) {
-      productStock.value =
-        product.stock || 0;
-    }
+    productStock.value =
+      product.stock || "";
 
 
-    if (productImage) {
-      productImage.value =
-        product.image_url || "";
-    }
+    productImage.value =
+      product.image_url || "";
 
 
-    if (productBadge) {
-      productBadge.value =
-        product.badge || "";
-    }
+    productBadge.value =
+      product.badge || "";
 
 
-    if (productDescription) {
-      productDescription.value =
-        product.description || "";
-    }
+    productDescription.value =
+      product.description || "";
 
 
-    if (productAvailable) {
-      productAvailable.checked =
-        product.available === true;
-    }
+    productAvailable.value =
+      product.available
+        ? "true"
+        : "false";
 
 
-    if (productFormCard) {
-      productFormCard.classList.remove(
-        "hidden"
-      );
-    }
+    productFormCard.classList.remove(
+      "hidden"
+    );
 
-
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
-    });
-
+    productMessage.textContent = "";
 
   } catch (error) {
 
     alert(
-      "Impossible de charger le produit :\n\n" +
+      "Erreur : " +
       error.message
     );
   }
 }
 
 
-/* =========================================================
-   ENREGISTRER PRODUIT
-   ========================================================= */
+/* =========================
+   ENREGISTREMENT
+========================= */
+
+saveProductBtn.addEventListener(
+  "click",
+  saveProduct
+);
 
 async function saveProduct() {
 
-  const name =
-    productName?.value.trim();
+  const body = {
 
-  const category =
-    productCategory?.value.trim();
-
-  const price =
-    Number(productPrice?.value || 0);
-
-  const stock =
-    Number(productStock?.value || 0);
-
-  const image =
-    productImage?.value.trim();
-
-  const badge =
-    productBadge?.value.trim();
-
-  const description =
-    productDescription?.value.trim();
-
-  const available =
-    productAvailable
-      ? productAvailable.checked
-      : true;
-
-
-  if (!name) {
-
-    message(
-      productMessage,
-      "Le nom du produit est obligatoire.",
-      true
-    );
-
-    return;
-  }
-
-
-  if (price < 0) {
-
-    message(
-      productMessage,
-      "Prix invalide.",
-      true
-    );
-
-    return;
-  }
-
-
-  if (stock < 0) {
-
-    message(
-      productMessage,
-      "Stock invalide.",
-      true
-    );
-
-    return;
-  }
-
-
-  const product = {
-
-    name: name,
+    name:
+      productName.value.trim(),
 
     category:
-      category || "accessoires",
+      productCategory.value.trim(),
 
-    price: price,
+    price:
+      Number(productPrice.value),
 
-    description:
-      description || "",
+    stock:
+      Number(productStock.value),
 
     image_url:
-      image || "",
-
-    stock: stock,
-
-    available:
-      available && stock > 0,
+      productImage.value.trim(),
 
     badge:
-      badge || null
+      productBadge.value.trim(),
+
+    description:
+      productDescription.value.trim(),
+
+    available:
+      productAvailable.value === "true"
   };
 
 
-  if (saveProductBtn) {
-    saveProductBtn.disabled = true;
+  if (!body.name) {
+
+    productMessage.textContent =
+      "Veuillez entrer le nom du produit.";
+
+    return;
   }
 
 
-  message(
-    productMessage,
-    "Enregistrement..."
-  );
+  if (
+    !body.price ||
+    body.price < 0
+  ) {
+
+    productMessage.textContent =
+      "Veuillez entrer un prix valide.";
+
+    return;
+  }
+
+
+  if (
+    body.stock < 0 ||
+    Number.isNaN(body.stock)
+  ) {
+
+    productMessage.textContent =
+      "Veuillez entrer un stock valide.";
+
+    return;
+  }
+
+
+  saveProductBtn.disabled =
+    true;
 
 
   try {
@@ -868,10 +638,7 @@ async function saveProduct() {
     if (editingProductId) {
 
       await api(
-        "products?id=eq." +
-        encodeURIComponent(
-          editingProductId
-        ),
+        `products?id=eq.${editingProductId}`,
         {
           method: "PATCH",
 
@@ -881,9 +648,13 @@ async function saveProduct() {
           },
 
           body:
-            JSON.stringify(product)
+            JSON.stringify(body)
         }
       );
+
+
+      productMessage.textContent =
+        "Produit modifié avec succès ✅";
 
     } else {
 
@@ -898,55 +669,43 @@ async function saveProduct() {
           },
 
           body:
-            JSON.stringify(product)
+            JSON.stringify(body)
         }
       );
-    }
 
 
-    message(
-      productMessage,
-      "Produit enregistré avec succès ✅"
-    );
-
-
-    editingProductId = null;
-
-    clearProductForm();
-
-
-    if (productFormCard) {
-      productFormCard.classList.add(
-        "hidden"
-      );
+      productMessage.textContent =
+        "Produit ajouté avec succès ✅";
     }
 
 
     await loadDashboard();
 
 
-  } catch (error) {
-
-    message(
-      productMessage,
-      "Erreur : " +
-      error.message,
-      true
+    setTimeout(
+      () => {
+        closeProductForm();
+      },
+      800
     );
 
+  } catch (error) {
+
+    productMessage.textContent =
+      "Erreur : " +
+      error.message;
 
   } finally {
 
-    if (saveProductBtn) {
-      saveProductBtn.disabled = false;
-    }
+    saveProductBtn.disabled =
+      false;
   }
 }
 
 
-/* =========================================================
-   SUPPRIMER
-   ========================================================= */
+/* =========================
+   SUPPRESSION
+========================= */
 
 async function deleteProduct(id) {
 
@@ -955,6 +714,7 @@ async function deleteProduct(id) {
       "Voulez-vous vraiment supprimer ce produit ?"
     )
   ) {
+
     return;
   }
 
@@ -962,232 +722,98 @@ async function deleteProduct(id) {
   try {
 
     await api(
-      "products?id=eq." +
-      encodeURIComponent(id),
+      `products?id=eq.${id}`,
       {
         method: "DELETE"
       }
     );
 
 
-    alert(
-      "Produit supprimé avec succès ✅"
-    );
-
-
     await loadDashboard();
-
 
   } catch (error) {
 
     alert(
-      "Impossible de supprimer :\n\n" +
+      "Erreur : " +
       error.message
     );
   }
 }
 
 
-/* =========================================================
-   DISPONIBILITE
-   ========================================================= */
+/* =========================
+   FERMER FORMULAIRE
+========================= */
 
-async function toggleProduct(
-  id,
-  currentlyAvailable
-) {
+cancelProductBtn.addEventListener(
+  "click",
+  closeProductForm
+);
 
-  try {
+function closeProductForm() {
 
-    await api(
-      "products?id=eq." +
-      encodeURIComponent(id),
-      {
-        method: "PATCH",
+  productFormCard.classList.add(
+    "hidden"
+  );
 
-        headers: {
-          "Prefer":
-            "return=minimal"
-        },
-
-        body: JSON.stringify({
-          available:
-            !currentlyAvailable
-        })
-      }
-    );
-
-
-    await loadDashboard();
-
-
-  } catch (error) {
-
-    alert(
-      "Impossible de modifier :\n\n" +
-      error.message
-    );
-  }
-}
-
-
-/* =========================================================
-   ANNULER
-   ========================================================= */
-
-function cancelProductForm() {
+  productMessage.textContent = "";
 
   editingProductId = null;
 
-  clearProductForm();
-
-  if (productFormCard) {
-    productFormCard.classList.add(
-      "hidden"
-    );
-  }
+  clearForm();
 }
 
 
-/* =========================================================
+/* =========================
    VIDER FORMULAIRE
-   ========================================================= */
+========================= */
 
-function clearProductForm() {
+function clearForm() {
 
-  if (productName)
-    productName.value = "";
+  productName.value = "";
 
-  if (productCategory)
-    productCategory.value =
-      "accessoires";
+  productCategory.value = "";
 
-  if (productPrice)
-    productPrice.value = "";
+  productPrice.value = "";
 
-  if (productStock)
-    productStock.value = "0";
+  productStock.value = "";
 
-  if (productImage)
-    productImage.value = "";
+  productImage.value = "";
 
-  if (productBadge)
-    productBadge.value = "";
+  productBadge.value = "";
 
-  if (productDescription)
-    productDescription.value = "";
+  productDescription.value = "";
 
-  if (productAvailable)
-    productAvailable.checked = true;
-
-  if (productMessage)
-    productMessage.textContent = "";
+  productAvailable.value =
+    "true";
 }
 
 
-/* =========================================================
-   COMMANDES
-   ========================================================= */
+/* =========================
+   SECURITE AFFICHAGE
+========================= */
 
-async function loadOrders() {
+function escapeHtml(value) {
 
-  const ordersList =
-    $("ordersList");
-
-
-  if (!ordersList) {
-    return;
-  }
-
-
-  try {
-
-    const orders =
-      await api(
-        "orders?select=*&order=created_at.desc"
-      );
-
-
-    const safeOrders =
-      Array.isArray(orders)
-        ? orders
-        : [];
-
-
-    const orderCount =
-      $("orderCount");
-
-
-    if (orderCount) {
-      orderCount.textContent =
-        safeOrders.length;
-    }
-
-
-    if (!safeOrders.length) {
-
-      ordersList.innerHTML =
-        "<p>Aucune commande pour le moment.</p>";
-
-      return;
-    }
-
-
-    ordersList.innerHTML =
-      safeOrders.map(order => {
-
-        let items =
-          order.items;
-
-
-        if (typeof items === "string") {
-
-          try {
-            items =
-              JSON.parse(items);
-          } catch {
-            items = [];
-          }
-        }
-
-
-        if (!Array.isArray(items)) {
-          items = [];
-        }
-
-
-        const itemsHtml =
-          items.map(item => {
-
-            return `
-              <li>
-                ${escapeHtml(
-                  item.name ||
-                  "Produit"
-                )}
-                ×
-                ${Number(
-                  item.quantity || 1
-                )}
-              </li>
-            `;
-
-          }).join("");
-
-
-        return `
-          <div style="
-            border:1px solid #ddd;
-            border-radius:14px;
-            padding:16px;
-            margin-bottom:14px;
-            background:white;
-          ">
-
-            <strong>
-              Commande #${escapeHtml(order.id)}
-            </strong>
-
-            <p>
-              👤
-      
+  return String(value ?? "")
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+     }
