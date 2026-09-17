@@ -1,124 +1,75 @@
 const SUPABASE_URL = "https://ocmvthymdjkrhmdyieim.supabase.co";
 const SUPABASE_KEY = "sb_publishable_OnchBsvLE3RVA-EualXSSA_pfVvFpTW";
 
-/* =========================
-   ELEMENTS
-========================= */
-
 const loginBox = document.getElementById("loginBox");
 const dashboard = document.getElementById("dashboard");
-
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
-
 const loginMessage = document.getElementById("loginMessage");
 
 const productsList = document.getElementById("productsList");
 const addProductBtn = document.getElementById("addProductBtn");
+const productFormCard = document.getElementById("productFormCard");
+const productFormTitle = document.getElementById("productFormTitle");
 
-const productFormCard =
-  document.getElementById("productFormCard");
+const productName = document.getElementById("productName");
+const productCategory = document.getElementById("productCategory");
+const productPrice = document.getElementById("productPrice");
+const productStock = document.getElementById("productStock");
+const productImage = document.getElementById("productImage");
+const productBadge = document.getElementById("productBadge");
+const productDescription = document.getElementById("productDescription");
+const productAvailable = document.getElementById("productAvailable");
 
-const productFormTitle =
-  document.getElementById("productFormTitle");
+const productImageFile = document.getElementById("productImageFile");
+const productImagePreview = document.getElementById("productImagePreview");
 
-const productName =
-  document.getElementById("productName");
+const saveProductBtn = document.getElementById("saveProductBtn");
+const cancelProductBtn = document.getElementById("cancelProductBtn");
+const productMessage = document.getElementById("productMessage");
 
-const productCategory =
-  document.getElementById("productCategory");
-
-const productPrice =
-  document.getElementById("productPrice");
-
-const productStock =
-  document.getElementById("productStock");
-
-const productImage =
-  document.getElementById("productImage");
-
-const productBadge =
-  document.getElementById("productBadge");
-
-const productDescription =
-  document.getElementById("productDescription");
-
-const productAvailable =
-  document.getElementById("productAvailable");
-
-const saveProductBtn =
-  document.getElementById("saveProductBtn");
-
-const cancelProductBtn =
-  document.getElementById("cancelProductBtn");
-
-const productMessage =
-  document.getElementById("productMessage");
-
-const ordersList =
-  document.getElementById("ordersList");
-
-const refreshOrdersBtn =
-  document.getElementById("refreshOrdersBtn");
-
-const orderFilter =
-  document.getElementById("orderFilter");
-
-
-/* =========================
-   VARIABLES
-========================= */
+const refreshOrdersBtn = document.getElementById("refreshOrdersBtn");
+const orderStatusFilter = document.getElementById("orderStatusFilter");
+const ordersList = document.getElementById("ordersList");
 
 let accessToken = null;
-
 let editingProductId = null;
-
-let allOrders = [];
 
 
 /* =========================
-   API SUPABASE
+   OUTILS SUPABASE
 ========================= */
 
 async function api(endpoint, options = {}) {
-
-  const headers = {
-    "apikey": SUPABASE_KEY,
-    "Authorization": `Bearer ${accessToken}`,
-    "Content-Type": "application/json",
-    ...options.headers
-  };
 
   const response = await fetch(
     `${SUPABASE_URL}/rest/v1/${endpoint}`,
     {
       ...options,
-      headers
+
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        ...options.headers
+      }
     }
   );
 
   const text = await response.text();
 
   if (!response.ok) {
-
     throw new Error(
       text || `Erreur HTTP ${response.status}`
     );
-
   }
 
-  if (!text) {
-    return null;
-  }
+  if (!text) return null;
 
   try {
-
     return JSON.parse(text);
-
   } catch {
-
     return text;
-
   }
 }
 
@@ -132,17 +83,13 @@ loginBtn.addEventListener(
   login
 );
 
-
 async function login() {
 
   const email =
-    document.getElementById("email")
-      .value
-      .trim();
+    document.getElementById("email").value.trim();
 
   const password =
-    document.getElementById("password")
-      .value;
+    document.getElementById("password").value;
 
   if (!email || !password) {
 
@@ -154,7 +101,6 @@ async function login() {
 
   loginMessage.textContent =
     "Connexion...";
-
 
   try {
 
@@ -169,16 +115,14 @@ async function login() {
         },
 
         body: JSON.stringify({
-          email,
-          password
+          email: email,
+          password: password
         })
       }
     );
 
-
     const data =
       await response.json();
-
 
     if (!response.ok) {
 
@@ -188,40 +132,58 @@ async function login() {
         data.message ||
         "Connexion impossible."
       );
-
     }
-
 
     accessToken =
       data.access_token;
 
-
     if (!accessToken) {
 
       throw new Error(
-        "Aucun jeton de connexion reçu."
+        "Aucun token de connexion reçu."
       );
-
     }
 
+    try {
 
-    loginBox.classList.add("hidden");
+      const payload =
+        JSON.parse(
+          atob(
+            accessToken.split(".")[1]
+          )
+        );
 
-    dashboard.classList.remove("hidden");
+      console.log(
+        "SESSION SUPABASE :",
+        payload
+      );
 
-    loginMessage.textContent = "";
+      loginMessage.textContent =
+        "Session active — rôle : " +
+        payload.role;
 
+    } catch {
+
+      loginMessage.textContent =
+        "Connexion réussie — session active ✅";
+    }
+
+    loginBox.classList.add(
+      "hidden"
+    );
+
+    dashboard.classList.remove(
+      "hidden"
+    );
 
     await loadDashboard();
-
 
   } catch (error) {
 
     loginMessage.textContent =
-      "Erreur : " + error.message;
-
+      "Erreur : " +
+      error.message;
   }
-
 }
 
 
@@ -234,19 +196,23 @@ logoutBtn.addEventListener(
   logout
 );
 
-
 function logout() {
 
   accessToken = null;
 
-  allOrders = [];
+  dashboard.classList.add(
+    "hidden"
+  );
 
-  dashboard.classList.add("hidden");
+  loginBox.classList.remove(
+    "hidden"
+  );
 
-  loginBox.classList.remove("hidden");
+  document.getElementById(
+    "password"
+  ).value = "";
 
-  document.getElementById("password").value = "";
-
+  loginMessage.textContent = "";
 }
 
 
@@ -258,10 +224,19 @@ async function loadDashboard() {
 
   try {
 
-    /* PRODUITS */
+    const products =
+      await api(
+        "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
+      );
 
-    const products = await api(
-      "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
+    console.log(
+      "PRODUITS RECUS :",
+      products
+    );
+
+    console.log(
+      "NOMBRE DE PRODUITS :",
+      products.length
     );
 
 
@@ -302,30 +277,59 @@ async function loadDashboard() {
     renderProducts(products);
 
 
-    /* COMMANDES */
+    try {
+
+      const orders =
+        await api(
+          "orders?select=id"
+        );
+
+      document.getElementById(
+        "orderCount"
+      ).textContent =
+        orders.length;
+
+    } catch (error) {
+
+      document.getElementById(
+        "orderCount"
+      ).textContent =
+        "0";
+
+      console.log(
+        "Commandes non disponibles :",
+        error.message
+      );
+    }
 
     await loadOrders();
 
-
   } catch (error) {
+
+    console.error(
+      "ERREUR PRODUITS :",
+      error
+    );
 
     productsList.innerHTML =
       `<p class="error">
-        Erreur : ${escapeHtml(error.message)}
+        Erreur lors du chargement des produits :
+        ${escapeHtml(error.message)}
       </p>`;
-
   }
-
 }
 
 
 /* =========================
-   PRODUITS
+   AFFICHAGE PRODUITS
 ========================= */
 
 function renderProducts(products) {
 
-  if (!products || products.length === 0) {
+  if (
+    !products ||
+    products.length === 0
+  ) {
 
     productsList.innerHTML =
       "<p>Aucun produit trouvé.</p>";
@@ -335,118 +339,98 @@ function renderProducts(products) {
 
 
   productsList.innerHTML =
-    products.map(product => {
+    products.map(
+      product => {
 
-      const availability =
-        product.available &&
-        Number(product.stock) > 0
-          ? "Disponible"
-          : "Indisponible";
-
-
-      const statusClass =
-        product.available &&
-        Number(product.stock) > 0
-          ? "available"
-          : "unavailable";
+        const availability =
+          product.available &&
+          Number(product.stock) > 0
+            ? "Disponible"
+            : "Indisponible";
 
 
-      const image =
-        product.image_url
-          ? `
-            <img
-              src="${escapeHtml(product.image_url)}"
-              alt="${escapeHtml(product.name)}"
-              class="product-image"
-            >
-          `
-          : "";
+        const image =
+          product.image_url
+            ? `
+              <img
+                src="${escapeHtml(product.image_url)}"
+                alt="${escapeHtml(product.name)}"
+              >
+            `
+            : "";
 
 
-      const badge =
-        product.badge
-          ? `
-            <span class="badge">
-              ${escapeHtml(product.badge)}
-            </span>
-          `
-          : "";
+        return `
+          <div class="admin-product">
 
+            ${image}
 
-      return `
-
-        <div class="product">
-
-          ${image}
-
-          <div class="product-top">
-
-            <div>
+            <div class="admin-product-info">
 
               <h3>
                 ${escapeHtml(product.name)}
               </h3>
 
-              ${badge}
+              <p>
+                Prix :
+                <strong>
+                  ${Number(product.price)
+                    .toLocaleString("fr-FR")}
+                  FCFA
+                </strong>
+              </p>
+
+              <p>
+                Stock :
+                <strong>
+                  ${product.stock ?? 0}
+                </strong>
+              </p>
+
+              <p>
+                Statut :
+                <strong>
+                  ${availability}
+                </strong>
+              </p>
+
+              ${
+                product.badge
+                  ? `
+                    <p>
+                      Badge :
+                      ${escapeHtml(product.badge)}
+                    </p>
+                  `
+                  : ""
+              }
+
+            </div>
+
+
+            <div class="admin-product-actions">
+
+              <button
+                type="button"
+                onclick="editProduct(${product.id})"
+              >
+                Modifier
+              </button>
+
+
+              <button
+                type="button"
+                onclick="deleteProduct(${product.id})"
+              >
+                Supprimer
+              </button>
 
             </div>
 
           </div>
-
-
-          <p>
-            Prix :
-            <strong>
-              ${Number(product.price)
-                .toLocaleString("fr-FR")}
-              FCFA
-            </strong>
-          </p>
-
-
-          <p>
-            Stock :
-            <strong>
-              ${product.stock ?? 0}
-            </strong>
-          </p>
-
-
-          <p>
-            Statut :
-            <strong class="${statusClass}">
-              ${availability}
-            </strong>
-          </p>
-
-
-          <div>
-
-            <button
-              type="button"
-              class="secondary"
-              onclick="editProduct(${product.id})"
-            >
-              Modifier
-            </button>
-
-
-            <button
-              type="button"
-              class="danger"
-              onclick="deleteProduct(${product.id})"
-            >
-              Supprimer
-            </button>
-
-          </div>
-
-        </div>
-
-      `;
-
-    }).join("");
-
+        `;
+      }
+    ).join("");
 }
 
 
@@ -458,7 +442,6 @@ addProductBtn.addEventListener(
   "click",
   openAddForm
 );
-
 
 function openAddForm() {
 
@@ -474,12 +457,170 @@ function openAddForm() {
   );
 
   productMessage.textContent = "";
-
 }
 
 
 /* =========================
-   MODIFIER PRODUIT
+   APERCU PHOTO
+========================= */
+
+productImageFile.addEventListener(
+  "change",
+  function () {
+
+    const file =
+      this.files[0];
+
+    if (!file) {
+
+      productImagePreview.style.display =
+        "none";
+
+      return;
+    }
+
+
+    if (!file.type.startsWith("image/")) {
+
+      alert(
+        "Veuillez choisir une image."
+      );
+
+      this.value = "";
+
+      productImagePreview.style.display =
+        "none";
+
+      return;
+    }
+
+
+    const reader =
+      new FileReader();
+
+
+    reader.onload =
+      function (event) {
+
+        productImagePreview.src =
+          event.target.result;
+
+        productImagePreview.style.display =
+          "block";
+      };
+
+
+    reader.readAsDataURL(file);
+  }
+);
+
+
+/* =========================
+   ENVOI PHOTO SUPABASE
+========================= */
+
+async function uploadProductImage(file) {
+
+  if (!file) {
+    return null;
+  }
+
+
+  if (!file.type.startsWith("image/")) {
+
+    throw new Error(
+      "Le fichier choisi n'est pas une image."
+    );
+  }
+
+
+  const extension =
+    getFileExtension(file);
+
+
+  const fileName =
+    `product-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 8)}.${extension}`;
+
+
+  const response =
+    await fetch(
+      `${SUPABASE_URL}/storage/v1/object/product-images/${fileName}`,
+      {
+        method: "POST",
+
+        headers: {
+          "Authorization":
+            `Bearer ${accessToken}`,
+
+          "apikey":
+            SUPABASE_KEY,
+
+          "Content-Type":
+            file.type,
+
+          "x-upsert":
+            "false"
+        },
+
+        body: file
+      }
+    );
+
+
+  const text =
+    await response.text();
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      text ||
+      `Erreur upload image HTTP ${response.status}`
+    );
+  }
+
+
+  return `${SUPABASE_URL}/storage/v1/object/public/product-images/${fileName}`;
+}
+
+
+/* =========================
+   EXTENSION PHOTO
+========================= */
+
+function getFileExtension(file) {
+
+  const parts =
+    file.name.split(".");
+
+  if (parts.length > 1) {
+
+    return parts[
+      parts.length - 1
+    ].toLowerCase();
+  }
+
+
+  if (file.type === "image/png") {
+    return "png";
+  }
+
+  if (file.type === "image/webp") {
+    return "webp";
+  }
+
+  if (file.type === "image/gif") {
+    return "gif";
+  }
+
+  return "jpg";
+}
+
+
+/* =========================
+   MODIFICATION PRODUIT
 ========================= */
 
 async function editProduct(id) {
@@ -508,7 +649,6 @@ async function editProduct(id) {
     const product =
       products[0];
 
-
     editingProductId =
       id;
 
@@ -530,7 +670,7 @@ async function editProduct(id) {
 
 
     productStock.value =
-      product.stock ?? "";
+      product.stock || "";
 
 
     productImage.value =
@@ -551,33 +691,52 @@ async function editProduct(id) {
         : "false";
 
 
+    /* Afficher ancienne photo */
+
+    if (product.image_url) {
+
+      productImagePreview.src =
+        product.image_url;
+
+      productImagePreview.style.display =
+        "block";
+
+    } else {
+
+      productImagePreview.style.display =
+        "none";
+    }
+
+
+    /* Réinitialiser sélection */
+
+    productImageFile.value = "";
+
+
     productFormCard.classList.remove(
       "hidden"
     );
 
     productMessage.textContent = "";
 
-
   } catch (error) {
 
     alert(
-      "Erreur : " + error.message
+      "Erreur : " +
+      error.message
     );
-
   }
-
 }
 
 
 /* =========================
-   ENREGISTRER PRODUIT
+   ENREGISTREMENT
 ========================= */
 
 saveProductBtn.addEventListener(
   "click",
   saveProduct
 );
-
 
 async function saveProduct() {
 
@@ -606,7 +765,6 @@ async function saveProduct() {
 
     available:
       productAvailable.value === "true"
-
   };
 
 
@@ -620,7 +778,7 @@ async function saveProduct() {
 
 
   if (
-    !Number.isFinite(body.price) ||
+    !body.price ||
     body.price < 0
   ) {
 
@@ -632,8 +790,8 @@ async function saveProduct() {
 
 
   if (
-    !Number.isFinite(body.stock) ||
-    body.stock < 0
+    body.stock < 0 ||
+    Number.isNaN(body.stock)
   ) {
 
     productMessage.textContent =
@@ -643,10 +801,44 @@ async function saveProduct() {
   }
 
 
-  saveProductBtn.disabled = true;
+  saveProductBtn.disabled =
+    true;
+
+
+  productMessage.textContent =
+    "Enregistrement en cours...";
 
 
   try {
+
+    /* =====================
+       UPLOAD PHOTO
+    ===================== */
+
+    const selectedFile =
+      productImageFile.files[0];
+
+
+    if (selectedFile) {
+
+      productMessage.textContent =
+        "Envoi de la photo...";
+
+
+      const imageUrl =
+        await uploadProductImage(
+          selectedFile
+        );
+
+
+      body.image_url =
+        imageUrl;
+    }
+
+
+    /* =====================
+       SAUVEGARDE PRODUIT
+    ===================== */
 
     if (editingProductId) {
 
@@ -669,7 +861,6 @@ async function saveProduct() {
       productMessage.textContent =
         "Produit modifié avec succès ✅";
 
-
     } else {
 
       await api(
@@ -690,7 +881,6 @@ async function saveProduct() {
 
       productMessage.textContent =
         "Produit ajouté avec succès ✅";
-
     }
 
 
@@ -698,29 +888,33 @@ async function saveProduct() {
 
 
     setTimeout(
-      closeProductForm,
+      () => {
+        closeProductForm();
+      },
       800
     );
 
-
   } catch (error) {
 
-    productMessage.textContent =
-      "Erreur : " + error.message;
+    console.error(
+      "ERREUR ENREGISTREMENT :",
+      error
+    );
 
+    productMessage.textContent =
+      "Erreur : " +
+      error.message;
 
   } finally {
 
     saveProductBtn.disabled =
       false;
-
   }
-
 }
 
 
 /* =========================
-   SUPPRIMER PRODUIT
+   SUPPRESSION
 ========================= */
 
 async function deleteProduct(id) {
@@ -730,6 +924,7 @@ async function deleteProduct(id) {
       "Voulez-vous vraiment supprimer ce produit ?"
     )
   ) {
+
     return;
   }
 
@@ -746,522 +941,24 @@ async function deleteProduct(id) {
 
     await loadDashboard();
 
-
   } catch (error) {
 
     alert(
-      "Erreur : " + error.message
-    );
-
-  }
-
-}
-
-
-/* =========================
-   COMMANDES
-========================= */
-
-async function loadOrders() {
-
-  try {
-
-    const orders =
-      await api(
-        "orders?select=*&order=created_at.desc"
-      );
-
-
-    allOrders =
-      Array.isArray(orders)
-        ? orders
-        : [];
-
-
-    document.getElementById(
-      "orderCount"
-    ).textContent =
-      allOrders.length;
-
-
-    renderOrders();
-
-
-  } catch (error) {
-
-    document.getElementById(
-      "orderCount"
-    ).textContent = "0";
-
-
-    ordersList.innerHTML =
-      `
-        <p class="error">
-          Impossible de charger les commandes.
-        </p>
-
-        <p class="muted">
-          ${escapeHtml(error.message)}
-        </p>
-      `;
-
-  }
-
-}
-
-
-/* =========================
-   AFFICHER COMMANDES
-========================= */
-
-function renderOrders() {
-
-  if (!allOrders.length) {
-
-    ordersList.innerHTML =
-      `
-        <p>
-          Aucune commande pour le moment.
-        </p>
-      `;
-
-    return;
-  }
-
-
-  const filter =
-    orderFilter.value;
-
-
-  let orders =
-    allOrders;
-
-
-  if (filter !== "all") {
-
-    orders =
-      allOrders.filter(
-        order =>
-          normalizeStatus(order.status) ===
-          filter
-      );
-
-  }
-
-
-  if (!orders.length) {
-
-    ordersList.innerHTML =
-      `
-        <p>
-          Aucune commande dans cette catégorie.
-        </p>
-      `;
-
-    return;
-  }
-
-
-  ordersList.innerHTML =
-    orders.map(
-      order => renderOrder(order)
-    ).join("");
-
-}
-
-
-/* =========================
-   UNE COMMANDE
-========================= */
-
-function renderOrder(order) {
-
-  const status =
-    normalizeStatus(order.status);
-
-
-  const statusLabel =
-    getStatusLabel(status);
-
-
-  const date =
-    formatDate(order.created_at);
-
-
-  const itemsHtml =
-    renderOrderItems(order.items);
-
-
-  return `
-
-    <div class="order">
-
-      <div class="order-header">
-
-        <div>
-
-          <div class="order-number">
-            🛒 Commande #${order.id}
-          </div>
-
-          <div class="order-date">
-            ${date}
-          </div>
-
-        </div>
-
-        <strong
-          class="${getStatusClass(status)}"
-        >
-          ${statusLabel}
-        </strong>
-
-      </div>
-
-
-      <div class="order-info">
-
-        <p>
-          👤
-          <strong>Client :</strong>
-          ${escapeHtml(
-            order.customer_name || "Non renseigné"
-          )}
-        </p>
-
-
-        <p>
-          📞
-          <strong>Téléphone :</strong>
-          ${escapeHtml(
-            order.phone || "Non renseigné"
-          )}
-        </p>
-
-
-        <p>
-          📍
-          <strong>Adresse :</strong>
-          ${escapeHtml(
-            order.address || "Non renseignée"
-          )}
-        </p>
-
-
-        <p>
-          💳
-          <strong>Paiement :</strong>
-          ${escapeHtml(
-            order.payment_method ||
-            "À la livraison"
-          )}
-        </p>
-
-      </div>
-
-
-      <div class="order-items">
-
-        <strong>
-          📦 Produits commandés
-        </strong>
-
-        ${itemsHtml}
-
-      </div>
-
-
-      <div class="order-total">
-
-        Total :
-        ${Number(order.total || 0)
-          .toLocaleString("fr-FR")}
-        FCFA
-
-      </div>
-
-
-      <div class="status-row">
-
-        <label>
-          <strong>
-            Statut :
-          </strong>
-        </label>
-
-
-        <select
-          class="status-select"
-          onchange="changeOrderStatus(${order.id}, this.value)"
-        >
-
-          <option
-            value="nouvelle"
-            ${status === "nouvelle" ? "selected" : ""}
-          >
-            🟠 Nouvelle
-          </option>
-
-          <option
-            value="preparation"
-            ${status === "preparation" ? "selected" : ""}
-          >
-            🟡 En préparation
-          </option>
-
-          <option
-            value="livraison"
-            ${status === "livraison" ? "selected" : ""}
-          >
-            🔵 En livraison
-          </option>
-
-          <option
-            value="livree"
-            ${status === "livree" ? "selected" : ""}
-          >
-            🟢 Livrée
-          </option>
-
-          <option
-            value="annulee"
-            ${status === "annulee" ? "selected" : ""}
-          >
-            🔴 Annulée
-          </option>
-
-        </select>
-
-      </div>
-
-    </div>
-
-  `;
-
-}
-
-
-/* =========================
-   PRODUITS D'UNE COMMANDE
-========================= */
-
-function renderOrderItems(items) {
-
-  if (!items) {
-
-    return `
-      <p>
-        Aucun détail disponible.
-      </p>
-    `;
-
-  }
-
-
-  let list = [];
-
-
-  if (Array.isArray(items)) {
-
-    list = items;
-
-  } else if (
-    typeof items === "string"
-  ) {
-
-    try {
-
-      const parsed =
-        JSON.parse(items);
-
-      if (Array.isArray(parsed)) {
-        list = parsed;
-      }
-
-    } catch {
-
-      list = [];
-
-    }
-
-  }
-
-
-  if (!list.length) {
-
-    return `
-      <p>
-        Détails des produits indisponibles.
-      </p>
-    `;
-
-  }
-
-
-  return list.map(item => {
-
-    const name =
-      item.name ||
-      item.product_name ||
-      "Produit";
-
-
-    const quantity =
-      Number(
-        item.quantity ||
-        item.qty ||
-        1
-      );
-
-
-    const price =
-      Number(
-        item.price ||
-        item.unit_price ||
-        0
-      );
-
-
-    return `
-
-      <div class="order-item">
-
-        <strong>
-          ${escapeHtml(name)}
-        </strong>
-
-        <br>
-
-        Quantité :
-        ${quantity}
-
-        ×
-
-        ${price.toLocaleString("fr-FR")}
-        FCFA
-
-      </div>
-
-    `;
-
-  }).join("");
-
-}
-
-
-/* =========================
-   CHANGER STATUT COMMANDE
-========================= */
-
-async function changeOrderStatus(
-  id,
-  newStatus
-) {
-
-  try {
-
-    await api(
-      `orders?id=eq.${id}`,
-      {
-        method: "PATCH",
-
-        headers: {
-          "Prefer":
-            "return=minimal"
-        },
-
-        body:
-          JSON.stringify({
-            status: newStatus
-          })
-      }
-    );
-
-
-    const order =
-      allOrders.find(
-        item =>
-          Number(item.id) === Number(id)
-      );
-
-
-    if (order) {
-
-      order.status =
-        newStatus;
-
-    }
-
-
-    renderOrders();
-
-
-  } catch (error) {
-
-    alert(
-      "Impossible de modifier le statut : " +
+      "Erreur : " +
       error.message
     );
-
-    renderOrders();
-
   }
-
 }
 
 
 /* =========================
-   FILTRE COMMANDES
-========================= */
-
-orderFilter.addEventListener(
-  "change",
-  renderOrders
-);
-
-
-/* =========================
-   ACTUALISER COMMANDES
-========================= */
-
-refreshOrdersBtn.addEventListener(
-  "click",
-  async () => {
-
-    refreshOrdersBtn.disabled =
-      true;
-
-    refreshOrdersBtn.textContent =
-      "⏳ Chargement...";
-
-
-    try {
-
-      await loadOrders();
-
-    } finally {
-
-      refreshOrdersBtn.disabled =
-        false;
-
-      refreshOrdersBtn.textContent =
-        "🔄 Actualiser";
-
-    }
-
-  }
-);
-
-
-/* =========================
-   FORMULAIRE
+   FERMER FORMULAIRE
 ========================= */
 
 cancelProductBtn.addEventListener(
   "click",
   closeProductForm
 );
-
 
 function closeProductForm() {
 
@@ -1274,9 +971,12 @@ function closeProductForm() {
   editingProductId = null;
 
   clearForm();
-
 }
 
+
+/* =========================
+   VIDER FORMULAIRE
+========================= */
 
 function clearForm() {
 
@@ -1297,321 +997,190 @@ function clearForm() {
   productAvailable.value =
     "true";
 
+
+  productImageFile.value = "";
+
+  productImagePreview.src = "";
+
+  productImagePreview.style.display =
+    "none";
 }
 
 
 /* =========================
-   STATUTS
+   COMMANDES
 ========================= */
 
-function normalizeStatus(status) {
+if (refreshOrdersBtn) {
 
-  const value =
-    String(status || "")
-      .toLowerCase()
-      .trim();
-
-
-  if (
-    value === "en préparation" ||
-    value === "en_preparation" ||
-    value === "en-preparation" ||
-    value === "preparation"
-  ) {
-    return "preparation";
-  }
-
-
-  if (
-    value === "en livraison" ||
-    value === "en_livraison" ||
-    value === "en-livraison" ||
-    value === "livraison"
-  ) {
-    return "livraison";
-  }
-
-
-  if (
-    value === "livrée" ||
-    value === "livree"
-  ) {
-    return "livree";
-  }
-
-
-  if (
-    value === "annulée" ||
-    value === "annulee"
-  ) {
-    return "annulee";
-  }
-
-
-  return "nouvelle";
-
+  refreshOrdersBtn.addEventListener(
+    "click",
+    loadOrders
+  );
 }
 
 
-function getStatusLabel(status) {
+if (orderStatusFilter) {
 
-  switch (status) {
+  orderStatusFilter.addEventListener(
+    "change",
+    loadOrders
+  );
+}
 
-    case "preparation":
-      return "🟡 En préparation";
 
-    case "livraison":
-      return "🔵 En livraison";
+async function loadOrders() {
 
-    case "livree":
-      return "🟢 Livrée";
-
-    case "
-/* =========================
-   PHOTO PRODUIT - AJOUT
-   ========================= */
-
-(function setupProductPhotoUpload() {
-
-  if (!productImage) {
-    console.error("Champ productImage introuvable.");
+  if (!ordersList) {
     return;
   }
 
-  /* Création automatique du bouton */
 
-  const photoContainer = document.createElement("div");
+  try {
 
-  photoContainer.style.margin = "10px 0 20px";
-  photoContainer.style.padding = "15px";
-  photoContainer.style.border = "2px dashed #ddd";
-  photoContainer.style.borderRadius = "14px";
-  photoContainer.style.textAlign = "center";
-
-  photoContainer.innerHTML = `
-    <div style="
-      font-weight:bold;
-      font-size:16px;
-      margin-bottom:10px;
-    ">
-      📷 Photo du produit
-    </div>
-
-    <button
-      type="button"
-      id="chooseProductPhotoBtn"
-      style="
-        background:#111;
-        color:white;
-        border:none;
-        padding:13px 20px;
-        border-radius:10px;
-        font-weight:bold;
-        font-size:15px;
-      "
-    >
-      📷 Choisir une photo
-    </button>
-
-    <input
-      type="file"
-      id="productPhotoFile"
-      accept="image/*"
-      style="display:none"
-    >
-
-    <div
-      id="productPhotoPreviewBox"
-      style="margin-top:12px;"
-    ></div>
-  `;
-
-  productImage.parentNode.insertBefore(
-    photoContainer,
-    productImage.nextSibling
-  );
+    const orders =
+      await api(
+        "orders?select=*&order=created_at.desc"
+      );
 
 
-  const chooseBtn =
-    document.getElementById(
-      "chooseProductPhotoBtn"
-    );
-
-  const photoInput =
-    document.getElementById(
-      "productPhotoFile"
-    );
-
-  const previewBox =
-    document.getElementById(
-      "productPhotoPreviewBox"
-    );
+    const filter =
+      orderStatusFilter
+        ? orderStatusFilter.value
+        : "all";
 
 
-  /* Bouton galerie */
+    const filteredOrders =
+      filter === "all"
+        ? orders
+        : orders.filter(
+            order =>
+              order.status === filter
+          );
 
-  chooseBtn.addEventListener(
-    "click",
-    function () {
 
-      photoInput.click();
+    if (
+      !filteredOrders ||
+      filteredOrders.length === 0
+    ) {
 
+      ordersList.innerHTML =
+        "<p>Aucune commande trouvée.</p>";
+
+      return;
     }
-  );
 
 
-  /* Sélection photo */
+    ordersList.innerHTML =
+      filteredOrders.map(
+        order => {
 
-  photoInput.addEventListener(
-    "change",
-    function () {
-
-      const file =
-        this.files[0];
-
-      if (!file) {
-        return;
-      }
+          let itemsText = "";
 
 
-      if (!file.type.startsWith("image/")) {
+          try {
 
-        alert(
-          "Veuillez choisir une image."
-        );
-
-        this.value = "";
-
-        return;
-      }
+            const items =
+              typeof order.items === "string"
+                ? JSON.parse(order.items)
+                : order.items;
 
 
-      const reader =
-        new FileReader();
+            if (Array.isArray(items)) {
+
+              itemsText =
+                items.map(
+                  item =>
+                    `${escapeHtml(
+                      item.name || "Produit"
+                    )} × ${
+                      item.quantity || 1
+                    }`
+                ).join("<br>");
+
+            } else {
+
+              itemsText =
+                escapeHtml(
+                  JSON.stringify(items)
+                );
+            }
+
+          } catch {
+
+            itemsText =
+              escapeHtml(
+                String(order.items || "")
+              );
+          }
 
 
-      reader.onload =
-        function (event) {
+          return `
+            <div class="card">
 
-          previewBox.innerHTML = `
-            <img
-              src="${event.target.result}"
-              alt="Aperçu"
-              style="
-                width:160px;
-                height:160px;
-                object-fit:cover;
-                border-radius:12px;
-                border:1px solid #ddd;
-              "
-            >
-            <div style="
-              margin-top:8px;
-              font-size:14px;
-              color:#555;
-            ">
-              ${escapeHtml(file.name)}
+              <h3>
+                Commande #${escapeHtml(order.id)}
+              </h3>
+
+              <p>
+                <strong>Client :</strong>
+                ${escapeHtml(
+                  order.customer_name
+                )}
+              </p>
+
+              <p>
+                <strong>Téléphone :</strong>
+                ${escapeHtml(
+                  order.phone
+                )}
+              </p>
+
+              <p>
+                <strong>Adresse :</strong>
+                ${escapeHtml(
+                  order.address
+                )}
+              </p>
+
+              <p>
+                <strong>Produits :</strong><br>
+                ${itemsText}
+              </p>
+
+              <p>
+                <strong>Total :</strong>
+                ${Number(order.total || 0)
+                  .toLocaleString("fr-FR")}
+                FCFA
+              </p>
+
+              <p>
+                <strong>Paiement :</strong>
+                ${escapeHtml(
+                  order.payment_method || ""
+                )}
+              </p>
+
+              <p>
+                <strong>Statut :</strong>
+                ${escapeHtml(
+                  order.status || "nouvelle"
+                )}
+              </p>
+
+              <p>
+                <strong>Date :</strong>
+                ${order.created_at
+                  ? new Date(
+                      order.created_at
+                    ).toLocaleString("fr-FR")
+                  : ""}
+              </p>
+
             </div>
           `;
+        }
+      ).join("");
 
-        };
-
-
-      reader.readAsDataURL(file);
-
-    }
-  );
-
-
-  /* =========================
-     UPLOAD SUPABASE
-  ========================= */
-
-  window.uploadSelectedProductPhoto =
-    async function () {
-
-      const file =
-        photoInput.files[0];
-
-      if (!file) {
-        return null;
-      }
-
-
-      if (!accessToken) {
-
-        throw new Error(
-          "Session administrateur absente."
-        );
-      }
-
-
-      if (!file.type.startsWith("image/")) {
-
-        throw new Error(
-          "Le fichier sélectionné n'est pas une image."
-        );
-      }
-
-
-      /* Nom unique */
-
-      const extension =
-        file.name.includes(".")
-          ? file.name
-              .split(".")
-              .pop()
-              .toLowerCase()
-          : "jpg";
-
-
-      const safeName =
-        `product-${Date.now()}-${Math.random()
-          .toString(36)
-          .substring(2, 8)}.${extension}`;
-
-
-      const uploadResponse =
-        await fetch(
-          `${SUPABASE_URL}/storage/v1/object/product-images/${safeName}`,
-          {
-            method: "POST",
-
-            headers: {
-              "apikey":
-                SUPABASE_KEY,
-
-              "Authorization":
-                `Bearer ${accessToken}`,
-
-              "Content-Type":
-                file.type,
-
-              "x-upsert":
-                "false"
-            },
-
-            body: file
-          }
-        );
-
-
-      const uploadText =
-        await uploadResponse.text();
-
-
-      if (!uploadResponse.ok) {
-
-        throw new Error(
-          uploadText ||
-          `Erreur upload image : HTTP ${uploadResponse.status}`
-        );
-      }
-
-
-      return (
-        `${SUPABASE_URL}` +
-        `/storage/v1/object/public/` +
-        `product-images/${safeName}`
-      );
-    };
+  } catch (error)
