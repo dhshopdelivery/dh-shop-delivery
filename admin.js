@@ -1,68 +1,124 @@
 const SUPABASE_URL = "https://ocmvthymdjkrhmdyieim.supabase.co";
 const SUPABASE_KEY = "sb_publishable_OnchBsvLE3RVA-EualXSSA_pfVvFpTW";
 
+/* =========================
+   ELEMENTS
+========================= */
+
 const loginBox = document.getElementById("loginBox");
 const dashboard = document.getElementById("dashboard");
+
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
+
 const loginMessage = document.getElementById("loginMessage");
 
 const productsList = document.getElementById("productsList");
 const addProductBtn = document.getElementById("addProductBtn");
-const productFormCard = document.getElementById("productFormCard");
-const productFormTitle = document.getElementById("productFormTitle");
 
-const productName = document.getElementById("productName");
-const productCategory = document.getElementById("productCategory");
-const productPrice = document.getElementById("productPrice");
-const productStock = document.getElementById("productStock");
-const productImage = document.getElementById("productImage");
-const productBadge = document.getElementById("productBadge");
-const productDescription = document.getElementById("productDescription");
-const productAvailable = document.getElementById("productAvailable");
+const productFormCard =
+  document.getElementById("productFormCard");
 
-const saveProductBtn = document.getElementById("saveProductBtn");
-const cancelProductBtn = document.getElementById("cancelProductBtn");
-const productMessage = document.getElementById("productMessage");
+const productFormTitle =
+  document.getElementById("productFormTitle");
 
-let accessToken = null;
-let editingProductId = null;
+const productName =
+  document.getElementById("productName");
+
+const productCategory =
+  document.getElementById("productCategory");
+
+const productPrice =
+  document.getElementById("productPrice");
+
+const productStock =
+  document.getElementById("productStock");
+
+const productImage =
+  document.getElementById("productImage");
+
+const productBadge =
+  document.getElementById("productBadge");
+
+const productDescription =
+  document.getElementById("productDescription");
+
+const productAvailable =
+  document.getElementById("productAvailable");
+
+const saveProductBtn =
+  document.getElementById("saveProductBtn");
+
+const cancelProductBtn =
+  document.getElementById("cancelProductBtn");
+
+const productMessage =
+  document.getElementById("productMessage");
+
+const ordersList =
+  document.getElementById("ordersList");
+
+const refreshOrdersBtn =
+  document.getElementById("refreshOrdersBtn");
+
+const orderFilter =
+  document.getElementById("orderFilter");
 
 
 /* =========================
-   OUTILS SUPABASE
+   VARIABLES
+========================= */
+
+let accessToken = null;
+
+let editingProductId = null;
+
+let allOrders = [];
+
+
+/* =========================
+   API SUPABASE
 ========================= */
 
 async function api(endpoint, options = {}) {
+
+  const headers = {
+    "apikey": SUPABASE_KEY,
+    "Authorization": `Bearer ${accessToken}`,
+    "Content-Type": "application/json",
+    ...options.headers
+  };
 
   const response = await fetch(
     `${SUPABASE_URL}/rest/v1/${endpoint}`,
     {
       ...options,
-
-      headers: {
-        "apikey": SUPABASE_KEY,
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-        ...options.headers
-      }
+      headers
     }
   );
 
   const text = await response.text();
 
   if (!response.ok) {
+
     throw new Error(
       text || `Erreur HTTP ${response.status}`
     );
+
   }
 
-  if (!text) return null;
+  if (!text) {
+    return null;
+  }
 
   try {
+
     return JSON.parse(text);
+
   } catch {
+
     return text;
+
   }
 }
 
@@ -76,13 +132,17 @@ loginBtn.addEventListener(
   login
 );
 
+
 async function login() {
 
   const email =
-    document.getElementById("email").value.trim();
+    document.getElementById("email")
+      .value
+      .trim();
 
   const password =
-    document.getElementById("password").value;
+    document.getElementById("password")
+      .value;
 
   if (!email || !password) {
 
@@ -94,6 +154,7 @@ async function login() {
 
   loginMessage.textContent =
     "Connexion...";
+
 
   try {
 
@@ -108,14 +169,16 @@ async function login() {
         },
 
         body: JSON.stringify({
-          email: email,
-          password: password
+          email,
+          password
         })
       }
     );
 
+
     const data =
       await response.json();
+
 
     if (!response.ok) {
 
@@ -125,64 +188,40 @@ async function login() {
         data.message ||
         "Connexion impossible."
       );
+
     }
+
 
     accessToken =
       data.access_token;
 
+
     if (!accessToken) {
+
       throw new Error(
-        "Aucun token de connexion reçu."
-      );
-    }
-
-    /*
-      TEST SESSION
-      On vérifie le rôle présent
-      dans le token sans afficher
-      le token lui-même.
-    */
-
-    try {
-
-      const payload =
-        JSON.parse(
-          atob(
-            accessToken.split(".")[1]
-          )
-        );
-
-      console.log(
-        "SESSION SUPABASE :",
-        payload
+        "Aucun jeton de connexion reçu."
       );
 
-      loginMessage.textContent =
-        "Session active — rôle : " +
-        payload.role;
-
-    } catch {
-
-      loginMessage.textContent =
-        "Connexion réussie — session active ✅";
     }
 
-    loginBox.classList.add(
-      "hidden"
-    );
 
-    dashboard.classList.remove(
-      "hidden"
-    );
+    loginBox.classList.add("hidden");
+
+    dashboard.classList.remove("hidden");
+
+    loginMessage.textContent = "";
+
 
     await loadDashboard();
+
 
   } catch (error) {
 
     loginMessage.textContent =
-      "Erreur : " +
-      error.message;
+      "Erreur : " + error.message;
+
   }
+
 }
 
 
@@ -195,23 +234,19 @@ logoutBtn.addEventListener(
   logout
 );
 
+
 function logout() {
 
   accessToken = null;
 
-  dashboard.classList.add(
-    "hidden"
-  );
+  allOrders = [];
 
-  loginBox.classList.remove(
-    "hidden"
-  );
+  dashboard.classList.add("hidden");
 
-  document.getElementById(
-    "password"
-  ).value = "";
+  loginBox.classList.remove("hidden");
 
-  loginMessage.textContent = "";
+  document.getElementById("password").value = "";
+
 }
 
 
@@ -223,25 +258,12 @@ async function loadDashboard() {
 
   try {
 
-    const products =
-      await api(
-        "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
-      );
+    /* PRODUITS */
 
-    console.log(
-      "PRODUITS RECUS :",
-      products
+    const products = await api(
+      "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
     );
 
-    console.log(
-      "NOMBRE DE PRODUITS :",
-      products.length
-    );
-
-
-    /* =====================
-       STATISTIQUES
-    ===================== */
 
     document.getElementById(
       "productCount"
@@ -277,68 +299,33 @@ async function loadDashboard() {
       outProducts.length;
 
 
-    /* =====================
-       AFFICHER LES PRODUITS
-    ===================== */
-
     renderProducts(products);
 
 
-    /* =====================
-       COMMANDES
-    ===================== */
+    /* COMMANDES */
 
-    try {
+    await loadOrders();
 
-      const orders =
-        await api(
-          "orders?select=id"
-        );
-
-      document.getElementById(
-        "orderCount"
-      ).textContent =
-        orders.length;
-
-    } catch (error) {
-
-      document.getElementById(
-        "orderCount"
-      ).textContent =
-        "0";
-
-      console.log(
-        "Commandes non disponibles :",
-        error.message
-      );
-    }
 
   } catch (error) {
 
-    console.error(
-      "ERREUR PRODUITS :",
-      error
-    );
-
     productsList.innerHTML =
       `<p class="error">
-        Erreur lors du chargement des produits :
-        ${escapeHtml(error.message)}
+        Erreur : ${escapeHtml(error.message)}
       </p>`;
+
   }
+
 }
 
 
 /* =========================
-   AFFICHAGE PRODUITS
+   PRODUITS
 ========================= */
 
 function renderProducts(products) {
 
-  if (
-    !products ||
-    products.length === 0
-  ) {
+  if (!products || products.length === 0) {
 
     productsList.innerHTML =
       "<p>Aucun produit trouvé.</p>";
@@ -348,98 +335,118 @@ function renderProducts(products) {
 
 
   productsList.innerHTML =
-    products.map(
-      product => {
+    products.map(product => {
 
-        const availability =
-          product.available &&
-          Number(product.stock) > 0
-            ? "Disponible"
-            : "Indisponible";
-
-
-        const image =
-          product.image_url
-            ? `
-              <img
-                src="${escapeHtml(product.image_url)}"
-                alt="${escapeHtml(product.name)}"
-              >
-            `
-            : "";
+      const availability =
+        product.available &&
+        Number(product.stock) > 0
+          ? "Disponible"
+          : "Indisponible";
 
 
-        return `
-          <div class="admin-product">
+      const statusClass =
+        product.available &&
+        Number(product.stock) > 0
+          ? "available"
+          : "unavailable";
 
-            ${image}
 
-            <div class="admin-product-info">
+      const image =
+        product.image_url
+          ? `
+            <img
+              src="${escapeHtml(product.image_url)}"
+              alt="${escapeHtml(product.name)}"
+              class="product-image"
+            >
+          `
+          : "";
+
+
+      const badge =
+        product.badge
+          ? `
+            <span class="badge">
+              ${escapeHtml(product.badge)}
+            </span>
+          `
+          : "";
+
+
+      return `
+
+        <div class="product">
+
+          ${image}
+
+          <div class="product-top">
+
+            <div>
 
               <h3>
                 ${escapeHtml(product.name)}
               </h3>
 
-              <p>
-                Prix :
-                <strong>
-                  ${Number(product.price)
-                    .toLocaleString("fr-FR")}
-                  FCFA
-                </strong>
-              </p>
-
-              <p>
-                Stock :
-                <strong>
-                  ${product.stock ?? 0}
-                </strong>
-              </p>
-
-              <p>
-                Statut :
-                <strong>
-                  ${availability}
-                </strong>
-              </p>
-
-              ${
-                product.badge
-                  ? `
-                    <p>
-                      Badge :
-                      ${escapeHtml(product.badge)}
-                    </p>
-                  `
-                  : ""
-              }
-
-            </div>
-
-
-            <div class="admin-product-actions">
-
-              <button
-                type="button"
-                onclick="editProduct(${product.id})"
-              >
-                Modifier
-              </button>
-
-
-              <button
-                type="button"
-                onclick="deleteProduct(${product.id})"
-              >
-                Supprimer
-              </button>
+              ${badge}
 
             </div>
 
           </div>
-        `;
-      }
-    ).join("");
+
+
+          <p>
+            Prix :
+            <strong>
+              ${Number(product.price)
+                .toLocaleString("fr-FR")}
+              FCFA
+            </strong>
+          </p>
+
+
+          <p>
+            Stock :
+            <strong>
+              ${product.stock ?? 0}
+            </strong>
+          </p>
+
+
+          <p>
+            Statut :
+            <strong class="${statusClass}">
+              ${availability}
+            </strong>
+          </p>
+
+
+          <div>
+
+            <button
+              type="button"
+              class="secondary"
+              onclick="editProduct(${product.id})"
+            >
+              Modifier
+            </button>
+
+
+            <button
+              type="button"
+              class="danger"
+              onclick="deleteProduct(${product.id})"
+            >
+              Supprimer
+            </button>
+
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
+
 }
 
 
@@ -451,6 +458,7 @@ addProductBtn.addEventListener(
   "click",
   openAddForm
 );
+
 
 function openAddForm() {
 
@@ -466,11 +474,12 @@ function openAddForm() {
   );
 
   productMessage.textContent = "";
+
 }
 
 
 /* =========================
-   MODIFICATION PRODUIT
+   MODIFIER PRODUIT
 ========================= */
 
 async function editProduct(id) {
@@ -499,6 +508,7 @@ async function editProduct(id) {
     const product =
       products[0];
 
+
     editingProductId =
       id;
 
@@ -520,7 +530,7 @@ async function editProduct(id) {
 
 
     productStock.value =
-      product.stock || "";
+      product.stock ?? "";
 
 
     productImage.value =
@@ -547,24 +557,27 @@ async function editProduct(id) {
 
     productMessage.textContent = "";
 
+
   } catch (error) {
 
     alert(
-      "Erreur : " +
-      error.message
+      "Erreur : " + error.message
     );
+
   }
+
 }
 
 
 /* =========================
-   ENREGISTREMENT
+   ENREGISTRER PRODUIT
 ========================= */
 
 saveProductBtn.addEventListener(
   "click",
   saveProduct
 );
+
 
 async function saveProduct() {
 
@@ -593,6 +606,7 @@ async function saveProduct() {
 
     available:
       productAvailable.value === "true"
+
   };
 
 
@@ -606,7 +620,7 @@ async function saveProduct() {
 
 
   if (
-    !body.price ||
+    !Number.isFinite(body.price) ||
     body.price < 0
   ) {
 
@@ -618,8 +632,8 @@ async function saveProduct() {
 
 
   if (
-    body.stock < 0 ||
-    Number.isNaN(body.stock)
+    !Number.isFinite(body.stock) ||
+    body.stock < 0
   ) {
 
     productMessage.textContent =
@@ -629,8 +643,7 @@ async function saveProduct() {
   }
 
 
-  saveProductBtn.disabled =
-    true;
+  saveProductBtn.disabled = true;
 
 
   try {
@@ -656,6 +669,7 @@ async function saveProduct() {
       productMessage.textContent =
         "Produit modifié avec succès ✅";
 
+
     } else {
 
       await api(
@@ -676,6 +690,7 @@ async function saveProduct() {
 
       productMessage.textContent =
         "Produit ajouté avec succès ✅";
+
     }
 
 
@@ -683,28 +698,29 @@ async function saveProduct() {
 
 
     setTimeout(
-      () => {
-        closeProductForm();
-      },
+      closeProductForm,
       800
     );
+
 
   } catch (error) {
 
     productMessage.textContent =
-      "Erreur : " +
-      error.message;
+      "Erreur : " + error.message;
+
 
   } finally {
 
     saveProductBtn.disabled =
       false;
+
   }
+
 }
 
 
 /* =========================
-   SUPPRESSION
+   SUPPRIMER PRODUIT
 ========================= */
 
 async function deleteProduct(id) {
@@ -714,7 +730,6 @@ async function deleteProduct(id) {
       "Voulez-vous vraiment supprimer ce produit ?"
     )
   ) {
-
     return;
   }
 
@@ -731,24 +746,522 @@ async function deleteProduct(id) {
 
     await loadDashboard();
 
+
   } catch (error) {
 
     alert(
-      "Erreur : " +
-      error.message
+      "Erreur : " + error.message
     );
+
   }
+
 }
 
 
 /* =========================
-   FERMER FORMULAIRE
+   COMMANDES
+========================= */
+
+async function loadOrders() {
+
+  try {
+
+    const orders =
+      await api(
+        "orders?select=*&order=created_at.desc"
+      );
+
+
+    allOrders =
+      Array.isArray(orders)
+        ? orders
+        : [];
+
+
+    document.getElementById(
+      "orderCount"
+    ).textContent =
+      allOrders.length;
+
+
+    renderOrders();
+
+
+  } catch (error) {
+
+    document.getElementById(
+      "orderCount"
+    ).textContent = "0";
+
+
+    ordersList.innerHTML =
+      `
+        <p class="error">
+          Impossible de charger les commandes.
+        </p>
+
+        <p class="muted">
+          ${escapeHtml(error.message)}
+        </p>
+      `;
+
+  }
+
+}
+
+
+/* =========================
+   AFFICHER COMMANDES
+========================= */
+
+function renderOrders() {
+
+  if (!allOrders.length) {
+
+    ordersList.innerHTML =
+      `
+        <p>
+          Aucune commande pour le moment.
+        </p>
+      `;
+
+    return;
+  }
+
+
+  const filter =
+    orderFilter.value;
+
+
+  let orders =
+    allOrders;
+
+
+  if (filter !== "all") {
+
+    orders =
+      allOrders.filter(
+        order =>
+          normalizeStatus(order.status) ===
+          filter
+      );
+
+  }
+
+
+  if (!orders.length) {
+
+    ordersList.innerHTML =
+      `
+        <p>
+          Aucune commande dans cette catégorie.
+        </p>
+      `;
+
+    return;
+  }
+
+
+  ordersList.innerHTML =
+    orders.map(
+      order => renderOrder(order)
+    ).join("");
+
+}
+
+
+/* =========================
+   UNE COMMANDE
+========================= */
+
+function renderOrder(order) {
+
+  const status =
+    normalizeStatus(order.status);
+
+
+  const statusLabel =
+    getStatusLabel(status);
+
+
+  const date =
+    formatDate(order.created_at);
+
+
+  const itemsHtml =
+    renderOrderItems(order.items);
+
+
+  return `
+
+    <div class="order">
+
+      <div class="order-header">
+
+        <div>
+
+          <div class="order-number">
+            🛒 Commande #${order.id}
+          </div>
+
+          <div class="order-date">
+            ${date}
+          </div>
+
+        </div>
+
+        <strong
+          class="${getStatusClass(status)}"
+        >
+          ${statusLabel}
+        </strong>
+
+      </div>
+
+
+      <div class="order-info">
+
+        <p>
+          👤
+          <strong>Client :</strong>
+          ${escapeHtml(
+            order.customer_name || "Non renseigné"
+          )}
+        </p>
+
+
+        <p>
+          📞
+          <strong>Téléphone :</strong>
+          ${escapeHtml(
+            order.phone || "Non renseigné"
+          )}
+        </p>
+
+
+        <p>
+          📍
+          <strong>Adresse :</strong>
+          ${escapeHtml(
+            order.address || "Non renseignée"
+          )}
+        </p>
+
+
+        <p>
+          💳
+          <strong>Paiement :</strong>
+          ${escapeHtml(
+            order.payment_method ||
+            "À la livraison"
+          )}
+        </p>
+
+      </div>
+
+
+      <div class="order-items">
+
+        <strong>
+          📦 Produits commandés
+        </strong>
+
+        ${itemsHtml}
+
+      </div>
+
+
+      <div class="order-total">
+
+        Total :
+        ${Number(order.total || 0)
+          .toLocaleString("fr-FR")}
+        FCFA
+
+      </div>
+
+
+      <div class="status-row">
+
+        <label>
+          <strong>
+            Statut :
+          </strong>
+        </label>
+
+
+        <select
+          class="status-select"
+          onchange="changeOrderStatus(${order.id}, this.value)"
+        >
+
+          <option
+            value="nouvelle"
+            ${status === "nouvelle" ? "selected" : ""}
+          >
+            🟠 Nouvelle
+          </option>
+
+          <option
+            value="preparation"
+            ${status === "preparation" ? "selected" : ""}
+          >
+            🟡 En préparation
+          </option>
+
+          <option
+            value="livraison"
+            ${status === "livraison" ? "selected" : ""}
+          >
+            🔵 En livraison
+          </option>
+
+          <option
+            value="livree"
+            ${status === "livree" ? "selected" : ""}
+          >
+            🟢 Livrée
+          </option>
+
+          <option
+            value="annulee"
+            ${status === "annulee" ? "selected" : ""}
+          >
+            🔴 Annulée
+          </option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+  `;
+
+}
+
+
+/* =========================
+   PRODUITS D'UNE COMMANDE
+========================= */
+
+function renderOrderItems(items) {
+
+  if (!items) {
+
+    return `
+      <p>
+        Aucun détail disponible.
+      </p>
+    `;
+
+  }
+
+
+  let list = [];
+
+
+  if (Array.isArray(items)) {
+
+    list = items;
+
+  } else if (
+    typeof items === "string"
+  ) {
+
+    try {
+
+      const parsed =
+        JSON.parse(items);
+
+      if (Array.isArray(parsed)) {
+        list = parsed;
+      }
+
+    } catch {
+
+      list = [];
+
+    }
+
+  }
+
+
+  if (!list.length) {
+
+    return `
+      <p>
+        Détails des produits indisponibles.
+      </p>
+    `;
+
+  }
+
+
+  return list.map(item => {
+
+    const name =
+      item.name ||
+      item.product_name ||
+      "Produit";
+
+
+    const quantity =
+      Number(
+        item.quantity ||
+        item.qty ||
+        1
+      );
+
+
+    const price =
+      Number(
+        item.price ||
+        item.unit_price ||
+        0
+      );
+
+
+    return `
+
+      <div class="order-item">
+
+        <strong>
+          ${escapeHtml(name)}
+        </strong>
+
+        <br>
+
+        Quantité :
+        ${quantity}
+
+        ×
+
+        ${price.toLocaleString("fr-FR")}
+        FCFA
+
+      </div>
+
+    `;
+
+  }).join("");
+
+}
+
+
+/* =========================
+   CHANGER STATUT COMMANDE
+========================= */
+
+async function changeOrderStatus(
+  id,
+  newStatus
+) {
+
+  try {
+
+    await api(
+      `orders?id=eq.${id}`,
+      {
+        method: "PATCH",
+
+        headers: {
+          "Prefer":
+            "return=minimal"
+        },
+
+        body:
+          JSON.stringify({
+            status: newStatus
+          })
+      }
+    );
+
+
+    const order =
+      allOrders.find(
+        item =>
+          Number(item.id) === Number(id)
+      );
+
+
+    if (order) {
+
+      order.status =
+        newStatus;
+
+    }
+
+
+    renderOrders();
+
+
+  } catch (error) {
+
+    alert(
+      "Impossible de modifier le statut : " +
+      error.message
+    );
+
+    renderOrders();
+
+  }
+
+}
+
+
+/* =========================
+   FILTRE COMMANDES
+========================= */
+
+orderFilter.addEventListener(
+  "change",
+  renderOrders
+);
+
+
+/* =========================
+   ACTUALISER COMMANDES
+========================= */
+
+refreshOrdersBtn.addEventListener(
+  "click",
+  async () => {
+
+    refreshOrdersBtn.disabled =
+      true;
+
+    refreshOrdersBtn.textContent =
+      "⏳ Chargement...";
+
+
+    try {
+
+      await loadOrders();
+
+    } finally {
+
+      refreshOrdersBtn.disabled =
+        false;
+
+      refreshOrdersBtn.textContent =
+        "🔄 Actualiser";
+
+    }
+
+  }
+);
+
+
+/* =========================
+   FORMULAIRE
 ========================= */
 
 cancelProductBtn.addEventListener(
   "click",
   closeProductForm
 );
+
 
 function closeProductForm() {
 
@@ -761,12 +1274,9 @@ function closeProductForm() {
   editingProductId = null;
 
   clearForm();
+
 }
 
-
-/* =========================
-   VIDER FORMULAIRE
-========================= */
 
 function clearForm() {
 
@@ -786,34 +1296,74 @@ function clearForm() {
 
   productAvailable.value =
     "true";
+
 }
 
 
 /* =========================
-   SECURITE AFFICHAGE
+   STATUTS
 ========================= */
 
-function escapeHtml(value) {
+function normalizeStatus(status) {
 
-  return String(value ?? "")
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
+  const value =
+    String(status || "")
+      .toLowerCase()
+      .trim();
+
+
+  if (
+    value === "en préparation" ||
+    value === "en_preparation" ||
+    value === "en-preparation" ||
+    value === "preparation"
+  ) {
+    return "preparation";
+  }
+
+
+  if (
+    value === "en livraison" ||
+    value === "en_livraison" ||
+    value === "en-livraison" ||
+    value === "livraison"
+  ) {
+    return "livraison";
+  }
+
+
+  if (
+    value === "livrée" ||
+    value === "livree"
+  ) {
+    return "livree";
+  }
+
+
+  if (
+    value === "annulée" ||
+    value === "annulee"
+  ) {
+    return "annulee";
+  }
+
+
+  return "nouvelle";
+
 }
+
+
+function getStatusLabel(status) {
+
+  switch (status) {
+
+    case "preparation":
+      return "🟡 En préparation";
+
+    case "livraison":
+      return "🔵 En livraison";
+
+    case "livree":
+      return "🟢 Livrée";
+
+    case "
