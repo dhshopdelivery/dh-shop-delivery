@@ -28,23 +28,71 @@ const productMessage = document.getElementById("productMessage");
 let accessToken = null;
 let editingProductId = null;
 
+loginBtn.addEventListener("click", login);
+logoutBtn.addEventListener("click", logout);
+addProductBtn.addEventListener("click", openAddForm);
+cancelProductBtn.addEventListener("click", closeProductForm);
+saveProductBtn.addEventListener("click", saveProduct);
 
-/* =========================
-   OUTILS SUPABASE
-========================= */
+async function login() {
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
 
-async function api(endpoint, options = {}) {
+  if (!email || !password) {
+    loginMessage.textContent = "Veuillez remplir les deux champs.";
+    return;
+  }
 
+  loginMessage.textContent = "Connexion...";
+
+  try {
+    const response = await fetch(
+      `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": SUPABASE_KEY
+        },
+        body: JSON.stringify({ email, password })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error_description || "Connexion impossible");
+    }
+
+    accessToken = data.access_token;
+
+    loginBox.classList.add("hidden");
+    dashboard.classList.remove("hidden");
+
+    await loadDashboard();
+
+  } catch (error) {
+    loginMessage.textContent = "Erreur : " + error.message;
+  }
+}
+
+function logout() {
+  accessToken = null;
+  dashboard.classList.add("hidden");
+  loginBox.classList.remove("hidden");
+  document.getElementById("password").value = "";
+}
+
+async function api(path, options = {}) {
   const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/${endpoint}`,
+    `${SUPABASE_URL}/rest/v1/${path}`,
     {
       ...options,
-
       headers: {
+        "Content-Type": "application/json",
         "apikey": SUPABASE_KEY,
         "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-        ...options.headers
+        ...(options.headers || {})
       }
     }
   );
@@ -52,675 +100,216 @@ async function api(endpoint, options = {}) {
   const text = await response.text();
 
   if (!response.ok) {
-    throw new Error(
-      text || `Erreur HTTP ${response.status}`
-    );
+    throw new Error(text || "Erreur Supabase");
   }
 
-  if (!text) return null;
-
-  try {
-    return JSON.parse(text);
-  } catch {
-    return text;
-  }
+  return text ? JSON.parse(text) : null;
 }
-
-
-/* =========================
-   CONNEXION
-========================= */
-
-loginBtn.addEventListener(
-  "click",
-  login
-);
-
-async function login() {
-
-  const email =
-    document.getElementById("email").value.trim();
-
-  const password =
-    document.getElementById("password").value;
-
-  if (!email || !password) {
-
-    loginMessage.textContent =
-      "Veuillez remplir les deux champs.";
-
-    return;
-  }
-
-  loginMessage.textContent =
-    "Connexion...";
-
-  try {
-
-    const response = await fetch(
-      `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
-      {
-        method: "POST",
-
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-          email: email,
-          password: password
-        })
-      }
-    );
-
-    const data =
-      await response.json();
-
-    if (!response.ok) {
-
-      throw new Error(
-        data.error_description ||
-        data.msg ||
-        data.message ||
-        "Connexion impossible."
-      );
-    }
-
-    accessToken =
-      data.access_token;
-
-    if (!accessToken) {
-      throw new Error(
-        "Aucun token de connexion reçu."
-      );
-    }
-
-    /*
-      TEST SESSION
-      On vérifie le rôle présent
-      dans le token sans afficher
-      le token lui-même.
-    */
-
-    try {
-
-      const payload =
-        JSON.parse(
-          atob(
-            accessToken.split(".")[1]
-          )
-        );
-
-      console.log(
-        "SESSION SUPABASE :",
-        payload
-      );
-
-      loginMessage.textContent =
-        "Session active — rôle : " +
-        payload.role;
-
-    } catch {
-
-      loginMessage.textContent =
-        "Connexion réussie — session active ✅";
-    }
-
-    loginBox.classList.add(
-      "hidden"
-    );
-
-    dashboard.classList.remove(
-      "hidden"
-    );
-
-    await loadDashboard();
-
-  } catch (error) {
-
-    loginMessage.textContent =
-      "Erreur : " +
-      error.message;
-  }
-}
-
-
-/* =========================
-   DECONNEXION
-========================= */
-
-logoutBtn.addEventListener(
-  "click",
-  logout
-);
-
-function logout() {
-
-  accessToken = null;
-
-  dashboard.classList.add(
-    "hidden"
-  );
-
-  loginBox.classList.remove(
-    "hidden"
-  );
-
-  document.getElementById(
-    "password"
-  ).value = "";
-
-  loginMessage.textContent = "";
-}
-
-
-/* =========================
-   TABLEAU DE BORD
-========================= */
 
 async function loadDashboard() {
-
   try {
-
-    const products =
-      await api(
-        "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
-      );
-
-    console.log(
-      "PRODUITS RECUS :",
-      products
+    const products = await api(
+      "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
     );
 
-    console.log(
-      "NOMBRE DE PRODUITS :",
-      products.length
-    );
+    const orders = await api("orders?select=id");
 
+    document.getElementById("productCount").textContent = products.length;
+    document.getElementById("orderCount").textContent = orders.length;
 
-    /* =====================
-       STATISTIQUES
-    ===================== */
+    document.getElementById("availableCount").textContent =
+      products.filter(p => p.available).length;
 
-    document.getElementById(
-      "productCount"
-    ).textContent =
-      products.length;
-
-
-    const availableProducts =
-      products.filter(
-        product =>
-          product.available === true &&
-          Number(product.stock) > 0
-      );
-
-
-    const outProducts =
-      products.filter(
-        product =>
-          product.available === false ||
-          Number(product.stock) <= 0
-      );
-
-
-    document.getElementById(
-      "availableCount"
-    ).textContent =
-      availableProducts.length;
-
-
-    document.getElementById(
-      "outCount"
-    ).textContent =
-      outProducts.length;
-
-
-    /* =====================
-       AFFICHER LES PRODUITS
-    ===================== */
+    document.getElementById("outCount").textContent =
+      products.filter(p => !p.available).length;
 
     renderProducts(products);
 
-
-    /* =====================
-       COMMANDES
-    ===================== */
-
-    try {
-
-      const orders =
-        await api(
-          "orders?select=id"
-        );
-
-      document.getElementById(
-        "orderCount"
-      ).textContent =
-        orders.length;
-
-    } catch (error) {
-
-      document.getElementById(
-        "orderCount"
-      ).textContent =
-        "0";
-
-      console.log(
-        "Commandes non disponibles :",
-        error.message
-      );
-    }
-
   } catch (error) {
-
-    console.error(
-      "ERREUR PRODUITS :",
-      error
-    );
-
     productsList.innerHTML =
-      `<p class="error">
-        Erreur lors du chargement des produits :
-        ${escapeHtml(error.message)}
-      </p>`;
+      `<p>Erreur : ${escapeHtml(error.message)}</p>`;
   }
 }
 
-
-/* =========================
-   AFFICHAGE PRODUITS
-========================= */
-
 function renderProducts(products) {
-
-  if (
-    !products ||
-    products.length === 0
-  ) {
-
-    productsList.innerHTML =
-      "<p>Aucun produit trouvé.</p>";
-
+  if (!products.length) {
+    productsList.innerHTML = "<p>Aucun produit.</p>";
     return;
   }
 
+  productsList.innerHTML = products.map(product => `
+    <div class="product">
 
-  productsList.innerHTML =
-    products.map(
-      product => {
+      <div class="product-top">
 
-        const availability =
-          product.available &&
-          Number(product.stock) > 0
-            ? "Disponible"
-            : "Indisponible";
+        <div>
+          <h3>${escapeHtml(product.name)}</h3>
 
+          <p>
+            <strong>${Number(product.price).toLocaleString("fr-FR")} FCFA</strong>
+          </p>
 
-        const image =
-          product.image_url
-            ? `
-              <img
-                src="${escapeHtml(product.image_url)}"
-                alt="${escapeHtml(product.name)}"
-              >
-            `
-            : "";
+          <p>Stock : ${product.stock}</p>
 
+          ${
+            product.available
+            ? '<span class="available">● Disponible</span>'
+            : '<span class="unavailable">● Rupture de stock</span>'
+          }
 
-        return `
-          <div class="admin-product">
+          ${
+            product.badge
+            ? `<p><span class="badge">${escapeHtml(product.badge)}</span></p>`
+            : ""
+          }
+        </div>
 
-            ${image}
+        <div>
+          <button class="secondary"
+            onclick="editProduct(${product.id})">
+            ✏️ Modifier
+          </button>
 
-            <div class="admin-product-info">
+          <button class="danger"
+            onclick="deleteProduct(${product.id})">
+            🗑️ Supprimer
+          </button>
+        </div>
 
-              <h3>
-                ${escapeHtml(product.name)}
-              </h3>
+      </div>
 
-              <p>
-                Prix :
-                <strong>
-                  ${Number(product.price)
-                    .toLocaleString("fr-FR")}
-                  FCFA
-                </strong>
-              </p>
-
-              <p>
-                Stock :
-                <strong>
-                  ${product.stock ?? 0}
-                </strong>
-              </p>
-
-              <p>
-                Statut :
-                <strong>
-                  ${availability}
-                </strong>
-              </p>
-
-              ${
-                product.badge
-                  ? `
-                    <p>
-                      Badge :
-                      ${escapeHtml(product.badge)}
-                    </p>
-                  `
-                  : ""
-              }
-
-            </div>
-
-
-            <div class="admin-product-actions">
-
-              <button
-                type="button"
-                onclick="editProduct(${product.id})"
-              >
-                Modifier
-              </button>
-
-
-              <button
-                type="button"
-                onclick="deleteProduct(${product.id})"
-              >
-                Supprimer
-              </button>
-
-            </div>
-
-          </div>
-        `;
-      }
-    ).join("");
+    </div>
+  `).join("");
 }
 
-
-/* =========================
-   AJOUT PRODUIT
-========================= */
-
-addProductBtn.addEventListener(
-  "click",
-  openAddForm
-);
-
 function openAddForm() {
-
   editingProductId = null;
-
-  productFormTitle.textContent =
-    "Ajouter un produit";
+  productFormTitle.textContent = "Ajouter un produit";
 
   clearForm();
 
-  productFormCard.classList.remove(
-    "hidden"
-  );
-
-  productMessage.textContent = "";
+  productFormCard.classList.remove("hidden");
+  window.scrollTo({
+    top: productFormCard.offsetTop,
+    behavior: "smooth"
+  });
 }
-
-
-/* =========================
-   MODIFICATION PRODUIT
-========================= */
 
 async function editProduct(id) {
-
   try {
-
-    const products =
-      await api(
-        `products?id=eq.${id}&select=*`
-      );
-
-
-    if (
-      !products ||
-      products.length === 0
-    ) {
-
-      alert(
-        "Produit introuvable."
-      );
-
-      return;
-    }
-
-
-    const product =
-      products[0];
-
-    editingProductId =
-      id;
-
-
-    productFormTitle.textContent =
-      "Modifier le produit";
-
-
-    productName.value =
-      product.name || "";
-
-
-    productCategory.value =
-      product.category || "";
-
-
-    productPrice.value =
-      product.price || "";
-
-
-    productStock.value =
-      product.stock || "";
-
-
-    productImage.value =
-      product.image_url || "";
-
-
-    productBadge.value =
-      product.badge || "";
-
-
-    productDescription.value =
-      product.description || "";
-
-
-    productAvailable.value =
-      product.available
-        ? "true"
-        : "false";
-
-
-    productFormCard.classList.remove(
-      "hidden"
+    const products = await api(
+      `products?id=eq.${id}&select=*`
     );
 
-    productMessage.textContent = "";
+    if (!products.length) return;
+
+    const p = products[0];
+
+    editingProductId = id;
+    productFormTitle.textContent = "Modifier le produit";
+
+    productName.value = p.name || "";
+    productCategory.value = p.category || "";
+    productPrice.value = p.price || "";
+    productStock.value = p.stock || "";
+    productImage.value = p.image_url || "";
+    productBadge.value = p.badge || "";
+    productDescription.value = p.description || "";
+    productAvailable.value = String(p.available);
+
+    productFormCard.classList.remove("hidden");
+
+    window.scrollTo({
+      top: productFormCard.offsetTop,
+      behavior: "smooth"
+    });
 
   } catch (error) {
-
-    alert(
-      "Erreur : " +
-      error.message
-    );
+    alert("Erreur : " + error.message);
   }
 }
 
-
-/* =========================
-   ENREGISTREMENT
-========================= */
-
-saveProductBtn.addEventListener(
-  "click",
-  saveProduct
-);
-
 async function saveProduct() {
+  const name = productName.value.trim();
+  const category = productCategory.value.trim();
+  const price = Number(productPrice.value);
+  const stock = Number(productStock.value);
+  const image_url = productImage.value.trim();
+  const badge = productBadge.value.trim();
+  const description = productDescription.value.trim();
+  const available = productAvailable.value === "true";
 
-  const body = {
-
-    name:
-      productName.value.trim(),
-
-    category:
-      productCategory.value.trim(),
-
-    price:
-      Number(productPrice.value),
-
-    stock:
-      Number(productStock.value),
-
-    image_url:
-      productImage.value.trim(),
-
-    badge:
-      productBadge.value.trim(),
-
-    description:
-      productDescription.value.trim(),
-
-    available:
-      productAvailable.value === "true"
-  };
-
-
-  if (!body.name) {
-
+  if (!name || !category || !price) {
     productMessage.textContent =
-      "Veuillez entrer le nom du produit.";
-
+      "Nom, catégorie et prix sont obligatoires.";
     return;
   }
 
-
-  if (
-    !body.price ||
-    body.price < 0
-  ) {
-
-    productMessage.textContent =
-      "Veuillez entrer un prix valide.";
-
-    return;
-  }
-
-
-  if (
-    body.stock < 0 ||
-    Number.isNaN(body.stock)
-  ) {
-
-    productMessage.textContent =
-      "Veuillez entrer un stock valide.";
-
-    return;
-  }
-
-
-  saveProductBtn.disabled =
-    true;
-
+  saveProductBtn.disabled = true;
+  productMessage.textContent = "Enregistrement...";
 
   try {
+    const body = {
+      name,
+      category,
+      price,
+      stock,
+      image_url,
+      badge,
+      description,
+      available
+    };
 
     if (editingProductId) {
-
       await api(
         `products?id=eq.${editingProductId}`,
         {
           method: "PATCH",
-
           headers: {
-            "Prefer":
-              "return=minimal"
+            "Prefer": "return=minimal"
           },
-
-          body:
-            JSON.stringify(body)
+          body: JSON.stringify(body)
         }
       );
 
-
-      productMessage.textContent =
-        "Produit modifié avec succès ✅";
+      productMessage.textContent = "Produit modifié avec succès ✅";
 
     } else {
-
       await api(
         "products",
         {
           method: "POST",
-
           headers: {
-            "Prefer":
-              "return=minimal"
+            "Prefer": "return=minimal"
           },
-
-          body:
-            JSON.stringify(body)
+          body: JSON.stringify(body)
         }
       );
 
-
-      productMessage.textContent =
-        "Produit ajouté avec succès ✅";
+      productMessage.textContent = "Produit ajouté avec succès ✅";
     }
-
 
     await loadDashboard();
 
-
-    setTimeout(
-      () => {
-        closeProductForm();
-      },
-      800
-    );
+    setTimeout(() => {
+      closeProductForm();
+    }, 800);
 
   } catch (error) {
-
     productMessage.textContent =
-      "Erreur : " +
-      error.message;
+      "Erreur : " + error.message;
 
   } finally {
-
-    saveProductBtn.disabled =
-      false;
+    saveProductBtn.disabled = false;
   }
 }
 
-
-/* =========================
-   SUPPRESSION
-========================= */
-
 async function deleteProduct(id) {
-
-  if (
-    !confirm(
-      "Voulez-vous vraiment supprimer ce produit ?"
-    )
-  ) {
-
+  if (!confirm("Voulez-vous vraiment supprimer ce produit ?")) {
     return;
   }
 
-
   try {
-
     await api(
       `products?id=eq.${id}`,
       {
@@ -728,92 +317,36 @@ async function deleteProduct(id) {
       }
     );
 
-
     await loadDashboard();
 
   } catch (error) {
-
-    alert(
-      "Erreur : " +
-      error.message
-    );
+    alert("Erreur : " + error.message);
   }
 }
 
-
-/* =========================
-   FERMER FORMULAIRE
-========================= */
-
-cancelProductBtn.addEventListener(
-  "click",
-  closeProductForm
-);
-
 function closeProductForm() {
-
-  productFormCard.classList.add(
-    "hidden"
-  );
-
+  productFormCard.classList.add("hidden");
   productMessage.textContent = "";
-
   editingProductId = null;
-
   clearForm();
 }
 
-
-/* =========================
-   VIDER FORMULAIRE
-========================= */
-
 function clearForm() {
-
   productName.value = "";
-
   productCategory.value = "";
-
   productPrice.value = "";
-
   productStock.value = "";
-
   productImage.value = "";
-
   productBadge.value = "";
-
   productDescription.value = "";
-
-  productAvailable.value =
-    "true";
+  productAvailable.value = "true";
 }
-
-
-/* =========================
-   SECURITE AFFICHAGE
-========================= */
 
 function escapeHtml(value) {
-
   return String(value ?? "")
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
-}
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+   }
