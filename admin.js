@@ -21,9 +21,16 @@ const productBadge = document.getElementById("productBadge");
 const productDescription = document.getElementById("productDescription");
 const productAvailable = document.getElementById("productAvailable");
 
+const productImageFile = document.getElementById("productImageFile");
+const productImagePreview = document.getElementById("productImagePreview");
+
 const saveProductBtn = document.getElementById("saveProductBtn");
 const cancelProductBtn = document.getElementById("cancelProductBtn");
 const productMessage = document.getElementById("productMessage");
+
+const refreshOrdersBtn = document.getElementById("refreshOrdersBtn");
+const orderStatusFilter = document.getElementById("orderStatusFilter");
+const ordersList = document.getElementById("ordersList");
 
 let accessToken = null;
 let editingProductId = null;
@@ -131,17 +138,11 @@ async function login() {
       data.access_token;
 
     if (!accessToken) {
+
       throw new Error(
         "Aucun token de connexion reçu."
       );
     }
-
-    /*
-      TEST SESSION
-      On vérifie le rôle présent
-      dans le token sans afficher
-      le token lui-même.
-    */
 
     try {
 
@@ -239,10 +240,6 @@ async function loadDashboard() {
     );
 
 
-    /* =====================
-       STATISTIQUES
-    ===================== */
-
     document.getElementById(
       "productCount"
     ).textContent =
@@ -277,16 +274,8 @@ async function loadDashboard() {
       outProducts.length;
 
 
-    /* =====================
-       AFFICHER LES PRODUITS
-    ===================== */
-
     renderProducts(products);
 
-
-    /* =====================
-       COMMANDES
-    ===================== */
 
     try {
 
@@ -312,6 +301,8 @@ async function loadDashboard() {
         error.message
       );
     }
+
+    await loadOrders();
 
   } catch (error) {
 
@@ -470,6 +461,165 @@ function openAddForm() {
 
 
 /* =========================
+   APERCU PHOTO
+========================= */
+
+productImageFile.addEventListener(
+  "change",
+  function () {
+
+    const file =
+      this.files[0];
+
+    if (!file) {
+
+      productImagePreview.style.display =
+        "none";
+
+      return;
+    }
+
+
+    if (!file.type.startsWith("image/")) {
+
+      alert(
+        "Veuillez choisir une image."
+      );
+
+      this.value = "";
+
+      productImagePreview.style.display =
+        "none";
+
+      return;
+    }
+
+
+    const reader =
+      new FileReader();
+
+
+    reader.onload =
+      function (event) {
+
+        productImagePreview.src =
+          event.target.result;
+
+        productImagePreview.style.display =
+          "block";
+      };
+
+
+    reader.readAsDataURL(file);
+  }
+);
+
+
+/* =========================
+   ENVOI PHOTO SUPABASE
+========================= */
+
+async function uploadProductImage(file) {
+
+  if (!file) {
+    return null;
+  }
+
+
+  if (!file.type.startsWith("image/")) {
+
+    throw new Error(
+      "Le fichier choisi n'est pas une image."
+    );
+  }
+
+
+  const extension =
+    getFileExtension(file);
+
+
+  const fileName =
+    `product-${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2, 8)}.${extension}`;
+
+
+  const response =
+    await fetch(
+      `${SUPABASE_URL}/storage/v1/object/product-images/${fileName}`,
+      {
+        method: "POST",
+
+        headers: {
+          "Authorization":
+            `Bearer ${accessToken}`,
+
+          "apikey":
+            SUPABASE_KEY,
+
+          "Content-Type":
+            file.type,
+
+          "x-upsert":
+            "false"
+        },
+
+        body: file
+      }
+    );
+
+
+  const text =
+    await response.text();
+
+
+  if (!response.ok) {
+
+    throw new Error(
+      text ||
+      `Erreur upload image HTTP ${response.status}`
+    );
+  }
+
+
+  return `${SUPABASE_URL}/storage/v1/object/public/product-images/${fileName}`;
+}
+
+
+/* =========================
+   EXTENSION PHOTO
+========================= */
+
+function getFileExtension(file) {
+
+  const parts =
+    file.name.split(".");
+
+  if (parts.length > 1) {
+
+    return parts[
+      parts.length - 1
+    ].toLowerCase();
+  }
+
+
+  if (file.type === "image/png") {
+    return "png";
+  }
+
+  if (file.type === "image/webp") {
+    return "webp";
+  }
+
+  if (file.type === "image/gif") {
+    return "gif";
+  }
+
+  return "jpg";
+}
+
+
+/* =========================
    MODIFICATION PRODUIT
 ========================= */
 
@@ -539,6 +689,28 @@ async function editProduct(id) {
       product.available
         ? "true"
         : "false";
+
+
+    /* Afficher ancienne photo */
+
+    if (product.image_url) {
+
+      productImagePreview.src =
+        product.image_url;
+
+      productImagePreview.style.display =
+        "block";
+
+    } else {
+
+      productImagePreview.style.display =
+        "none";
+    }
+
+
+    /* Réinitialiser sélection */
+
+    productImageFile.value = "";
 
 
     productFormCard.classList.remove(
@@ -633,7 +805,40 @@ async function saveProduct() {
     true;
 
 
+  productMessage.textContent =
+    "Enregistrement en cours...";
+
+
   try {
+
+    /* =====================
+       UPLOAD PHOTO
+    ===================== */
+
+    const selectedFile =
+      productImageFile.files[0];
+
+
+    if (selectedFile) {
+
+      productMessage.textContent =
+        "Envoi de la photo...";
+
+
+      const imageUrl =
+        await uploadProductImage(
+          selectedFile
+        );
+
+
+      body.image_url =
+        imageUrl;
+    }
+
+
+    /* =====================
+       SAUVEGARDE PRODUIT
+    ===================== */
 
     if (editingProductId) {
 
@@ -690,6 +895,11 @@ async function saveProduct() {
     );
 
   } catch (error) {
+
+    console.error(
+      "ERREUR ENREGISTREMENT :",
+      error
+    );
 
     productMessage.textContent =
       "Erreur : " +
@@ -786,34 +996,191 @@ function clearForm() {
 
   productAvailable.value =
     "true";
+
+
+  productImageFile.value = "";
+
+  productImagePreview.src = "";
+
+  productImagePreview.style.display =
+    "none";
 }
 
 
 /* =========================
-   SECURITE AFFICHAGE
+   COMMANDES
 ========================= */
 
-function escapeHtml(value) {
+if (refreshOrdersBtn) {
 
-  return String(value ?? "")
-    .replace(
-      /&/g,
-      "&amp;"
-    )
-    .replace(
-      /</g,
-      "&lt;"
-    )
-    .replace(
-      />/g,
-      "&gt;"
-    )
-    .replace(
-      /"/g,
-      "&quot;"
-    )
-    .replace(
-      /'/g,
-      "&#039;"
-    );
+  refreshOrdersBtn.addEventListener(
+    "click",
+    loadOrders
+  );
 }
+
+
+if (orderStatusFilter) {
+
+  orderStatusFilter.addEventListener(
+    "change",
+    loadOrders
+  );
+}
+
+
+async function loadOrders() {
+
+  if (!ordersList) {
+    return;
+  }
+
+
+  try {
+
+    const orders =
+      await api(
+        "orders?select=*&order=created_at.desc"
+      );
+
+
+    const filter =
+      orderStatusFilter
+        ? orderStatusFilter.value
+        : "all";
+
+
+    const filteredOrders =
+      filter === "all"
+        ? orders
+        : orders.filter(
+            order =>
+              order.status === filter
+          );
+
+
+    if (
+      !filteredOrders ||
+      filteredOrders.length === 0
+    ) {
+
+      ordersList.innerHTML =
+        "<p>Aucune commande trouvée.</p>";
+
+      return;
+    }
+
+
+    ordersList.innerHTML =
+      filteredOrders.map(
+        order => {
+
+          let itemsText = "";
+
+
+          try {
+
+            const items =
+              typeof order.items === "string"
+                ? JSON.parse(order.items)
+                : order.items;
+
+
+            if (Array.isArray(items)) {
+
+              itemsText =
+                items.map(
+                  item =>
+                    `${escapeHtml(
+                      item.name || "Produit"
+                    )} × ${
+                      item.quantity || 1
+                    }`
+                ).join("<br>");
+
+            } else {
+
+              itemsText =
+                escapeHtml(
+                  JSON.stringify(items)
+                );
+            }
+
+          } catch {
+
+            itemsText =
+              escapeHtml(
+                String(order.items || "")
+              );
+          }
+
+
+          return `
+            <div class="card">
+
+              <h3>
+                Commande #${escapeHtml(order.id)}
+              </h3>
+
+              <p>
+                <strong>Client :</strong>
+                ${escapeHtml(
+                  order.customer_name
+                )}
+              </p>
+
+              <p>
+                <strong>Téléphone :</strong>
+                ${escapeHtml(
+                  order.phone
+                )}
+              </p>
+
+              <p>
+                <strong>Adresse :</strong>
+                ${escapeHtml(
+                  order.address
+                )}
+              </p>
+
+              <p>
+                <strong>Produits :</strong><br>
+                ${itemsText}
+              </p>
+
+              <p>
+                <strong>Total :</strong>
+                ${Number(order.total || 0)
+                  .toLocaleString("fr-FR")}
+                FCFA
+              </p>
+
+              <p>
+                <strong>Paiement :</strong>
+                ${escapeHtml(
+                  order.payment_method || ""
+                )}
+              </p>
+
+              <p>
+                <strong>Statut :</strong>
+                ${escapeHtml(
+                  order.status || "nouvelle"
+                )}
+              </p>
+
+              <p>
+                <strong>Date :</strong>
+                ${order.created_at
+                  ? new Date(
+                      order.created_at
+                    ).toLocaleString("fr-FR")
+                  : ""}
+              </p>
+
+            </div>
+          `;
+        }
+      ).join("");
+
+  } catch (error)
