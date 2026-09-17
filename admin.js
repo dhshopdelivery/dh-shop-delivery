@@ -1,6 +1,6 @@
 /* =========================================================
    DH SHOP & DELIVERY — ADMIN
-   Version 10
+   VERSION 20
    ========================================================= */
 
 const SUPABASE_URL =
@@ -14,63 +14,12 @@ let editingProductId = null;
 
 
 /* =========================================================
-   ELEMENTS
-   ========================================================= */
-
-const loginBox = document.getElementById("loginBox");
-const dashboard = document.getElementById("dashboard");
-
-const loginBtn = document.getElementById("loginBtn");
-const logoutBtn = document.getElementById("logoutBtn");
-
-const loginMessage = document.getElementById("loginMessage");
-
-const productsList = document.getElementById("productsList");
-const addProductBtn = document.getElementById("addProductBtn");
-
-const productFormCard =
-  document.getElementById("productFormCard");
-
-const productFormTitle =
-  document.getElementById("productFormTitle");
-
-const productName =
-  document.getElementById("productName");
-
-const productCategory =
-  document.getElementById("productCategory");
-
-const productPrice =
-  document.getElementById("productPrice");
-
-const productStock =
-  document.getElementById("productStock");
-
-const productImage =
-  document.getElementById("productImage");
-
-const productBadge =
-  document.getElementById("productBadge");
-
-const productDescription =
-  document.getElementById("productDescription");
-
-const productAvailable =
-  document.getElementById("productAvailable");
-
-const saveProductBtn =
-  document.getElementById("saveProductBtn");
-
-const cancelProductBtn =
-  document.getElementById("cancelProductBtn");
-
-const productMessage =
-  document.getElementById("productMessage");
-
-
-/* =========================================================
    OUTILS
    ========================================================= */
+
+function $(id) {
+  return document.getElementById(id);
+}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -81,22 +30,52 @@ function escapeHtml(value) {
     .replace(/'/g, "&#039;");
 }
 
-
 function formatPrice(value) {
   return Number(value || 0).toLocaleString("fr-FR") + " FCFA";
 }
 
-
-function showMessage(element, message, error = false) {
+function message(element, text, error = false) {
   if (!element) return;
 
-  element.textContent = message;
+  element.textContent = text;
   element.style.color = error ? "#b00020" : "#087f23";
 }
 
 
 /* =========================================================
-   SUPABASE REST
+   ELEMENTS
+   ========================================================= */
+
+const loginBox = $("loginBox");
+const dashboard = $("dashboard");
+
+const loginBtn = $("loginBtn");
+const logoutBtn = $("logoutBtn");
+
+const loginMessage = $("loginMessage");
+
+const productsList = $("productsList");
+const addProductBtn = $("addProductBtn");
+
+const productFormCard = $("productFormCard");
+const productFormTitle = $("productFormTitle");
+
+const productName = $("productName");
+const productCategory = $("productCategory");
+const productPrice = $("productPrice");
+const productStock = $("productStock");
+const productImage = $("productImage");
+const productBadge = $("productBadge");
+const productDescription = $("productDescription");
+const productAvailable = $("productAvailable");
+
+const saveProductBtn = $("saveProductBtn");
+const cancelProductBtn = $("cancelProductBtn");
+const productMessage = $("productMessage");
+
+
+/* =========================================================
+   SUPABASE API
    ========================================================= */
 
 async function api(endpoint, options = {}) {
@@ -141,43 +120,67 @@ async function api(endpoint, options = {}) {
 
 
 /* =========================================================
-   CONNEXION
+   CONNEXION ADMINISTRATEUR
    ========================================================= */
 
 async function login() {
 
-  const emailInput =
-    document.getElementById("email");
-
-  const passwordInput =
-    document.getElementById("password");
+  const emailElement = $("email");
+  const passwordElement = $("password");
 
   const email =
-    emailInput ? emailInput.value.trim() : "";
+    emailElement
+      ? emailElement.value.trim()
+      : "";
 
   const password =
-    passwordInput ? passwordInput.value : "";
+    passwordElement
+      ? passwordElement.value
+      : "";
 
-  if (!email || !password) {
 
-    showMessage(
+  if (!email) {
+
+    message(
       loginMessage,
-      "Entre ton email et ton mot de passe.",
+      "Entre ton adresse email.",
       true
     );
 
     return;
   }
 
-  loginBtn.disabled = true;
-  loginBtn.textContent = "Connexion...";
 
-  showMessage(
+  if (!password) {
+
+    message(
+      loginMessage,
+      "Entre ton mot de passe.",
+      true
+    );
+
+    return;
+  }
+
+
+  if (loginBtn) {
+
+    loginBtn.disabled = true;
+    loginBtn.textContent = "Connexion...";
+  }
+
+
+  message(
     loginMessage,
-    "Connexion à Supabase..."
+    "Connexion en cours..."
   );
 
+
   try {
+
+    /*
+      Connexion directe à Supabase Auth
+    */
 
     const response = await fetch(
       SUPABASE_URL +
@@ -197,96 +200,130 @@ async function login() {
       }
     );
 
-    const data = await response.json();
+
+    const text =
+      await response.text();
+
+
+    let data = {};
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      data = {};
+    }
+
+
+    /*
+      Si Supabase refuse la connexion,
+      on affiche exactement son message.
+    */
 
     if (!response.ok) {
 
-      throw new Error(
-        data?.error_description ||
-        data?.msg ||
-        data?.message ||
-        "Email ou mot de passe incorrect."
-      );
+      const errorMessage =
+        data.error_description ||
+        data.msg ||
+        data.message ||
+        data.error ||
+        "Connexion refusée par Supabase.";
+
+      throw new Error(errorMessage);
     }
+
+
+    /*
+      Récupération du token
+    */
 
     if (!data.access_token) {
 
       throw new Error(
-        "Supabase n'a pas envoyé de session."
+        "Connexion reçue mais aucun token de session n'a été envoyé."
       );
     }
 
-    accessToken = data.access_token;
+
+    accessToken =
+      data.access_token;
+
 
     /*
-      Vérification de la session.
-      On ne montre jamais le token.
+      Vérification de l'accès à la table products.
+      Si cela fonctionne, le compte peut accéder
+      au tableau de bord.
     */
 
-    showMessage(
+    message(
       loginMessage,
-      "Connexion réussie. Vérification du compte..."
+      "Connexion réussie. Chargement du tableau de bord..."
     );
 
-    /*
-      Vérifie que le compte est bien administrateur.
-    */
-
-    let adminResult = false;
 
     try {
 
-      adminResult =
-        await api(
-          "rpc/is_admin",
-          {
-            method: "POST",
-            body: "{}"
-          }
-        );
+      await api(
+        "products?select=id&limit=1"
+      );
 
-    } catch (rpcError) {
+    } catch (error) {
+
+      /*
+        Ici on ne bloque pas immédiatement la connexion.
+        On affiche l'erreur réelle dans le tableau.
+      */
 
       console.log(
-        "Vérification is_admin :",
-        rpcError.message
+        "Vérification produits :",
+        error.message
       );
     }
 
 
     /*
-      Si la fonction retourne false, on teste quand même
-      l'accès aux produits.
+      Afficher le tableau de bord
     */
 
-    loginBox.classList.add("hidden");
-    dashboard.classList.remove("hidden");
+    if (loginBox) {
+      loginBox.classList.add("hidden");
+    }
 
-    showMessage(
-      loginMessage,
-      adminResult === true
-        ? "Connexion administrateur réussie ✅"
-        : "Session Supabase active ✅"
-    );
+    if (dashboard) {
+      dashboard.classList.remove("hidden");
+    }
+
+
+    /*
+      Charger les données
+    */
 
     await loadDashboard();
+
 
   } catch (error) {
 
     accessToken = "";
 
-    showMessage(
+    console.error(
+      "ERREUR CONNEXION :",
+      error
+    );
+
+
+    message(
       loginMessage,
       "Erreur : " + error.message,
       true
     );
 
-    console.error(error);
 
   } finally {
 
-    loginBtn.disabled = false;
-    loginBtn.textContent = "Connexion";
+    if (loginBtn) {
+
+      loginBtn.disabled = false;
+      loginBtn.textContent = "Connexion";
+    }
   }
 }
 
@@ -300,8 +337,13 @@ function logout() {
   accessToken = "";
   editingProductId = null;
 
-  dashboard.classList.add("hidden");
-  loginBox.classList.remove("hidden");
+  if (dashboard) {
+    dashboard.classList.add("hidden");
+  }
+
+  if (loginBox) {
+    loginBox.classList.remove("hidden");
+  }
 
   if (productFormCard) {
     productFormCard.classList.add("hidden");
@@ -311,6 +353,11 @@ function logout() {
     loginMessage.textContent = "";
   }
 
+  const password = $("password");
+
+  if (password) {
+    password.value = "";
+  }
 }
 
 
@@ -322,39 +369,29 @@ async function loadDashboard() {
 
   try {
 
-    const products = await api(
-      "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
-    );
+    const products =
+      await api(
+        "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
+      );
 
-    console.log(
-      "DH SHOP — PRODUITS :",
-      products
-    );
 
     const safeProducts =
       Array.isArray(products)
         ? products
         : [];
 
-    /*
-      Compteurs
-    */
 
     const productCount =
-      document.getElementById("productCount");
+      $("productCount");
 
     const availableCount =
-      document.getElementById("availableCount");
+      $("availableCount");
 
     const outCount =
-      document.getElementById("outCount");
-
-    const orderCount =
-      document.getElementById("orderCount");
+      $("outCount");
 
 
     if (productCount) {
-
       productCount.textContent =
         safeProducts.length;
     }
@@ -362,71 +399,76 @@ async function loadDashboard() {
 
     const availableProducts =
       safeProducts.filter(
-        product =>
-          product.available === true &&
-          Number(product.stock) > 0
+        p =>
+          p.available === true &&
+          Number(p.stock) > 0
       );
 
 
     const outProducts =
       safeProducts.filter(
-        product =>
-          product.available === false ||
-          Number(product.stock) <= 0
+        p =>
+          p.available === false ||
+          Number(p.stock) <= 0
       );
 
 
     if (availableCount) {
-
       availableCount.textContent =
         availableProducts.length;
     }
 
 
     if (outCount) {
-
       outCount.textContent =
         outProducts.length;
     }
 
 
-    /*
-      Affichage des produits
-    */
+    renderProducts(
+      safeProducts
+    );
 
-    renderProducts(safeProducts);
-
-
-    /*
-      Commandes
-    */
 
     await loadOrders();
 
+
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Erreur dashboard :",
+      error
+    );
+
 
     if (productsList) {
 
-      productsList.innerHTML =
-        `<p class="error">
-          Impossible de charger les produits.<br><br>
+      productsList.innerHTML = `
+        <div style="
+          padding:20px;
+          border:1px solid #ddd;
+          border-radius:12px;
+        ">
+          <strong>Erreur de chargement</strong>
+          <br><br>
           ${escapeHtml(error.message)}
-        </p>`;
+        </div>
+      `;
     }
-
   }
 }
 
 
 /* =========================================================
-   PRODUITS
+   AFFICHER PRODUITS
    ========================================================= */
 
 function renderProducts(products) {
 
-  if (!productsList) return;
+  if (!productsList) {
+    return;
+  }
+
 
   if (!products.length) {
 
@@ -437,11 +479,7 @@ function renderProducts(products) {
         border-radius:12px;
         text-align:center;
       ">
-        <strong>Aucun produit trouvé.</strong>
-        <p>
-          La connexion fonctionne, mais Supabase
-          ne renvoie aucun produit.
-        </p>
+        <strong>Aucun produit.</strong>
       </div>
     `;
 
@@ -458,15 +496,13 @@ function renderProducts(products) {
 
 
       return `
-        <div class="admin-product-card"
-          style="
-            border:1px solid #ddd;
-            border-radius:14px;
-            padding:16px;
-            margin-bottom:14px;
-            background:#fff;
-          "
-        >
+        <div style="
+          border:1px solid #ddd;
+          border-radius:14px;
+          padding:16px;
+          margin-bottom:14px;
+          background:white;
+        ">
 
           <div style="
             display:flex;
@@ -479,26 +515,29 @@ function renderProducts(products) {
               height:80px;
               border-radius:10px;
               background:#f2f2f2;
-              overflow:hidden;
               display:flex;
               align-items:center;
               justify-content:center;
+              overflow:hidden;
+              flex-shrink:0;
             ">
 
               ${
                 product.image_url
                 ?
-                `<img
-                  src="${escapeHtml(product.image_url)}"
-                  alt="${escapeHtml(product.name)}"
-                  style="
-                    width:100%;
-                    height:100%;
-                    object-fit:cover;
-                  "
-                >`
+                `
+                  <img
+                    src="${escapeHtml(product.image_url)}"
+                    alt="${escapeHtml(product.name)}"
+                    style="
+                      width:100%;
+                      height:100%;
+                      object-fit:cover;
+                    "
+                  >
+                `
                 :
-                `<span>📦</span>`
+                `<span style="font-size:30px">📦</span>`
               }
 
             </div>
@@ -506,17 +545,20 @@ function renderProducts(products) {
 
             <div style="flex:1">
 
-              <h3 style="margin:0 0 5px">
+              <h3 style="
+                margin:0 0 6px;
+              ">
                 ${escapeHtml(product.name)}
               </h3>
 
-              <div>
+              <strong>
                 ${formatPrice(product.price)}
-              </div>
+              </strong>
+
+              <br>
 
               <small>
-                Stock :
-                ${Number(product.stock || 0)}
+                Stock : ${Number(product.stock || 0)}
               </small>
 
               <br>
@@ -537,8 +579,8 @@ function renderProducts(products) {
           <div style="
             display:flex;
             gap:8px;
-            margin-top:14px;
             flex-wrap:wrap;
+            margin-top:14px;
           ">
 
             <button
@@ -551,7 +593,10 @@ function renderProducts(products) {
 
             <button
               type="button"
-              onclick="toggleProduct(${product.id}, ${available})"
+              onclick="toggleProduct(
+                ${product.id},
+                ${available}
+              )"
             >
               ${
                 available
@@ -578,7 +623,7 @@ function renderProducts(products) {
 
 
 /* =========================================================
-   AJOUTER PRODUIT
+   AJOUT PRODUIT
    ========================================================= */
 
 function openAddProductForm() {
@@ -610,90 +655,87 @@ async function editProduct(id) {
 
   try {
 
-    const result = await api(
-      "products?id=eq." +
-      encodeURIComponent(id) +
-      "&select=*"
-    );
+    const result =
+      await api(
+        "products?id=eq." +
+        encodeURIComponent(id) +
+        "&select=*"
+      );
+
 
     if (!result || !result.length) {
 
-      alert("Produit introuvable.");
+      alert(
+        "Produit introuvable."
+      );
 
       return;
     }
 
-    const product = result[0];
+
+    const product =
+      result[0];
+
 
     editingProductId =
       product.id;
 
 
     if (productFormTitle) {
-
       productFormTitle.textContent =
         "Modifier le produit";
     }
 
 
     if (productName) {
-
       productName.value =
         product.name || "";
     }
 
 
     if (productCategory) {
-
       productCategory.value =
         product.category || "";
     }
 
 
     if (productPrice) {
-
       productPrice.value =
         product.price || "";
     }
 
 
     if (productStock) {
-
       productStock.value =
         product.stock || 0;
     }
 
 
     if (productImage) {
-
       productImage.value =
         product.image_url || "";
     }
 
 
     if (productBadge) {
-
       productBadge.value =
         product.badge || "";
     }
 
 
     if (productDescription) {
-
       productDescription.value =
         product.description || "";
     }
 
 
     if (productAvailable) {
-
       productAvailable.checked =
         product.available === true;
     }
 
 
     if (productFormCard) {
-
       productFormCard.classList.remove(
         "hidden"
       );
@@ -705,10 +747,11 @@ async function editProduct(id) {
       behavior: "smooth"
     });
 
+
   } catch (error) {
 
     alert(
-      "Impossible de charger le produit : " +
+      "Impossible de charger le produit :\n\n" +
       error.message
     );
   }
@@ -716,7 +759,7 @@ async function editProduct(id) {
 
 
 /* =========================================================
-   SAUVEGARDER PRODUIT
+   ENREGISTRER PRODUIT
    ========================================================= */
 
 async function saveProduct() {
@@ -750,7 +793,7 @@ async function saveProduct() {
 
   if (!name) {
 
-    showMessage(
+    message(
       productMessage,
       "Le nom du produit est obligatoire.",
       true
@@ -762,9 +805,9 @@ async function saveProduct() {
 
   if (price < 0) {
 
-    showMessage(
+    message(
       productMessage,
-      "Le prix est invalide.",
+      "Prix invalide.",
       true
     );
 
@@ -774,9 +817,9 @@ async function saveProduct() {
 
   if (stock < 0) {
 
-    showMessage(
+    message(
       productMessage,
-      "Le stock est invalide.",
+      "Stock invalide.",
       true
     );
 
@@ -809,9 +852,12 @@ async function saveProduct() {
   };
 
 
-  saveProductBtn.disabled = true;
+  if (saveProductBtn) {
+    saveProductBtn.disabled = true;
+  }
 
-  showMessage(
+
+  message(
     productMessage,
     "Enregistrement..."
   );
@@ -828,10 +874,14 @@ async function saveProduct() {
         ),
         {
           method: "PATCH",
+
           headers: {
-            "Prefer": "return=minimal"
+            "Prefer":
+              "return=minimal"
           },
-          body: JSON.stringify(product)
+
+          body:
+            JSON.stringify(product)
         }
       );
 
@@ -841,32 +891,34 @@ async function saveProduct() {
         "products",
         {
           method: "POST",
+
           headers: {
-            "Prefer": "return=minimal"
+            "Prefer":
+              "return=minimal"
           },
-          body: JSON.stringify(product)
+
+          body:
+            JSON.stringify(product)
         }
       );
     }
 
 
-    showMessage(
+    message(
       productMessage,
-      editingProductId
-        ? "Produit modifié avec succès ✅"
-        : "Produit ajouté avec succès ✅"
+      "Produit enregistré avec succès ✅"
     );
 
 
-    clearProductForm();
-
     editingProductId = null;
 
+    clearProductForm();
 
-    if (productFormTitle) {
 
-      productFormTitle.textContent =
-        "Ajouter un produit";
+    if (productFormCard) {
+      productFormCard.classList.add(
+        "hidden"
+      );
     }
 
 
@@ -875,32 +927,36 @@ async function saveProduct() {
 
   } catch (error) {
 
-    showMessage(
+    message(
       productMessage,
-      "Erreur : " + error.message,
+      "Erreur : " +
+      error.message,
       true
     );
 
+
   } finally {
 
-    saveProductBtn.disabled = false;
+    if (saveProductBtn) {
+      saveProductBtn.disabled = false;
+    }
   }
 }
 
 
 /* =========================================================
-   SUPPRIMER PRODUIT
+   SUPPRIMER
    ========================================================= */
 
 async function deleteProduct(id) {
 
-  const confirmation =
-    confirm(
+  if (
+    !confirm(
       "Voulez-vous vraiment supprimer ce produit ?"
-    );
-
-
-  if (!confirmation) return;
+    )
+  ) {
+    return;
+  }
 
 
   try {
@@ -921,6 +977,7 @@ async function deleteProduct(id) {
 
     await loadDashboard();
 
+
   } catch (error) {
 
     alert(
@@ -935,13 +992,12 @@ async function deleteProduct(id) {
    DISPONIBILITE
    ========================================================= */
 
-async function toggleProduct(id, currentlyAvailable) {
+async function toggleProduct(
+  id,
+  currentlyAvailable
+) {
 
   try {
-
-    const newAvailable =
-      !currentlyAvailable;
-
 
     await api(
       "products?id=eq." +
@@ -950,12 +1006,13 @@ async function toggleProduct(id, currentlyAvailable) {
         method: "PATCH",
 
         headers: {
-          "Prefer": "return=minimal"
+          "Prefer":
+            "return=minimal"
         },
 
         body: JSON.stringify({
           available:
-            newAvailable
+            !currentlyAvailable
         })
       }
     );
@@ -963,10 +1020,11 @@ async function toggleProduct(id, currentlyAvailable) {
 
     await loadDashboard();
 
+
   } catch (error) {
 
     alert(
-      "Impossible de modifier le stock :\n\n" +
+      "Impossible de modifier :\n\n" +
       error.message
     );
   }
@@ -974,7 +1032,7 @@ async function toggleProduct(id, currentlyAvailable) {
 
 
 /* =========================================================
-   ANNULER FORMULAIRE
+   ANNULER
    ========================================================= */
 
 function cancelProductForm() {
@@ -984,12 +1042,10 @@ function cancelProductForm() {
   clearProductForm();
 
   if (productFormCard) {
-
     productFormCard.classList.add(
       "hidden"
     );
   }
-
 }
 
 
@@ -1003,7 +1059,8 @@ function clearProductForm() {
     productName.value = "";
 
   if (productCategory)
-    productCategory.value = "accessoires";
+    productCategory.value =
+      "accessoires";
 
   if (productPrice)
     productPrice.value = "";
@@ -1034,17 +1091,21 @@ function clearProductForm() {
 
 async function loadOrders() {
 
-  const ordersContainer =
-    document.getElementById("ordersList");
+  const ordersList =
+    $("ordersList");
 
-  if (!ordersContainer) return;
+
+  if (!ordersList) {
+    return;
+  }
 
 
   try {
 
-    const orders = await api(
-      "orders?select=*&order=created_at.desc"
-    );
+    const orders =
+      await api(
+        "orders?select=*&order=created_at.desc"
+      );
 
 
     const safeOrders =
@@ -1054,13 +1115,10 @@ async function loadOrders() {
 
 
     const orderCount =
-      document.getElementById(
-        "orderCount"
-      );
+      $("orderCount");
 
 
     if (orderCount) {
-
       orderCount.textContent =
         safeOrders.length;
     }
@@ -1068,22 +1126,25 @@ async function loadOrders() {
 
     if (!safeOrders.length) {
 
-      ordersContainer.innerHTML =
+      ordersList.innerHTML =
         "<p>Aucune commande pour le moment.</p>";
 
       return;
     }
 
 
-    ordersContainer.innerHTML =
+    ordersList.innerHTML =
       safeOrders.map(order => {
 
-        let items = order.items;
+        let items =
+          order.items;
+
 
         if (typeof items === "string") {
 
           try {
-            items = JSON.parse(items);
+            items =
+              JSON.parse(items);
           } catch {
             items = [];
           }
@@ -1091,7 +1152,6 @@ async function loadOrders() {
 
 
         if (!Array.isArray(items)) {
-
           items = [];
         }
 
@@ -1101,8 +1161,14 @@ async function loadOrders() {
 
             return `
               <li>
-                ${escapeHtml(item.name || "Produit")}
-                × ${Number(item.quantity || 1)}
+                ${escapeHtml(
+                  item.name ||
+                  "Produit"
+                )}
+                ×
+                ${Number(
+                  item.quantity || 1
+                )}
               </li>
             `;
 
@@ -1115,6 +1181,7 @@ async function loadOrders() {
             border-radius:14px;
             padding:16px;
             margin-bottom:14px;
+            background:white;
           ">
 
             <strong>
@@ -1122,9 +1189,5 @@ async function loadOrders() {
             </strong>
 
             <p>
-              👤 ${escapeHtml(order.customer_name)}
-            </p>
-
-            <p>
-              📞 ${escapeHtml(order.phone)}
- 
+              👤
+      
