@@ -3,10 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>DH Shop & Delivery — Administration</title>
 
   <style>
-    *{box-sizing:border-box}
+
+    *{
+      box-sizing:border-box;
+    }
 
     body{
       margin:0;
@@ -38,11 +42,17 @@
       margin-top:0;
     }
 
+    h3{
+      margin-top:0;
+    }
+
     .muted{
       color:#777;
     }
 
-    input,textarea,select{
+    input,
+    textarea,
+    select{
       width:100%;
       padding:13px;
       margin:7px 0;
@@ -99,6 +109,14 @@
       margin-top:7px;
     }
 
+    .hidden{
+      display:none !important;
+    }
+
+    /* =========================
+       PRODUITS
+    ========================= */
+
     .product{
       border:1px solid #eee;
       border-radius:15px;
@@ -132,11 +150,130 @@
       font-weight:700;
     }
 
-    .hidden{
-      display:none !important;
+    /* =========================
+       COMMANDES
+    ========================= */
+
+    .orders-toolbar{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      margin-bottom:15px;
     }
 
+    .orders-toolbar select{
+      flex:1;
+      min-width:180px;
+      margin:0;
+    }
+
+    .order{
+      border:1px solid #e5e5e5;
+      border-radius:15px;
+      padding:16px;
+      margin:12px 0;
+      background:#fff;
+    }
+
+    .order-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-bottom:12px;
+    }
+
+    .order-number{
+      font-size:18px;
+      font-weight:700;
+    }
+
+    .order-status{
+      display:inline-block;
+      padding:7px 11px;
+      border-radius:20px;
+      font-size:13px;
+      font-weight:700;
+      background:#eee;
+    }
+
+    .status-nouvelle{
+      background:#e8f1ff;
+      color:#1456a0;
+    }
+
+    .status-preparation{
+      background:#fff3d6;
+      color:#8a5a00;
+    }
+
+    .status-livraison{
+      background:#e9e0ff;
+      color:#5b2ca0;
+    }
+
+    .status-livree{
+      background:#def7e8;
+      color:#16803c;
+    }
+
+    .status-annulee{
+      background:#ffe3e3;
+      color:#b00020;
+    }
+
+    .order-info{
+      margin:8px 0;
+    }
+
+    .order-items{
+      background:#f7f7f7;
+      border-radius:10px;
+      padding:12px;
+      margin:12px 0;
+    }
+
+    .order-total{
+      font-size:19px;
+      font-weight:700;
+      margin-top:12px;
+    }
+
+    .order-actions{
+      margin-top:12px;
+      padding-top:12px;
+      border-top:1px solid #eee;
+    }
+
+    .order-actions select{
+      width:auto;
+      min-width:190px;
+      margin:4px;
+    }
+
+    .order-date{
+      color:#777;
+      font-size:13px;
+    }
+
+    .empty{
+      padding:20px 0;
+      color:#777;
+    }
+
+    .error{
+      color:#b00020;
+      font-weight:700;
+    }
+
+    /* =========================
+       MOBILE
+    ========================= */
+
     @media(max-width:700px){
+
       .stats{
         grid-template-columns:repeat(2,1fr);
       }
@@ -144,88 +281,188 @@
       .product-top{
         display:block;
       }
+
+      .order-header{
+        display:block;
+      }
+
+      .order-status{
+        margin-top:8px;
+      }
+
+      .order-actions select{
+        width:100%;
+        margin:4px 0;
+      }
+
+      .order-actions button{
+        width:100%;
+        margin:4px 0;
+      }
+
     }
+
   </style>
+
 </head>
 
 <body>
 
 <div class="container">
 
-  <!-- CONNEXION -->
+  <!-- =========================
+       CONNEXION
+  ========================== -->
+
   <div class="card" id="loginBox">
+
     <h1>DH Shop & Delivery</h1>
-    <p class="muted">Espace administrateur</p>
 
-    <input id="email" type="email" placeholder="Adresse e-mail">
+    <p class="muted">
+      Espace administrateur
+    </p>
 
-    <input id="password" type="password" placeholder="Mot de passe">
+    <input
+      id="email"
+      type="email"
+      placeholder="Adresse e-mail"
+    >
 
-    <button id="loginBtn" class="primary">
+    <input
+      id="password"
+      type="password"
+      placeholder="Mot de passe"
+    >
+
+    <button
+      id="loginBtn"
+      class="primary"
+    >
       Se connecter
     </button>
 
     <p id="loginMessage"></p>
+
   </div>
 
 
-  <!-- TABLEAU DE BORD -->
+  <!-- =========================
+       TABLEAU DE BORD
+  ========================== -->
+
   <div id="dashboard" class="hidden">
 
+
+    <!-- EN-TÊTE -->
+
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          flex-wrap:wrap;
+        "
+      >
+
         <div>
-          <h1>Tableau de bord</h1>
-          <p class="muted">Gestion de DH Shop & Delivery</p>
+
+          <h1>
+            Tableau de bord
+          </h1>
+
+          <p class="muted">
+            Gestion de DH Shop & Delivery
+          </p>
+
         </div>
 
-        <button id="logoutBtn" class="secondary">
+        <button
+          id="logoutBtn"
+          class="secondary"
+        >
           Se déconnecter
         </button>
+
       </div>
+
     </div>
 
 
-    <!-- STATISTIQUES -->
+    <!-- =========================
+         STATISTIQUES
+    ========================== -->
+
     <div class="stats">
 
       <div class="stat">
         Produits
-        <strong id="productCount">0</strong>
+        <strong id="productCount">
+          0
+        </strong>
       </div>
 
       <div class="stat">
         Commandes
-        <strong id="orderCount">0</strong>
+        <strong id="orderCount">
+          0
+        </strong>
       </div>
 
       <div class="stat">
         Disponibles
-        <strong id="availableCount">0</strong>
+        <strong id="availableCount">
+          0
+        </strong>
       </div>
 
       <div class="stat">
         Ruptures
-        <strong id="outCount">0</strong>
+        <strong id="outCount">
+          0
+        </strong>
       </div>
 
     </div>
 
 
-    <!-- PRODUITS -->
+    <!-- =========================
+         PRODUITS
+    ========================== -->
+
     <div class="card">
 
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          flex-wrap:wrap;
+        "
+      >
+
         <div>
-          <h2>📦 Produits</h2>
+
+          <h2>
+            📦 Produits
+          </h2>
+
           <p class="muted">
             Ajoute et gère les produits de ta boutique.
           </p>
+
         </div>
 
-        <button id="addProductBtn" class="primary">
+        <button
+          id="addProductBtn"
+          class="primary"
+        >
           + Ajouter un produit
         </button>
+
       </div>
 
       <div id="productsList">
@@ -235,53 +472,88 @@
     </div>
 
 
-    <!-- FORMULAIRE PRODUIT -->
-    <div class="card hidden" id="productFormCard">
+    <!-- =========================
+         FORMULAIRE PRODUIT
+    ========================== -->
+
+    <div
+      class="card hidden"
+      id="productFormCard"
+    >
 
       <h2 id="productFormTitle">
         Ajouter un produit
       </h2>
 
-      <input id="productName"
-             type="text"
-             placeholder="Nom du produit">
+      <input
+        id="productName"
+        type="text"
+        placeholder="Nom du produit"
+      >
 
-      <input id="productCategory"
-             type="text"
-             placeholder="Catégorie">
+      <input
+        id="productCategory"
+        type="text"
+        placeholder="Catégorie"
+      >
 
-      <input id="productPrice"
-             type="number"
-             placeholder="Prix en FCFA">
+      <input
+        id="productPrice"
+        type="number"
+        placeholder="Prix en FCFA"
+      >
 
-      <input id="productStock"
-             type="number"
-             placeholder="Stock">
+      <input
+        id="productStock"
+        type="number"
+        placeholder="Stock"
+      >
 
-      <input id="productImage"
-             type="text"
-             placeholder="Lien de l'image du produit">
+      <input
+        id="productImage"
+        type="text"
+        placeholder="Lien de l'image du produit"
+      >
 
-      <input id="productBadge"
-             type="text"
-             placeholder="Badge : NOUVEAU, POPULAIRE...">
+      <input
+        id="productBadge"
+        type="text"
+        placeholder="Badge : NOUVEAU, POPULAIRE..."
+      >
 
-      <textarea id="productDescription"
-                placeholder="Description du produit"></textarea>
+      <textarea
+        id="productDescription"
+        placeholder="Description du produit"
+      ></textarea>
 
       <select id="productAvailable">
-        <option value="true">Produit disponible</option>
-        <option value="false">Rupture de stock</option>
+
+        <option value="true">
+          Produit disponible
+        </option>
+
+        <option value="false">
+          Rupture de stock
+        </option>
+
       </select>
 
       <div>
-        <button id="saveProductBtn" class="primary">
+
+        <button
+          id="saveProductBtn"
+          class="primary"
+        >
           Enregistrer
         </button>
 
-        <button id="cancelProductBtn" class="secondary">
+        <button
+          id="cancelProductBtn"
+          class="secondary"
+        >
           Annuler
         </button>
+
       </div>
 
       <p id="productMessage"></p>
@@ -289,40 +561,119 @@
     </div>
 
 
-    <!-- COMMANDES -->
+    <!-- =========================
+         COMMANDES
+    ========================== -->
+
     <div class="card">
 
-      <h2>🛒 Commandes</h2>
+      <div
+        style="
+          display:flex;
+          justify-content:space-between;
+          align-items:center;
+          gap:10px;
+          flex-wrap:wrap;
+        "
+      >
 
-      <p class="muted">
-        La gestion complète des commandes sera activée dans l'étape suivante.
-      </p>
+        <div>
 
-      <button class="secondary" id="ordersBtn">
-        Voir les commandes
-      </button>
+          <h2>
+            🛒 Commandes
+          </h2>
+
+          <p class="muted">
+            Consulte et gère les commandes de tes clients.
+          </p>
+
+        </div>
+
+        <button
+          id="refreshOrdersBtn"
+          class="primary"
+        >
+          🔄 Actualiser
+        </button>
+
+      </div>
+
+
+      <!-- FILTRE -->
+
+      <div class="orders-toolbar">
+
+        <select id="orderStatusFilter">
+
+          <option value="all">
+            Toutes les commandes
+          </option>
+
+          <option value="nouvelle">
+            Nouvelles
+          </option>
+
+          <option value="preparation">
+            En préparation
+          </option>
+
+          <option value="livraison">
+            En livraison
+          </option>
+
+          <option value="livree">
+            Livrées
+          </option>
+
+          <option value="annulee">
+            Annulées
+          </option>
+
+        </select>
+
+      </div>
+
+
+      <!-- LISTE DES COMMANDES -->
+
+      <div id="ordersList">
+
+        Chargement des commandes...
+
+      </div>
 
     </div>
 
 
-    <!-- PARAMÈTRES -->
+    <!-- =========================
+         PARAMÈTRES
+    ========================== -->
+
     <div class="card">
 
-      <h2>⚙️ Paramètres</h2>
+      <h2>
+        ⚙️ Paramètres
+      </h2>
 
       <p>
         Boutique :
-        <strong>DH Shop & Delivery</strong>
+        <strong>
+          DH Shop & Delivery
+        </strong>
       </p>
 
       <p>
         Paiement :
-        <strong>À la livraison</strong>
+        <strong>
+          À la livraison
+        </strong>
       </p>
 
       <p>
         WhatsApp :
-        <strong>22792617092</strong>
+        <strong>
+          22792617092
+        </strong>
       </p>
 
     </div>
@@ -331,7 +682,8 @@
 
 </div>
 
+
 <script src="admin.js"></script>
 
 </body>
-      </html>
+  </html>
