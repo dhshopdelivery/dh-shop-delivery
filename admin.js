@@ -1367,3 +1367,463 @@ function getStatusLabel(status) {
       return "🟢 Livrée";
 
     case "
+/* =========================
+   PHOTO PRODUIT - AJOUT
+   ========================= */
+
+(function setupProductPhotoUpload() {
+
+  if (!productImage) {
+    console.error("Champ productImage introuvable.");
+    return;
+  }
+
+  /* Création automatique du bouton */
+
+  const photoContainer = document.createElement("div");
+
+  photoContainer.style.margin = "10px 0 20px";
+  photoContainer.style.padding = "15px";
+  photoContainer.style.border = "2px dashed #ddd";
+  photoContainer.style.borderRadius = "14px";
+  photoContainer.style.textAlign = "center";
+
+  photoContainer.innerHTML = `
+    <div style="
+      font-weight:bold;
+      font-size:16px;
+      margin-bottom:10px;
+    ">
+      📷 Photo du produit
+    </div>
+
+    <button
+      type="button"
+      id="chooseProductPhotoBtn"
+      style="
+        background:#111;
+        color:white;
+        border:none;
+        padding:13px 20px;
+        border-radius:10px;
+        font-weight:bold;
+        font-size:15px;
+      "
+    >
+      📷 Choisir une photo
+    </button>
+
+    <input
+      type="file"
+      id="productPhotoFile"
+      accept="image/*"
+      style="display:none"
+    >
+
+    <div
+      id="productPhotoPreviewBox"
+      style="margin-top:12px;"
+    ></div>
+  `;
+
+  productImage.parentNode.insertBefore(
+    photoContainer,
+    productImage.nextSibling
+  );
+
+
+  const chooseBtn =
+    document.getElementById(
+      "chooseProductPhotoBtn"
+    );
+
+  const photoInput =
+    document.getElementById(
+      "productPhotoFile"
+    );
+
+  const previewBox =
+    document.getElementById(
+      "productPhotoPreviewBox"
+    );
+
+
+  /* Bouton galerie */
+
+  chooseBtn.addEventListener(
+    "click",
+    function () {
+
+      photoInput.click();
+
+    }
+  );
+
+
+  /* Sélection photo */
+
+  photoInput.addEventListener(
+    "change",
+    function () {
+
+      const file =
+        this.files[0];
+
+      if (!file) {
+        return;
+      }
+
+
+      if (!file.type.startsWith("image/")) {
+
+        alert(
+          "Veuillez choisir une image."
+        );
+
+        this.value = "";
+
+        return;
+      }
+
+
+      const reader =
+        new FileReader();
+
+
+      reader.onload =
+        function (event) {
+
+          previewBox.innerHTML = `
+            <img
+              src="${event.target.result}"
+              alt="Aperçu"
+              style="
+                width:160px;
+                height:160px;
+                object-fit:cover;
+                border-radius:12px;
+                border:1px solid #ddd;
+              "
+            >
+            <div style="
+              margin-top:8px;
+              font-size:14px;
+              color:#555;
+            ">
+              ${escapeHtml(file.name)}
+            </div>
+          `;
+
+        };
+
+
+      reader.readAsDataURL(file);
+
+    }
+  );
+
+
+  /* =========================
+     UPLOAD SUPABASE
+  ========================= */
+
+  window.uploadSelectedProductPhoto =
+    async function () {
+
+      const file =
+        photoInput.files[0];
+
+      if (!file) {
+        return null;
+      }
+
+
+      if (!accessToken) {
+
+        throw new Error(
+          "Session administrateur absente."
+        );
+      }
+
+
+      if (!file.type.startsWith("image/")) {
+
+        throw new Error(
+          "Le fichier sélectionné n'est pas une image."
+        );
+      }
+
+
+      /* Nom unique */
+
+      const extension =
+        file.name.includes(".")
+          ? file.name
+              .split(".")
+              .pop()
+              .toLowerCase()
+          : "jpg";
+
+
+      const safeName =
+        `product-${Date.now()}-${Math.random()
+          .toString(36)
+          .substring(2, 8)}.${extension}`;
+
+
+      const uploadResponse =
+        await fetch(
+          `${SUPABASE_URL}/storage/v1/object/product-images/${safeName}`,
+          {
+            method: "POST",
+
+            headers: {
+              "apikey":
+                SUPABASE_KEY,
+
+              "Authorization":
+                `Bearer ${accessToken}`,
+
+              "Content-Type":
+                file.type,
+
+              "x-upsert":
+                "false"
+            },
+
+            body: file
+          }
+        );
+
+
+      const uploadText =
+        await uploadResponse.text();
+
+
+      if (!uploadResponse.ok) {
+
+        throw new Error(
+          uploadText ||
+          `Erreur upload image : HTTP ${uploadResponse.status}`
+        );
+      }
+
+
+      return (
+        `${SUPABASE_URL}` +
+        `/storage/v1/object/public/` +
+        `product-images/${safeName}`
+      );
+    };
+
+
+  /* =========================
+     INTERCEPTION ENREGISTREMENT
+  ========================= */
+
+  saveProductBtn.addEventListener(
+    "click",
+    async function (event) {
+
+      const file =
+        photoInput.files[0];
+
+      /* S'il n'y a pas de nouvelle photo,
+         le fonctionnement original continue. */
+
+      if (!file) {
+        return;
+      }
+
+
+      /*
+        On laisse le premier système faire
+        son travail uniquement si aucune
+        photo n'est sélectionnée.
+
+        Avec une photo, on bloque le clic
+        original et on fait l'upload avant
+        l'enregistrement.
+      */
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+
+      saveProductBtn.disabled =
+        true;
+
+      productMessage.textContent =
+        "📷 Envoi de la photo...";
+
+
+      try {
+
+        const imageUrl =
+          await window.uploadSelectedProductPhoto();
+
+
+        if (!imageUrl) {
+
+          throw new Error(
+            "La photo n'a pas pu être envoyée."
+          );
+        }
+
+
+        /*
+          On place automatiquement
+          l'URL dans le champ existant.
+        */
+
+        productImage.value =
+          imageUrl;
+
+
+        productMessage.textContent =
+          "Photo envoyée. Enregistrement du produit...";
+
+
+        /*
+          Reproduit exactement la sauvegarde
+          de ton système actuel.
+        */
+
+        const body = {
+
+          name:
+            productName.value.trim(),
+
+          category:
+            productCategory.value.trim(),
+
+          price:
+            Number(productPrice.value),
+
+          stock:
+            Number(productStock.value),
+
+          image_url:
+            imageUrl,
+
+          badge:
+            productBadge.value.trim(),
+
+          description:
+            productDescription.value.trim(),
+
+          available:
+            productAvailable.value === "true"
+        };
+
+
+        if (!body.name) {
+
+          throw new Error(
+            "Veuillez entrer le nom du produit."
+          );
+        }
+
+
+        if (
+          !body.price ||
+          body.price < 0
+        ) {
+
+          throw new Error(
+            "Veuillez entrer un prix valide."
+          );
+        }
+
+
+        if (
+          body.stock < 0 ||
+          Number.isNaN(body.stock)
+        ) {
+
+          throw new Error(
+            "Veuillez entrer un stock valide."
+          );
+        }
+
+
+        if (editingProductId) {
+
+          await api(
+            `products?id=eq.${editingProductId}`,
+            {
+              method: "PATCH",
+
+              headers: {
+                "Prefer":
+                  "return=minimal"
+              },
+
+              body:
+                JSON.stringify(body)
+            }
+          );
+
+
+          productMessage.textContent =
+            "Produit modifié avec succès ✅";
+
+        } else {
+
+          await api(
+            "products",
+            {
+              method: "POST",
+
+              headers: {
+                "Prefer":
+                  "return=minimal"
+              },
+
+              body:
+                JSON.stringify(body)
+            }
+          );
+
+
+          productMessage.textContent =
+            "Produit ajouté avec succès ✅";
+        }
+
+
+        await loadDashboard();
+
+
+        setTimeout(
+          function () {
+
+            closeProductForm();
+
+          },
+          800
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "ERREUR PHOTO :",
+          error
+        );
+
+        productMessage.textContent =
+          "Erreur : " +
+          error.message;
+
+
+      } finally {
+
+        saveProductBtn.disabled =
+          false;
+      }
+
+    },
+    true
+  );
+
+})();
