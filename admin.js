@@ -1,158 +1,63 @@
-/* =========================================================
-   DH SHOP & DELIVERY — ADMIN
-   Gestion produits + commandes
-   ========================================================= */
-
-const SUPABASE_URL =
-  "https://ocmvthymdjkrhmdyieim.supabase.co";
-
-const SUPABASE_KEY =
-  "sb_publishable_OnchBsvLE3RVA-EualXSSA_pfVvFpTW";
-
-let accessToken = "";
-let editingProductId = null;
-let allOrders = [];
-
-
-/* =========================================================
-   ELEMENTS
-   ========================================================= */
+const SUPABASE_URL = "https://ocmvthymdjkrhmdyieim.supabase.co";
+const SUPABASE_KEY = "sb_publishable_OnchBsvLE3RVA-EualXSSA_pfVvFpTW";
 
 const loginBox = document.getElementById("loginBox");
 const dashboard = document.getElementById("dashboard");
-
 const loginBtn = document.getElementById("loginBtn");
 const logoutBtn = document.getElementById("logoutBtn");
 const loginMessage = document.getElementById("loginMessage");
 
-const productsList =
-  document.getElementById("productsList");
+const productsList = document.getElementById("productsList");
+const addProductBtn = document.getElementById("addProductBtn");
+const productFormCard = document.getElementById("productFormCard");
+const productFormTitle = document.getElementById("productFormTitle");
 
-const addProductBtn =
-  document.getElementById("addProductBtn");
+const productName = document.getElementById("productName");
+const productCategory = document.getElementById("productCategory");
+const productPrice = document.getElementById("productPrice");
+const productStock = document.getElementById("productStock");
+const productImage = document.getElementById("productImage");
+const productBadge = document.getElementById("productBadge");
+const productDescription = document.getElementById("productDescription");
+const productAvailable = document.getElementById("productAvailable");
 
-const productFormCard =
-  document.getElementById("productFormCard");
+const saveProductBtn = document.getElementById("saveProductBtn");
+const cancelProductBtn = document.getElementById("cancelProductBtn");
+const productMessage = document.getElementById("productMessage");
 
-const productFormTitle =
-  document.getElementById("productFormTitle");
-
-const productName =
-  document.getElementById("productName");
-
-const productCategory =
-  document.getElementById("productCategory");
-
-const productPrice =
-  document.getElementById("productPrice");
-
-const productStock =
-  document.getElementById("productStock");
-
-const productImage =
-  document.getElementById("productImage");
-
-const productBadge =
-  document.getElementById("productBadge");
-
-const productDescription =
-  document.getElementById("productDescription");
-
-const productAvailable =
-  document.getElementById("productAvailable");
-
-const saveProductBtn =
-  document.getElementById("saveProductBtn");
-
-const cancelProductBtn =
-  document.getElementById("cancelProductBtn");
-
-const productMessage =
-  document.getElementById("productMessage");
-
-const refreshOrdersBtn =
-  document.getElementById("refreshOrdersBtn");
-
-const orderStatusFilter =
-  document.getElementById("orderStatusFilter");
-
-const ordersList =
-  document.getElementById("ordersList");
+let accessToken = null;
+let editingProductId = null;
 
 
-/* =========================================================
-   OUTILS
-   ========================================================= */
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
-
-function formatPrice(value) {
-  return Number(value || 0)
-    .toLocaleString("fr-FR") + " FCFA";
-}
-
-
-function showMessage(element, text, error = false) {
-
-  if (!element) return;
-
-  element.textContent = text;
-
-  element.style.color =
-    error ? "#b00020" : "#16803c";
-}
-
-
-/* =========================================================
-   API SUPABASE
-   ========================================================= */
+/* =========================
+   OUTILS SUPABASE
+========================= */
 
 async function api(endpoint, options = {}) {
 
-  const headers = {
-    "apikey": SUPABASE_KEY,
-    "Content-Type": "application/json",
-    ...options.headers
-  };
-
-  if (accessToken) {
-    headers["Authorization"] =
-      "Bearer " + accessToken;
-  }
-
   const response = await fetch(
-    SUPABASE_URL +
-    "/rest/v1/" +
-    endpoint,
+    `${SUPABASE_URL}/rest/v1/${endpoint}`,
     {
       ...options,
-      headers
+
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        ...options.headers
+      }
     }
   );
 
-  const text =
-    await response.text();
+  const text = await response.text();
 
   if (!response.ok) {
-
     throw new Error(
-      text ||
-      "Erreur Supabase HTTP " +
-      response.status
+      text || `Erreur HTTP ${response.status}`
     );
   }
 
-  if (!text) {
-    return null;
-  }
+  if (!text) return null;
 
   try {
     return JSON.parse(text);
@@ -162,86 +67,55 @@ async function api(endpoint, options = {}) {
 }
 
 
-/* =========================================================
+/* =========================
    CONNEXION
-   ========================================================= */
+========================= */
+
+loginBtn.addEventListener(
+  "click",
+  login
+);
 
 async function login() {
 
-  const emailInput =
-    document.getElementById("email");
-
-  const passwordInput =
-    document.getElementById("password");
-
   const email =
-    emailInput
-      ? emailInput.value.trim()
-      : "";
+    document.getElementById("email").value.trim();
 
   const password =
-    passwordInput
-      ? passwordInput.value
-      : "";
-
+    document.getElementById("password").value;
 
   if (!email || !password) {
 
-    showMessage(
-      loginMessage,
-      "Entre ton email et ton mot de passe.",
-      true
-    );
+    loginMessage.textContent =
+      "Veuillez remplir les deux champs.";
 
     return;
   }
 
-
-  loginBtn.disabled = true;
-  loginBtn.textContent = "Connexion...";
-
-
-  showMessage(
-    loginMessage,
-    "Connexion en cours..."
-  );
-
+  loginMessage.textContent =
+    "Connexion...";
 
   try {
 
-    const response =
-      await fetch(
-        SUPABASE_URL +
-        "/auth/v1/token?grant_type=password",
-        {
-          method: "POST",
+    const response = await fetch(
+      `${SUPABASE_URL}/auth/v1/token?grant_type=password`,
+      {
+        method: "POST",
 
-          headers: {
-            "apikey": SUPABASE_KEY,
-            "Content-Type":
-              "application/json"
-          },
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Content-Type": "application/json"
+        },
 
-          body: JSON.stringify({
-            email: email,
-            password: password
-          })
-        }
-      );
+        body: JSON.stringify({
+          email: email,
+          password: password
+        })
+      }
+    );
 
-
-    const text =
-      await response.text();
-
-
-    let data = {};
-
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = {};
-    }
-
+    const data =
+      await response.json();
 
     if (!response.ok) {
 
@@ -249,96 +123,101 @@ async function login() {
         data.error_description ||
         data.msg ||
         data.message ||
-        data.error ||
-        "Email ou mot de passe incorrect."
+        "Connexion impossible."
       );
     }
-
-
-    if (!data.access_token) {
-
-      throw new Error(
-        "Supabase n'a pas envoyé de session."
-      );
-    }
-
 
     accessToken =
       data.access_token;
 
+    if (!accessToken) {
+      throw new Error(
+        "Aucun token de connexion reçu."
+      );
+    }
 
-    showMessage(
-      loginMessage,
-      "Connexion réussie..."
+    /*
+      TEST SESSION
+      On vérifie le rôle présent
+      dans le token sans afficher
+      le token lui-même.
+    */
+
+    try {
+
+      const payload =
+        JSON.parse(
+          atob(
+            accessToken.split(".")[1]
+          )
+        );
+
+      console.log(
+        "SESSION SUPABASE :",
+        payload
+      );
+
+      loginMessage.textContent =
+        "Session active — rôle : " +
+        payload.role;
+
+    } catch {
+
+      loginMessage.textContent =
+        "Connexion réussie — session active ✅";
+    }
+
+    loginBox.classList.add(
+      "hidden"
     );
 
-
-    loginBox.classList.add("hidden");
-    dashboard.classList.remove("hidden");
-
+    dashboard.classList.remove(
+      "hidden"
+    );
 
     await loadDashboard();
 
-
   } catch (error) {
 
-    accessToken = "";
-
-    console.error(
-      "Erreur connexion :",
-      error
-    );
-
-
-    showMessage(
-      loginMessage,
+    loginMessage.textContent =
       "Erreur : " +
-      error.message,
-      true
-    );
-
-
-  } finally {
-
-    loginBtn.disabled = false;
-    loginBtn.textContent =
-      "Se connecter";
+      error.message;
   }
 }
 
 
-/* =========================================================
+/* =========================
    DECONNEXION
-   ========================================================= */
+========================= */
+
+logoutBtn.addEventListener(
+  "click",
+  logout
+);
 
 function logout() {
 
-  accessToken = "";
-  editingProductId = null;
+  accessToken = null;
 
-  dashboard.classList.add("hidden");
-  loginBox.classList.remove("hidden");
+  dashboard.classList.add(
+    "hidden"
+  );
 
-  if (productFormCard) {
-    productFormCard.classList.add("hidden");
-  }
+  loginBox.classList.remove(
+    "hidden"
+  );
 
-  if (loginMessage) {
-    loginMessage.textContent = "";
-  }
+  document.getElementById(
+    "password"
+  ).value = "";
 
-  const password =
-    document.getElementById("password");
-
-  if (password) {
-    password.value = "";
-  }
+  loginMessage.textContent = "";
 }
 
 
-/* =========================================================
+/* =========================
    TABLEAU DE BORD
-   ========================================================= */
+========================= */
 
 async function loadDashboard() {
 
@@ -349,37 +228,29 @@ async function loadDashboard() {
         "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
       );
 
+    console.log(
+      "PRODUITS RECUS :",
+      products
+    );
 
-    const safeProducts =
-      Array.isArray(products)
-        ? products
-        : [];
-
-
-    const productCount =
-      document.getElementById(
-        "productCount"
-      );
-
-    const availableCount =
-      document.getElementById(
-        "availableCount"
-      );
-
-    const outCount =
-      document.getElementById(
-        "outCount"
-      );
+    console.log(
+      "NOMBRE DE PRODUITS :",
+      products.length
+    );
 
 
-    if (productCount) {
-      productCount.textContent =
-        safeProducts.length;
-    }
+    /* =====================
+       STATISTIQUES
+    ===================== */
+
+    document.getElementById(
+      "productCount"
+    ).textContent =
+      products.length;
 
 
     const availableProducts =
-      safeProducts.filter(
+      products.filter(
         product =>
           product.available === true &&
           Number(product.stock) > 0
@@ -387,231 +258,235 @@ async function loadDashboard() {
 
 
     const outProducts =
-      safeProducts.filter(
+      products.filter(
         product =>
           product.available === false ||
           Number(product.stock) <= 0
       );
 
 
-    if (availableCount) {
-      availableCount.textContent =
-        availableProducts.length;
+    document.getElementById(
+      "availableCount"
+    ).textContent =
+      availableProducts.length;
+
+
+    document.getElementById(
+      "outCount"
+    ).textContent =
+      outProducts.length;
+
+
+    /* =====================
+       AFFICHER LES PRODUITS
+    ===================== */
+
+    renderProducts(products);
+
+
+    /* =====================
+       COMMANDES
+    ===================== */
+
+    try {
+
+      const orders =
+        await api(
+          "orders?select=id"
+        );
+
+      document.getElementById(
+        "orderCount"
+      ).textContent =
+        orders.length;
+
+    } catch (error) {
+
+      document.getElementById(
+        "orderCount"
+      ).textContent =
+        "0";
+
+      console.log(
+        "Commandes non disponibles :",
+        error.message
+      );
     }
-
-
-    if (outCount) {
-      outCount.textContent =
-        outProducts.length;
-    }
-
-
-    renderProducts(
-      safeProducts
-    );
-
-
-    await loadOrders();
 
   } catch (error) {
 
     console.error(
-      "Erreur dashboard :",
+      "ERREUR PRODUITS :",
       error
     );
 
-
-    if (productsList) {
-
-      productsList.innerHTML = `
-        <p class="error">
-          Impossible de charger les produits.
-          <br><br>
-          ${escapeHtml(error.message)}
-        </p>
-      `;
-    }
+    productsList.innerHTML =
+      `<p class="error">
+        Erreur lors du chargement des produits :
+        ${escapeHtml(error.message)}
+      </p>`;
   }
 }
 
 
-/* =========================================================
-   PRODUITS
-   ========================================================= */
+/* =========================
+   AFFICHAGE PRODUITS
+========================= */
 
 function renderProducts(products) {
 
-  if (!productsList) return;
+  if (
+    !products ||
+    products.length === 0
+  ) {
 
-
-  if (!products.length) {
-
-    productsList.innerHTML = `
-      <div class="empty">
-        Aucun produit.
-      </div>
-    `;
+    productsList.innerHTML =
+      "<p>Aucun produit trouvé.</p>";
 
     return;
   }
 
 
   productsList.innerHTML =
-    products.map(product => {
+    products.map(
+      product => {
 
-      const available =
-        product.available === true &&
-        Number(product.stock) > 0;
+        const availability =
+          product.available &&
+          Number(product.stock) > 0
+            ? "Disponible"
+            : "Indisponible";
 
 
-      return `
-        <div class="product">
+        const image =
+          product.image_url
+            ? `
+              <img
+                src="${escapeHtml(product.image_url)}"
+                alt="${escapeHtml(product.name)}"
+              >
+            `
+            : "";
 
-          <div class="product-top">
 
-            <div>
+        return `
+          <div class="admin-product">
+
+            ${image}
+
+            <div class="admin-product-info">
 
               <h3>
                 ${escapeHtml(product.name)}
               </h3>
 
-              ${
-                product.badge
-                ?
-                `
-                  <span class="badge">
-                    ${escapeHtml(product.badge)}
-                  </span>
-                `
-                :
-                ""
-              }
-
               <p>
+                Prix :
                 <strong>
-                  ${formatPrice(product.price)}
+                  ${Number(product.price)
+                    .toLocaleString("fr-FR")}
+                  FCFA
                 </strong>
               </p>
 
               <p>
-                Catégorie :
-                ${escapeHtml(
-                  product.category ||
-                  "Non définie"
-                )}
+                Stock :
+                <strong>
+                  ${product.stock ?? 0}
+                </strong>
               </p>
 
               <p>
-                Stock :
-                ${Number(product.stock || 0)}
+                Statut :
+                <strong>
+                  ${availability}
+                </strong>
               </p>
 
-              <p class="${
-                available
-                  ? "available"
-                  : "unavailable"
-              }">
+              ${
+                product.badge
+                  ? `
+                    <p>
+                      Badge :
+                      ${escapeHtml(product.badge)}
+                    </p>
+                  `
+                  : ""
+              }
 
-                ${
-                  available
-                    ? "🟢 Disponible"
-                    : "🔴 Rupture de stock"
-                }
+            </div>
 
-              </p>
+
+            <div class="admin-product-actions">
+
+              <button
+                type="button"
+                onclick="editProduct(${product.id})"
+              >
+                Modifier
+              </button>
+
+
+              <button
+                type="button"
+                onclick="deleteProduct(${product.id})"
+              >
+                Supprimer
+              </button>
 
             </div>
 
           </div>
-
-
-          <div>
-
-            <button
-              class="primary"
-              type="button"
-              onclick="editProduct(${product.id})"
-            >
-              ✏️ Modifier
-            </button>
-
-
-            <button
-              class="secondary"
-              type="button"
-              onclick="toggleProduct(
-                ${product.id},
-                ${available}
-              )"
-            >
-
-              ${
-                available
-                  ? "Mettre en rupture"
-                  : "Rendre disponible"
-              }
-
-            </button>
-
-
-            <button
-              class="danger"
-              type="button"
-              onclick="deleteProduct(${product.id})"
-            >
-              🗑️ Supprimer
-            </button>
-
-          </div>
-
-        </div>
-      `;
-
-    }).join("");
+        `;
+      }
+    ).join("");
 }
 
 
-/* =========================================================
-   AJOUTER PRODUIT
-   ========================================================= */
+/* =========================
+   AJOUT PRODUIT
+========================= */
 
-function openAddProductForm() {
+addProductBtn.addEventListener(
+  "click",
+  openAddForm
+);
+
+function openAddForm() {
 
   editingProductId = null;
 
   productFormTitle.textContent =
     "Ajouter un produit";
 
-  clearProductForm();
+  clearForm();
 
   productFormCard.classList.remove(
     "hidden"
   );
 
-  window.scrollTo({
-    top: productFormCard.offsetTop - 20,
-    behavior: "smooth"
-  });
+  productMessage.textContent = "";
 }
 
 
-/* =========================================================
-   MODIFIER PRODUIT
-   ========================================================= */
+/* =========================
+   MODIFICATION PRODUIT
+========================= */
 
 async function editProduct(id) {
 
   try {
 
-    const result =
+    const products =
       await api(
-        "products?id=eq." +
-        encodeURIComponent(id) +
-        "&select=*"
+        `products?id=eq.${id}&select=*`
       );
 
 
-    if (!result || !result.length) {
+    if (
+      !products ||
+      products.length === 0
+    ) {
 
       alert(
         "Produit introuvable."
@@ -622,11 +497,10 @@ async function editProduct(id) {
 
 
     const product =
-      result[0];
-
+      products[0];
 
     editingProductId =
-      product.id;
+      id;
 
 
     productFormTitle.textContent =
@@ -646,7 +520,7 @@ async function editProduct(id) {
 
 
     productStock.value =
-      product.stock || 0;
+      product.stock || "";
 
 
     productImage.value =
@@ -661,14 +535,8 @@ async function editProduct(id) {
       product.description || "";
 
 
-    /*
-      IMPORTANT :
-      productAvailable est un SELECT
-      dans ton HTML.
-    */
-
     productAvailable.value =
-      product.available === true
+      product.available
         ? "true"
         : "false";
 
@@ -677,6 +545,275 @@ async function editProduct(id) {
       "hidden"
     );
 
+    productMessage.textContent = "";
 
-    window.scrollTo({
-     
+  } catch (error) {
+
+    alert(
+      "Erreur : " +
+      error.message
+    );
+  }
+}
+
+
+/* =========================
+   ENREGISTREMENT
+========================= */
+
+saveProductBtn.addEventListener(
+  "click",
+  saveProduct
+);
+
+async function saveProduct() {
+
+  const body = {
+
+    name:
+      productName.value.trim(),
+
+    category:
+      productCategory.value.trim(),
+
+    price:
+      Number(productPrice.value),
+
+    stock:
+      Number(productStock.value),
+
+    image_url:
+      productImage.value.trim(),
+
+    badge:
+      productBadge.value.trim(),
+
+    description:
+      productDescription.value.trim(),
+
+    available:
+      productAvailable.value === "true"
+  };
+
+
+  if (!body.name) {
+
+    productMessage.textContent =
+      "Veuillez entrer le nom du produit.";
+
+    return;
+  }
+
+
+  if (
+    !body.price ||
+    body.price < 0
+  ) {
+
+    productMessage.textContent =
+      "Veuillez entrer un prix valide.";
+
+    return;
+  }
+
+
+  if (
+    body.stock < 0 ||
+    Number.isNaN(body.stock)
+  ) {
+
+    productMessage.textContent =
+      "Veuillez entrer un stock valide.";
+
+    return;
+  }
+
+
+  saveProductBtn.disabled =
+    true;
+
+
+  try {
+
+    if (editingProductId) {
+
+      await api(
+        `products?id=eq.${editingProductId}`,
+        {
+          method: "PATCH",
+
+          headers: {
+            "Prefer":
+              "return=minimal"
+          },
+
+          body:
+            JSON.stringify(body)
+        }
+      );
+
+
+      productMessage.textContent =
+        "Produit modifié avec succès ✅";
+
+    } else {
+
+      await api(
+        "products",
+        {
+          method: "POST",
+
+          headers: {
+            "Prefer":
+              "return=minimal"
+          },
+
+          body:
+            JSON.stringify(body)
+        }
+      );
+
+
+      productMessage.textContent =
+        "Produit ajouté avec succès ✅";
+    }
+
+
+    await loadDashboard();
+
+
+    setTimeout(
+      () => {
+        closeProductForm();
+      },
+      800
+    );
+
+  } catch (error) {
+
+    productMessage.textContent =
+      "Erreur : " +
+      error.message;
+
+  } finally {
+
+    saveProductBtn.disabled =
+      false;
+  }
+}
+
+
+/* =========================
+   SUPPRESSION
+========================= */
+
+async function deleteProduct(id) {
+
+  if (
+    !confirm(
+      "Voulez-vous vraiment supprimer ce produit ?"
+    )
+  ) {
+
+    return;
+  }
+
+
+  try {
+
+    await api(
+      `products?id=eq.${id}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+
+    await loadDashboard();
+
+  } catch (error) {
+
+    alert(
+      "Erreur : " +
+      error.message
+    );
+  }
+}
+
+
+/* =========================
+   FERMER FORMULAIRE
+========================= */
+
+cancelProductBtn.addEventListener(
+  "click",
+  closeProductForm
+);
+
+function closeProductForm() {
+
+  productFormCard.classList.add(
+    "hidden"
+  );
+
+  productMessage.textContent = "";
+
+  editingProductId = null;
+
+  clearForm();
+}
+
+
+/* =========================
+   VIDER FORMULAIRE
+========================= */
+
+function clearForm() {
+
+  productName.value = "";
+
+  productCategory.value = "";
+
+  productPrice.value = "";
+
+  productStock.value = "";
+
+  productImage.value = "";
+
+  productBadge.value = "";
+
+  productDescription.value = "";
+
+  productAvailable.value =
+    "true";
+}
+
+
+/* =========================
+   SECURITE AFFICHAGE
+========================= */
+
+function escapeHtml(value) {
+
+  return String(value ?? "")
+    .replace(
+      /&/g,
+      "&amp;"
+    )
+    .replace(
+      /</g,
+      "&lt;"
+    )
+    .replace(
+      />/g,
+      "&gt;"
+    )
+    .replace(
+      /"/g,
+      "&quot;"
+    )
+    .replace(
+      /'/g,
+      "&#039;"
+    );
+}
