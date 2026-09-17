@@ -4,40 +4,164 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DH Shop & Delivery — Administration</title>
-  <link rel="stylesheet" href="style.css">
+
   <style>
-    body{background:#f6f6f6}
-    .admin-wrap{max-width:1100px;margin:auto;padding:20px}
-    .admin-card{background:#fff;border-radius:18px;padding:22px;margin:15px 0;box-shadow:0 5px 20px rgba(0,0,0,.06)}
-    .admin-title{font-size:28px;font-weight:800;margin-bottom:6px}
-    .admin-sub{color:#666;margin-bottom:20px}
-    .admin-input{width:100%;box-sizing:border-box;padding:14px;margin:8px 0;border:1px solid #ddd;border-radius:10px;font-size:16px}
-    .admin-btn{border:0;border-radius:10px;padding:14px 18px;background:#111;color:#fff;font-weight:700;font-size:15px;cursor:pointer}
-    .admin-btn.secondary{background:#eee;color:#111}
-    .admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-    .stat{background:#fff;border-radius:15px;padding:18px}
-    .stat strong{display:block;font-size:26px;margin-top:5px}
-    .hidden{display:none}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-    @media(max-width:700px){.admin-grid{grid-template-columns:repeat(2,1fr)}}
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Arial,sans-serif;
+      background:#f5f5f5;
+      color:#111;
+    }
+
+    .container{
+      max-width:1100px;
+      margin:auto;
+      padding:18px;
+    }
+
+    .card{
+      background:#fff;
+      border-radius:18px;
+      padding:20px;
+      margin-bottom:18px;
+      box-shadow:0 4px 18px rgba(0,0,0,.07);
+    }
+
+    h1{
+      margin:0 0 6px;
+      font-size:27px;
+    }
+
+    h2{
+      margin-top:0;
+    }
+
+    .muted{
+      color:#777;
+    }
+
+    input,textarea,select{
+      width:100%;
+      padding:13px;
+      margin:7px 0;
+      border:1px solid #ddd;
+      border-radius:10px;
+      font-size:16px;
+    }
+
+    textarea{
+      min-height:90px;
+      resize:vertical;
+    }
+
+    button{
+      border:0;
+      border-radius:10px;
+      padding:12px 16px;
+      font-weight:700;
+      cursor:pointer;
+      margin:4px;
+    }
+
+    .primary{
+      background:#111;
+      color:#fff;
+    }
+
+    .secondary{
+      background:#eee;
+      color:#111;
+    }
+
+    .danger{
+      background:#b00020;
+      color:#fff;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
+      margin-bottom:18px;
+    }
+
+    .stat{
+      background:#fff;
+      padding:18px;
+      border-radius:15px;
+    }
+
+    .stat strong{
+      display:block;
+      font-size:28px;
+      margin-top:7px;
+    }
+
+    .product{
+      border:1px solid #eee;
+      border-radius:15px;
+      padding:16px;
+      margin:12px 0;
+    }
+
+    .product-top{
+      display:flex;
+      justify-content:space-between;
+      gap:12px;
+      align-items:center;
+    }
+
+    .badge{
+      display:inline-block;
+      background:#111;
+      color:#fff;
+      padding:5px 9px;
+      border-radius:20px;
+      font-size:12px;
+    }
+
+    .available{
+      color:#16803c;
+      font-weight:700;
+    }
+
+    .unavailable{
+      color:#b00020;
+      font-weight:700;
+    }
+
+    .hidden{
+      display:none !important;
+    }
+
+    @media(max-width:700px){
+      .stats{
+        grid-template-columns:repeat(2,1fr);
+      }
+
+      .product-top{
+        display:block;
+      }
+    }
   </style>
 </head>
 
 <body>
 
-<div class="admin-wrap">
+<div class="container">
 
-  <div class="admin-card" id="loginBox">
-    <div class="admin-title">DH Shop & Delivery</div>
-    <div class="admin-sub">Espace administrateur</div>
+  <!-- CONNEXION -->
+  <div class="card" id="loginBox">
+    <h1>DH Shop & Delivery</h1>
+    <p class="muted">Espace administrateur</p>
 
-    <input id="email" class="admin-input" type="email"
-           placeholder="Adresse e-mail">
+    <input id="email" type="email" placeholder="Adresse e-mail">
 
-    <input id="password" class="admin-input" type="password"
-           placeholder="Mot de passe">
+    <input id="password" type="password" placeholder="Mot de passe">
 
-    <button id="loginBtn" class="admin-btn">
+    <button id="loginBtn" class="primary">
       Se connecter
     </button>
 
@@ -45,25 +169,26 @@
   </div>
 
 
+  <!-- TABLEAU DE BORD -->
   <div id="dashboard" class="hidden">
 
-    <div class="admin-card">
-      <div class="topbar">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
         <div>
-          <div class="admin-title">Tableau de bord</div>
-          <div class="admin-sub">
-            Gestion de DH Shop & Delivery
-          </div>
+          <h1>Tableau de bord</h1>
+          <p class="muted">Gestion de DH Shop & Delivery</p>
         </div>
 
-        <button id="logoutBtn" class="admin-btn secondary">
+        <button id="logoutBtn" class="secondary">
           Se déconnecter
         </button>
       </div>
     </div>
 
 
-    <div class="admin-grid">
+    <!-- STATISTIQUES -->
+    <div class="stats">
+
       <div class="stat">
         Produits
         <strong id="productCount">0</strong>
@@ -75,7 +200,7 @@
       </div>
 
       <div class="stat">
-        Produits disponibles
+        Disponibles
         <strong id="availableCount">0</strong>
       </div>
 
@@ -83,33 +208,123 @@
         Ruptures
         <strong id="outCount">0</strong>
       </div>
+
     </div>
 
 
-    <div class="admin-card">
-      <h2>📦 Produits</h2>
+    <!-- PRODUITS -->
+    <div class="card">
 
-      <button class="admin-btn" onclick="alert('Gestion des produits — étape suivante')">
-        Ajouter / gérer les produits
-      </button>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+        <div>
+          <h2>📦 Produits</h2>
+          <p class="muted">
+            Ajoute et gère les produits de ta boutique.
+          </p>
+        </div>
+
+        <button id="addProductBtn" class="primary">
+          + Ajouter un produit
+        </button>
+      </div>
+
+      <div id="productsList">
+        Chargement des produits...
+      </div>
+
     </div>
 
 
-    <div class="admin-card">
+    <!-- FORMULAIRE PRODUIT -->
+    <div class="card hidden" id="productFormCard">
+
+      <h2 id="productFormTitle">
+        Ajouter un produit
+      </h2>
+
+      <input id="productName"
+             type="text"
+             placeholder="Nom du produit">
+
+      <input id="productCategory"
+             type="text"
+             placeholder="Catégorie">
+
+      <input id="productPrice"
+             type="number"
+             placeholder="Prix en FCFA">
+
+      <input id="productStock"
+             type="number"
+             placeholder="Stock">
+
+      <input id="productImage"
+             type="text"
+             placeholder="Lien de l'image du produit">
+
+      <input id="productBadge"
+             type="text"
+             placeholder="Badge : NOUVEAU, POPULAIRE...">
+
+      <textarea id="productDescription"
+                placeholder="Description du produit"></textarea>
+
+      <select id="productAvailable">
+        <option value="true">Produit disponible</option>
+        <option value="false">Rupture de stock</option>
+      </select>
+
+      <div>
+        <button id="saveProductBtn" class="primary">
+          Enregistrer
+        </button>
+
+        <button id="cancelProductBtn" class="secondary">
+          Annuler
+        </button>
+      </div>
+
+      <p id="productMessage"></p>
+
+    </div>
+
+
+    <!-- COMMANDES -->
+    <div class="card">
+
       <h2>🛒 Commandes</h2>
 
-      <button class="admin-btn" onclick="alert('Gestion des commandes — étape suivante')">
+      <p class="muted">
+        La gestion complète des commandes sera activée dans l'étape suivante.
+      </p>
+
+      <button class="secondary" id="ordersBtn">
         Voir les commandes
       </button>
+
     </div>
 
 
-    <div class="admin-card">
+    <!-- PARAMÈTRES -->
+    <div class="card">
+
       <h2>⚙️ Paramètres</h2>
 
-      <p>Nom de la boutique : <strong>DH Shop & Delivery</strong></p>
-      <p>Paiement : <strong>À la livraison</strong></p>
-      <p>WhatsApp : <strong>22792617092</strong></p>
+      <p>
+        Boutique :
+        <strong>DH Shop & Delivery</strong>
+      </p>
+
+      <p>
+        Paiement :
+        <strong>À la livraison</strong>
+      </p>
+
+      <p>
+        WhatsApp :
+        <strong>22792617092</strong>
+      </p>
+
     </div>
 
   </div>
@@ -119,4 +334,4 @@
 <script src="admin.js"></script>
 
 </body>
-  </html>
+      </html>
