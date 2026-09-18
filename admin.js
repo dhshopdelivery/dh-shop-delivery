@@ -1117,3 +1117,36 @@ function escapeHtml(value) {
   );
 
 })();
+/* =========================
+   TAILLE DES PHOTOS PRODUITS
+========================= */
+
+const productImageStyle = document.createElement("style");
+
+productImageStyle.textContent = `
+  #productsList .admin-product {
+    overflow: hidden;
+  }
+
+  #productsList .admin-product img {
+    width: 100px !important;
+    height: 100px !important;
+    max-width: 100px !important;
+    max-height: 100px !important;
+    object-fit: cover !important;
+    display: block;
+    flex-shrink: 0;
+    border-radius: 12px;
+  }
+
+  @media (max-width: 700px) {
+    #productsList .admin-product img {
+      width: 120px !important;
+      height: 120px !important;
+      max-width: 120px !important;
+      max-height: 120px !important;
+    }
+  }
+`;
+
+document.head.appendChild(productImageStyle);
