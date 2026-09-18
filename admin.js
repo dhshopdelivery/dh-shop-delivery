@@ -817,3 +817,303 @@ function escapeHtml(value) {
       "&#039;"
     );
 }
+/* =========================
+   UPLOAD PHOTO PRODUIT
+   ========================= */
+
+(function () {
+
+  if (!productImage) {
+    console.error("Champ productImage introuvable.");
+    return;
+  }
+
+  /* Éviter de créer le bouton deux fois */
+
+  if (document.getElementById("productPhotoFile")) {
+    return;
+  }
+
+  /* Conteneur */
+
+  const photoBox = document.createElement("div");
+
+  photoBox.id = "productPhotoBox";
+
+  photoBox.style.margin = "10px 0 15px";
+  photoBox.style.padding = "15px";
+  photoBox.style.border = "2px dashed #ddd";
+  photoBox.style.borderRadius = "12px";
+  photoBox.style.textAlign = "center";
+
+  photoBox.innerHTML = `
+
+    <strong style="
+      display:block;
+      margin-bottom:10px;
+      font-size:16px;
+    ">
+      📷 Photo du produit
+    </strong>
+
+    <button
+      type="button"
+      id="chooseProductPhotoBtn"
+      style="
+        background:#111;
+        color:white;
+        border:none;
+        padding:12px 18px;
+        border-radius:10px;
+        font-weight:bold;
+        font-size:15px;
+      "
+    >
+      📷 Choisir une photo
+    </button>
+
+    <input
+      type="file"
+      id="productPhotoFile"
+      accept="image/*"
+      style="display:none;"
+    >
+
+    <div
+      id="productPhotoStatus"
+      style="
+        margin-top:10px;
+        font-size:14px;
+      "
+    ></div>
+
+    <img
+      id="productPhotoPreview"
+      style="
+        display:none;
+        width:150px;
+        height:150px;
+        object-fit:cover;
+        border-radius:12px;
+        margin:12px auto 0;
+      "
+    >
+
+  `;
+
+  /* Placer le nouveau bloc juste avant le champ URL */
+
+  productImage.parentNode.insertBefore(
+    photoBox,
+    productImage
+  );
+
+
+  const chooseBtn =
+    document.getElementById(
+      "chooseProductPhotoBtn"
+    );
+
+  const fileInput =
+    document.getElementById(
+      "productPhotoFile"
+    );
+
+  const status =
+    document.getElementById(
+      "productPhotoStatus"
+    );
+
+  const preview =
+    document.getElementById(
+      "productPhotoPreview"
+    );
+
+
+  /* =========================
+     OUVRIR LA GALERIE
+  ========================= */
+
+  chooseBtn.addEventListener(
+    "click",
+    function () {
+
+      fileInput.click();
+
+    }
+  );
+
+
+  /* =========================
+     SÉLECTION PHOTO
+  ========================= */
+
+  fileInput.addEventListener(
+    "change",
+    async function () {
+
+      const file =
+        this.files[0];
+
+      if (!file) {
+        return;
+      }
+
+
+      if (!file.type.startsWith("image/")) {
+
+        status.textContent =
+          "❌ Veuillez choisir une image.";
+
+        this.value = "";
+
+        return;
+      }
+
+
+      if (!accessToken) {
+
+        status.textContent =
+          "❌ Connecte-toi d'abord à l'administration.";
+
+        this.value = "";
+
+        return;
+      }
+
+
+      /* Aperçu immédiat */
+
+      const reader =
+        new FileReader();
+
+      reader.onload =
+        function (event) {
+
+          preview.src =
+            event.target.result;
+
+          preview.style.display =
+            "block";
+        };
+
+      reader.readAsDataURL(file);
+
+
+      status.textContent =
+        "⏳ Envoi de la photo...";
+
+      chooseBtn.disabled =
+        true;
+
+
+      try {
+
+        /* Extension */
+
+        let extension =
+          "jpg";
+
+        if (file.type === "image/png") {
+          extension = "png";
+        }
+
+        if (file.type === "image/webp") {
+          extension = "webp";
+        }
+
+        if (file.type === "image/gif") {
+          extension = "gif";
+        }
+
+
+        /* Nom unique */
+
+        const fileName =
+          `product-${Date.now()}-${Math.random()
+            .toString(36)
+            .substring(2, 8)}.${extension}`;
+
+
+        /* Upload Supabase */
+
+        const response =
+          await fetch(
+            `${SUPABASE_URL}/storage/v1/object/product-images/${fileName}`,
+            {
+              method: "POST",
+
+              headers: {
+                "apikey":
+                  SUPABASE_KEY,
+
+                "Authorization":
+                  `Bearer ${accessToken}`,
+
+                "Content-Type":
+                  file.type,
+
+                "x-upsert":
+                  "false"
+              },
+
+              body: file
+            }
+          );
+
+
+        const text =
+          await response.text();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            text ||
+            `Erreur HTTP ${response.status}`
+          );
+        }
+
+
+        /* URL publique */
+
+        const imageUrl =
+          `${SUPABASE_URL}/storage/v1/object/public/product-images/${fileName}`;
+
+
+        /*
+          On remplit automatiquement
+          le champ existant
+          "Lien de l'image du produit".
+        */
+
+        productImage.value =
+          imageUrl;
+
+
+        status.textContent =
+          "✅ Photo envoyée avec succès";
+
+
+      } catch (error) {
+
+        console.error(
+          "ERREUR UPLOAD PHOTO :",
+          error
+        );
+
+        status.textContent =
+          "❌ Erreur : " +
+          error.message;
+
+      } finally {
+
+        chooseBtn.disabled =
+          false;
+
+      }
+
+    }
+  );
+
+})();
