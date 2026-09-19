@@ -1150,3 +1150,101 @@ productImageStyle.textContent = `
 `;
 
 document.head.appendChild(productImageStyle);
+/* =========================
+   NUMÉRO WHATSAPP
+========================= */
+
+const whatsappNumberInput =
+  document.getElementById("whatsappNumber");
+
+const saveWhatsappBtn =
+  document.getElementById("saveWhatsappBtn");
+
+const whatsappMessage =
+  document.getElementById("whatsappMessage");
+
+
+if (
+  whatsappNumberInput &&
+  saveWhatsappBtn
+) {
+
+  saveWhatsappBtn.addEventListener(
+    "click",
+    saveWhatsappNumber
+  );
+
+}
+
+
+async function saveWhatsappNumber() {
+
+  const number =
+    whatsappNumberInput.value
+      .trim()
+      .replace(/\s+/g, "");
+
+
+  if (!number) {
+
+    whatsappMessage.textContent =
+      "❌ Veuillez entrer un numéro.";
+
+    return;
+  }
+
+
+  if (!/^[0-9]{8,15}$/.test(number)) {
+
+    whatsappMessage.textContent =
+      "❌ Numéro invalide. Exemple : 22792617092";
+
+    return;
+  }
+
+
+  saveWhatsappBtn.disabled = true;
+
+  whatsappMessage.textContent =
+    "⏳ Enregistrement...";
+
+
+  try {
+
+    await api(
+      "shop_settings?id=eq.1",
+      {
+        method: "PATCH",
+
+        headers: {
+          "Prefer": "return=minimal"
+        },
+
+        body: JSON.stringify({
+          whatsapp_number: number
+        })
+      }
+    );
+
+
+    whatsappMessage.textContent =
+      "✅ Numéro WhatsApp enregistré avec succès.";
+
+  } catch (error) {
+
+    console.error(
+      "ERREUR WHATSAPP :",
+      error
+    );
+
+    whatsappMessage.textContent =
+      "❌ Erreur : " +
+      error.message;
+
+  } finally {
+
+    saveWhatsappBtn.disabled = false;
+
+  }
+
+   }
