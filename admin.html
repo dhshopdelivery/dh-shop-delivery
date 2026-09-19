@@ -271,6 +271,32 @@
       margin:0;
     }
 
+    /* PARAMÈTRES */
+
+    .settings-box{
+      background:#f8f8f8;
+      border-radius:14px;
+      padding:15px;
+      margin-top:12px;
+    }
+
+    .settings-label{
+      display:block;
+      font-weight:700;
+      margin-bottom:4px;
+    }
+
+    .settings-help{
+      color:#777;
+      font-size:14px;
+      margin:4px 0 10px;
+    }
+
+    .settings-message{
+      margin-top:10px;
+      font-weight:700;
+    }
+
     @media(max-width:700px){
 
       .stats{
@@ -375,43 +401,23 @@
     <div class="stats">
 
       <div class="stat">
-
         Produits
-
-        <strong id="productCount">
-          0
-        </strong>
-
+        <strong id="productCount">0</strong>
       </div>
 
       <div class="stat">
-
         Commandes
-
-        <strong id="orderCount">
-          0
-        </strong>
-
+        <strong id="orderCount">0</strong>
       </div>
 
       <div class="stat">
-
         Disponibles
-
-        <strong id="availableCount">
-          0
-        </strong>
-
+        <strong id="availableCount">0</strong>
       </div>
 
       <div class="stat">
-
         Ruptures
-
-        <strong id="outCount">
-          0
-        </strong>
-
+        <strong id="outCount">0</strong>
       </div>
 
     </div>
@@ -581,8 +587,6 @@
       </div>
 
 
-      <!-- FILTRE -->
-
       <div class="orders-toolbar">
 
         <select id="orderFilter">
@@ -617,9 +621,7 @@
 
 
       <div id="ordersList">
-
         Chargement des commandes...
-
       </div>
 
     </div>
@@ -647,12 +649,44 @@
         </strong>
       </p>
 
-      <p>
-        WhatsApp :
-        <strong>
-          22792617092
-        </strong>
-      </p>
+
+      <div class="settings-box">
+
+        <label
+          class="settings-label"
+          for="whatsappNumber"
+        >
+          📱 Numéro WhatsApp
+        </label>
+
+        <p class="settings-help">
+          Entre le numéro au format international,
+          sans le signe +.
+          Exemple : 22792617092
+        </p>
+
+        <input
+          id="whatsappNumber"
+          type="tel"
+          inputmode="numeric"
+          placeholder="22792617092"
+          value="22792617092"
+        >
+
+        <button
+          id="saveWhatsappBtn"
+          class="primary"
+          type="button"
+        >
+          💾 Enregistrer le numéro
+        </button>
+
+        <p
+          id="whatsappMessage"
+          class="settings-message"
+        ></p>
+
+      </div>
 
     </div>
 
