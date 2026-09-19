@@ -1,9 +1,10 @@
 /* =========================================================
    DH SHOP & DELIVERY
-   APP.JS
+   APP.JS — VERSION STABLE
    ========================================================= */
 
-const SUPABASE_URL = "https://ocmvthymdjkrhmdyieim.supabase.co";
+const SUPABASE_URL =
+  "https://ocmvthymdjkrhmdyieim.supabase.co";
 
 const SUPABASE_KEY =
   "sb_publishable_OnchBsvLE3RVA-EualXSSA_pfVvFpTW";
@@ -15,7 +16,7 @@ const CONFIG = {
 
 
 /* =========================================================
-   ÉTAT DE LA BOUTIQUE
+   ÉTAT
    ========================================================= */
 
 let products = [];
@@ -29,11 +30,13 @@ let shopSettings = {
 
 
 /* =========================================================
-   RÉCUPÉRATION DU PANIER
+   PANIER LOCAL
    ========================================================= */
 
 try {
-  cart = JSON.parse(localStorage.getItem("dhCart") || "[]");
+  cart = JSON.parse(
+    localStorage.getItem("dhCart") || "[]"
+  );
 
   if (!Array.isArray(cart)) {
     cart = [];
@@ -47,10 +50,17 @@ try {
    ÉLÉMENTS HTML
    ========================================================= */
 
-const grid = document.getElementById("grid");
-const category = document.getElementById("category");
-const search = document.getElementById("search");
-const desktopSearch = document.getElementById("desktopSearch");
+const grid =
+  document.getElementById("grid");
+
+const category =
+  document.getElementById("category");
+
+const search =
+  document.getElementById("search");
+
+const desktopSearch =
+  document.getElementById("desktopSearch");
 
 const categoryCards =
   document.getElementById("categoryCards");
@@ -112,7 +122,8 @@ const emptyProducts =
    ========================================================= */
 
 if (year) {
-  year.textContent = new Date().getFullYear();
+  year.textContent =
+    new Date().getFullYear();
 }
 
 
@@ -129,8 +140,10 @@ async function api(endpoint, options = {}) {
 
       headers: {
         apikey: SUPABASE_KEY,
-        Authorization: `Bearer ${SUPABASE_KEY}`,
-        "Content-Type": "application/json",
+        Authorization:
+          `Bearer ${SUPABASE_KEY}`,
+        "Content-Type":
+          "application/json",
         ...(options.headers || {})
       }
     }
@@ -138,10 +151,13 @@ async function api(endpoint, options = {}) {
 
   if (!response.ok) {
 
-    let message = "Erreur Supabase";
+    let message =
+      "Erreur Supabase";
 
     try {
-      const data = await response.json();
+
+      const data =
+        await response.json();
 
       message =
         data.message ||
@@ -155,7 +171,8 @@ async function api(endpoint, options = {}) {
     throw new Error(message);
   }
 
-  const text = await response.text();
+  const text =
+    await response.text();
 
   if (!text) {
     return null;
@@ -191,7 +208,10 @@ async function init() {
 
   } catch (error) {
 
-    console.error(error);
+    console.error(
+      "Erreur initialisation :",
+      error
+    );
 
     if (grid) {
 
@@ -199,7 +219,8 @@ async function init() {
         <div class="loading">
           Impossible de charger les produits.
           <br><br>
-          Vérifiez votre connexion puis actualisez la page.
+          Vérifiez votre connexion puis
+          actualisez la page.
         </div>
       `;
     }
@@ -208,18 +229,22 @@ async function init() {
 
 
 /* =========================================================
-   PARAMÈTRES DE LA BOUTIQUE
+   PARAMÈTRES BOUTIQUE
    ========================================================= */
 
 async function loadSettings() {
 
   try {
 
-    const data = await api(
-      "shop_settings?id=eq.1&select=*"
-    );
+    const data =
+      await api(
+        "shop_settings?id=eq.1&select=*"
+      );
 
-    if (Array.isArray(data) && data.length) {
+    if (
+      Array.isArray(data) &&
+      data.length
+    ) {
 
       shopSettings = {
         ...shopSettings,
@@ -230,7 +255,7 @@ async function loadSettings() {
   } catch (error) {
 
     console.warn(
-      "Impossible de charger les paramètres :",
+      "Paramètres non chargés :",
       error
     );
   }
@@ -243,30 +268,35 @@ async function loadSettings() {
 
 async function loadProducts() {
 
-  const data = await api(
-    "products?select=*&order=created_at.desc"
-  );
+  const data =
+    await api(
+      "products?select=*&order=created_at.desc"
+    );
 
-  products = Array.isArray(data)
-    ? data
-    : [];
+  products =
+    Array.isArray(data)
+      ? data
+      : [];
 
-  products = products.filter(product => {
+  products =
+    products.filter(product => {
 
-    if (product.available === false) {
-      return false;
-    }
+      if (
+        product.available === false
+      ) {
+        return false;
+      }
 
-    if (
-      product.stock !== null &&
-      product.stock !== undefined &&
-      Number(product.stock) <= 0
-    ) {
-      return false;
-    }
+      if (
+        product.stock !== null &&
+        product.stock !== undefined &&
+        Number(product.stock) <= 0
+      ) {
+        return false;
+      }
 
-    return true;
-  });
+      return true;
+    });
 }
 
 
@@ -288,10 +318,6 @@ function renderCategories() {
     )
   ];
 
-  /* -------------------------
-     SELECT
-     ------------------------- */
-
   category.innerHTML = `
     <option value="all">
       Toutes les catégories
@@ -304,6 +330,7 @@ function renderCategories() {
       document.createElement("option");
 
     option.value = cat;
+
     option.textContent =
       formatCategory(cat);
 
@@ -311,17 +338,14 @@ function renderCategories() {
   });
 
 
-  /* -------------------------
-     CARTES CATÉGORIES
-     ------------------------- */
-
   categoryCards.innerHTML = "";
 
 
   const allCard =
     document.createElement("button");
 
-  allCard.className = "category-card";
+  allCard.className =
+    "category-card";
 
   allCard.type = "button";
 
@@ -339,25 +363,26 @@ function renderCategories() {
     </small>
   `;
 
-  allCard.addEventListener("click", () => {
+  allCard.addEventListener(
+    "click",
+    () => {
 
-    category.value = "all";
+      category.value = "all";
 
-    renderProducts();
+      renderProducts();
 
-    document
-      .getElementById("boutique")
-      ?.scrollIntoView({
-        behavior: "smooth"
-      });
-  });
+      document
+        .getElementById("boutique")
+        ?.scrollIntoView({
+          behavior: "smooth"
+        });
+    }
+  );
 
-  categoryCards.appendChild(allCard);
+  categoryCards.appendChild(
+    allCard
+  );
 
-
-  /* -------------------------
-     CATÉGORIES RÉELLES
-     ------------------------- */
 
   categories.forEach(cat => {
 
@@ -382,20 +407,34 @@ function renderCategories() {
 
         ${
           image
-            ? `<img
-                 src="${escapeAttribute(image)}"
-                 alt="${escapeAttribute(formatCategory(cat))}"
-                 style="width:100%;height:100%;object-fit:cover;"
-               >`
-            : `<span>${escapeHtml(
-                getCategoryInitial(cat)
-              )}</span>`
+            ? `
+              <img
+                src="${escapeAttribute(image)}"
+                alt="${escapeAttribute(
+                  formatCategory(cat)
+                )}"
+                style="
+                  width:100%;
+                  height:100%;
+                  object-fit:cover;
+                "
+              >
+            `
+            : `
+              <span>
+                ${escapeHtml(
+                  getCategoryInitial(cat)
+                )}
+              </span>
+            `
         }
 
       </div>
 
       <strong>
-        ${escapeHtml(formatCategory(cat))}
+        ${escapeHtml(
+          formatCategory(cat)
+        )}
       </strong>
 
       <small>
@@ -403,20 +442,21 @@ function renderCategories() {
       </small>
     `;
 
+    card.addEventListener(
+      "click",
+      () => {
 
-    card.addEventListener("click", () => {
+        category.value = cat;
 
-      category.value = cat;
+        renderProducts();
 
-      renderProducts();
-
-      document
-        .getElementById("boutique")
-        ?.scrollIntoView({
-          behavior: "smooth"
-        });
-    });
-
+        document
+          .getElementById("boutique")
+          ?.scrollIntoView({
+            behavior: "smooth"
+          });
+      }
+    );
 
     categoryCards.appendChild(card);
   });
@@ -424,7 +464,7 @@ function renderCategories() {
 
 
 /* =========================================================
-   AFFICHAGE PRODUITS
+   PRODUITS
    ========================================================= */
 
 function renderProducts() {
@@ -439,30 +479,28 @@ function renderProducts() {
   const searchTerm =
     getSearchTerm();
 
-
   const filtered =
     products.filter(product => {
 
       const categoryMatch =
         selectedCategory === "all" ||
-        product.category === selectedCategory;
+        product.category ===
+          selectedCategory;
 
-
-      const text =
-        `
-          ${product.name || ""}
-          ${product.description || ""}
-          ${product.category || ""}
-        `.toLowerCase();
-
+      const text = `
+        ${product.name || ""}
+        ${product.description || ""}
+        ${product.category || ""}
+      `.toLowerCase();
 
       const searchMatch =
         !searchTerm ||
         text.includes(searchTerm);
 
-
-      return categoryMatch &&
-             searchMatch;
+      return (
+        categoryMatch &&
+        searchMatch
+      );
     });
 
 
@@ -471,7 +509,9 @@ function renderProducts() {
     grid.innerHTML = "";
 
     if (emptyProducts) {
-      emptyProducts.classList.remove("hidden");
+      emptyProducts.classList.remove(
+        "hidden"
+      );
     }
 
     return;
@@ -479,15 +519,16 @@ function renderProducts() {
 
 
   if (emptyProducts) {
-    emptyProducts.classList.add("hidden");
+    emptyProducts.classList.add(
+      "hidden"
+    );
   }
 
 
   grid.innerHTML =
     filtered
-      .map(product => createProductCard(product))
+      .map(createProductCard)
       .join("");
-
 
   attachProductEvents();
 }
@@ -506,16 +547,20 @@ function createProductCard(product) {
     product.badge
       ? `
         <span class="product-badge">
-          ${escapeHtml(product.badge)}
+          ${escapeHtml(
+            product.badge
+          )}
         </span>
       `
       : "";
 
-
   return `
     <article
       class="product-card"
-      data-id="${product.id}">
+      data-id="${escapeAttribute(
+        product.id
+      )}"
+    >
 
       <div class="product-image">
 
@@ -526,7 +571,10 @@ function createProductCard(product) {
             ? `
               <img
                 src="${escapeAttribute(image)}"
-                alt="${escapeAttribute(product.name || "Produit DH")}"
+                alt="${escapeAttribute(
+                  product.name ||
+                  "Produit DH"
+                )}"
                 loading="lazy"
               >
             `
@@ -541,7 +589,8 @@ function createProductCard(product) {
                   color:#d4af37;
                   font-size:42px;
                   font-weight:900;
-                ">
+                "
+              >
                 DH
               </div>
             `
@@ -549,22 +598,22 @@ function createProductCard(product) {
 
       </div>
 
-
       <div class="product-info">
 
         <div class="product-category">
           ${escapeHtml(
-            formatCategory(product.category)
+            formatCategory(
+              product.category
+            )
           )}
         </div>
 
-
         <h3>
           ${escapeHtml(
-            product.name || "Produit DH"
+            product.name ||
+            "Produit DH"
           )}
         </h3>
-
 
         ${
           product.description
@@ -578,26 +627,31 @@ function createProductCard(product) {
             : ""
         }
 
-
         <div class="product-price">
-          ${formatPrice(product.price)}
+          ${formatPrice(
+            product.price
+          )}
         </div>
-
 
         <div class="product-actions">
 
           <button
             type="button"
             class="details-btn"
-            data-id="${product.id}">
+            data-id="${escapeAttribute(
+              product.id
+            )}"
+          >
             Détails
           </button>
-
 
           <button
             type="button"
             class="add-btn"
-            data-id="${product.id}">
+            data-id="${escapeAttribute(
+              product.id
+            )}"
+          >
             Ajouter
           </button>
 
@@ -624,10 +678,9 @@ function attachProductEvents() {
         "click",
         () => {
 
-          const id =
-            button.dataset.id;
-
-          addToCart(id);
+          addToCart(
+            button.dataset.id
+          );
         }
       );
     });
@@ -641,10 +694,9 @@ function attachProductEvents() {
         "click",
         () => {
 
-          const id =
-            button.dataset.id;
-
-          openProduct(id);
+          openProduct(
+            button.dataset.id
+          );
         }
       );
     });
@@ -658,12 +710,19 @@ function attachProductEvents() {
 function getSearchTerm() {
 
   const mobileValue =
-    search?.value?.trim().toLowerCase() || "";
+    search?.value
+      ?.trim()
+      .toLowerCase() || "";
 
   const desktopValue =
-    desktopSearch?.value?.trim().toLowerCase() || "";
+    desktopSearch?.value
+      ?.trim()
+      .toLowerCase() || "";
 
-  return desktopValue || mobileValue;
+  return (
+    desktopValue ||
+    mobileValue
+  );
 }
 
 
@@ -697,7 +756,9 @@ if (desktopSearch) {
   desktopSearch.addEventListener(
     "input",
     () => {
-      syncSearch(desktopSearch.value);
+      syncSearch(
+        desktopSearch.value
+      );
     }
   );
 }
@@ -726,19 +787,24 @@ if (searchBtn) {
         return;
       }
 
+      const visible =
+        searchPanel.style.display ===
+        "block";
+
       searchPanel.style.display =
-        searchPanel.style.display === "block"
+        visible
           ? "none"
           : "block";
 
-
       if (
-        searchPanel.style.display === "block" &&
+        !visible &&
         search
       ) {
-        setTimeout(() => {
-          search.focus();
-        }, 100);
+
+        setTimeout(
+          () => search.focus(),
+          100
+        );
       }
     }
   );
@@ -752,7 +818,8 @@ if (closeSearch) {
     () => {
 
       if (searchPanel) {
-        searchPanel.style.display = "none";
+        searchPanel.style.display =
+          "none";
       }
     }
   );
@@ -776,20 +843,21 @@ function addToCart(id) {
 
   const product =
     products.find(
-      p => String(p.id) === String(id)
+      p =>
+        String(p.id) ===
+        String(id)
     );
-
 
   if (!product) {
     return;
   }
 
-
   const existing =
     cart.find(
-      item => String(item.id) === String(id)
+      item =>
+        String(item.id) ===
+        String(id)
     );
-
 
   if (existing) {
 
@@ -818,7 +886,6 @@ function addToCart(id) {
     });
   }
 
-
   saveCart();
 
   updateCart();
@@ -832,42 +899,43 @@ function changeQty(id, change) {
   const item =
     cart.find(
       product =>
-        String(product.id) === String(id)
+        String(product.id) ===
+        String(id)
     );
-
 
   if (!item) {
     return;
   }
 
-
   const product =
     products.find(
-      p => String(p.id) === String(id)
+      p =>
+        String(p.id) ===
+        String(id)
     );
 
-
   item.qty += change;
-
 
   if (
     product &&
     Number(product.stock) > 0 &&
-    item.qty > Number(product.stock)
+    item.qty >
+      Number(product.stock)
   ) {
-    item.qty = Number(product.stock);
-  }
 
+    item.qty =
+      Number(product.stock);
+  }
 
   if (item.qty <= 0) {
 
     cart =
       cart.filter(
         product =>
-          String(product.id) !== String(id)
+          String(product.id) !==
+          String(id)
       );
   }
-
 
   saveCart();
 
@@ -880,7 +948,8 @@ function removeItem(id) {
   cart =
     cart.filter(
       item =>
-        String(item.id) !== String(id)
+        String(item.id) !==
+        String(id)
     );
 
   saveCart();
@@ -894,21 +963,19 @@ function updateCart() {
   const totalQuantity =
     cart.reduce(
       (total, item) =>
-        total + Number(item.qty || 0),
+        total +
+        Number(item.qty || 0),
       0
     );
-
 
   if (cartCount) {
     cartCount.textContent =
       totalQuantity;
   }
 
-
   if (!cartItems) {
     return;
   }
-
 
   if (!cart.length) {
 
@@ -918,9 +985,11 @@ function updateCart() {
           padding:50px 10px;
           text-align:center;
           color:#888;
-        ">
-
-        <div style="font-size:45px;">
+        "
+      >
+        <div
+          style="font-size:45px;"
+        >
           🛍️
         </div>
 
@@ -929,9 +998,9 @@ function updateCart() {
         </h3>
 
         <p>
-          Ajoutez des produits pour commencer.
+          Ajoutez des produits
+          pour commencer.
         </p>
-
       </div>
     `;
 
@@ -958,25 +1027,21 @@ function updateCart() {
               String(item.id)
           );
 
-
         if (!product) {
           return "";
         }
-
 
         const price =
           Number(product.price) || 0;
 
         const subtotal =
-          price * Number(item.qty);
-
+          price *
+          Number(item.qty);
 
         total += subtotal;
 
-
         const image =
           getProductImage(product);
-
 
         return `
           <div
@@ -984,8 +1049,10 @@ function updateCart() {
               display:flex;
               gap:12px;
               padding:13px 0;
-              border-bottom:1px solid #eee;
-            ">
+              border-bottom:
+                1px solid #eee;
+            "
+          >
 
             <div
               style="
@@ -995,13 +1062,16 @@ function updateCart() {
                 border-radius:10px;
                 overflow:hidden;
                 background:#f2f2f2;
-              ">
+              "
+            >
 
               ${
                 image
                   ? `
                     <img
-                      src="${escapeAttribute(image)}"
+                      src="${escapeAttribute(
+                        image
+                      )}"
                       alt=""
                       style="
                         width:100%;
@@ -1019,7 +1089,8 @@ function updateCart() {
                         background:#111;
                         color:#d4af37;
                         font-weight:900;
-                      ">
+                      "
+                    >
                       DH
                     </div>
                   `
@@ -1031,7 +1102,9 @@ function updateCart() {
             <div style="flex:1;">
 
               <strong>
-                ${escapeHtml(product.name)}
+                ${escapeHtml(
+                  product.name
+                )}
               </strong>
 
               <div
@@ -1039,7 +1112,8 @@ function updateCart() {
                   margin-top:4px;
                   color:#777;
                   font-size:12px;
-                ">
+                "
+              >
                 ${formatPrice(price)}
               </div>
 
@@ -1050,92 +1124,41 @@ function updateCart() {
                   display:flex;
                   align-items:center;
                   gap:8px;
-                ">
+                "
+              >
 
                 <button
                   type="button"
-                  onclick="changeQty('${product.id}',-1)"
+                  onclick="
+                    changeQty(
+                      '${escapeAttribute(
+                        product.id
+                      )}',
+                      -1
+                    )
+                  "
                   style="
                     width:30px;
                     height:30px;
                     border:1px solid #ddd;
                     background:#fff;
                     border-radius:5px;
-                  ">
+                  "
+                >
                   −
                 </button>
-
 
                 <b>
                   ${item.qty}
                 </b>
 
-
                 <button
                   type="button"
-                  onclick="changeQty('${product.id}',1)"
-                  style="
-                    width:30px;
-                    height:30px;
-                    border:1px solid #ddd;
-                    background:#fff;
-                    border-radius:5px;
-                  ">
-                  +
-                </button>
-
-
-                <button
-                  type="button"
-                  onclick="removeItem('${product.id}')"
-                  style="
-                    margin-left:auto;
-                    border:0;
-                    background:transparent;
-                    color:#c33;
-                    font-size:12px;
-                  ">
-                  Supprimer
-                </button>
-
-              </div>
-
-            </div>
-
-          </div>
-        `;
-      })
-      .join("");
-
-
-  if (cartTotal) {
-
-    cartTotal.textContent =
-      formatPrice(total);
-  }
-}
-
-
-/* =========================================================
-   OUVERTURE PANIER
-   ========================================================= */
-
-function openCart() {
-
-  if (drawer) {
-    drawer.classList.add("open");
-  }
-
-  if (drawerBack) {
-    drawerBack.classList.remove("hidden");
-  }
-
-  document.body.style.overflow =
-    "hidden";
-}
-
-
-function closeCartDrawer() {
-
-  if (d
-init();
+                  onclick="
+                    changeQty(
+                      '${escapeAttribute(
+                        product.id
+                      )}',
+                      1
+                    )
+                  
