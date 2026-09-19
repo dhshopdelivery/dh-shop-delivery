@@ -1138,3 +1138,4 @@ function openCart() {
 function closeCartDrawer() {
 
   if (d
+init();
