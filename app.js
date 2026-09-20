@@ -1161,4 +1161,4 @@ function updateCart() {
                       )}',
                       1
                     )
-                  
+     init();             
