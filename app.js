@@ -3,15 +3,15 @@
    APP.JS — VERSION STABLE
    ========================================================= */
 
-const SUPABASE_URL =
-  "https://ocmvthymdjkrhmdyieim.supabase.co";
+const SUPABASE_URL = "https://ocmvthymdjkrhmdyieim.supabase.co";
 
 const SUPABASE_KEY =
   "sb_publishable_OnchBsvLE3RVA-EualXSSA_pfVvFpTW";
 
 const CONFIG = {
   shopName: "DH Shop & Delivery",
-  currency: "FCFA"
+  currency: "FCFA",
+  whatsappNumber: "22792617092"
 };
 
 
@@ -23,9 +23,9 @@ let products = [];
 let cart = [];
 
 let shopSettings = {
-  whatsapp_number: "22792617092",
-  shop_name: "DH Shop & Delivery",
-  currency: "FCFA"
+  whatsapp_number: CONFIG.whatsappNumber,
+  shop_name: CONFIG.shopName,
+  currency: CONFIG.currency
 };
 
 
@@ -34,9 +34,8 @@ let shopSettings = {
    ========================================================= */
 
 try {
-  cart = JSON.parse(
-    localStorage.getItem("dhCart") || "[]"
-  );
+  const savedCart = localStorage.getItem("dhCart");
+  cart = savedCart ? JSON.parse(savedCart) : [];
 
   if (!Array.isArray(cart)) {
     cart = [];
@@ -50,71 +49,38 @@ try {
    ÉLÉMENTS HTML
    ========================================================= */
 
-const grid =
-  document.getElementById("grid");
+const grid = document.getElementById("grid");
+const category = document.getElementById("category");
+const search = document.getElementById("search");
+const desktopSearch = document.getElementById("desktopSearch");
 
-const category =
-  document.getElementById("category");
+const categoryCards = document.getElementById("categoryCards");
 
-const search =
-  document.getElementById("search");
+const cartBtn = document.getElementById("cartBtn");
+const cartCount = document.getElementById("cartCount");
 
-const desktopSearch =
-  document.getElementById("desktopSearch");
+const drawer = document.getElementById("drawer");
+const drawerBack = document.getElementById("drawerBack");
+const closeCart = document.getElementById("closeCart");
 
-const categoryCards =
-  document.getElementById("categoryCards");
+const cartItems = document.getElementById("cartItems");
+const cartTotal = document.getElementById("cartTotal");
 
-const cartBtn =
-  document.getElementById("cartBtn");
+const checkout = document.getElementById("checkout");
 
-const cartCount =
-  document.getElementById("cartCount");
+const modal = document.getElementById("modal");
+const modalContent = document.getElementById("modalContent");
 
-const drawer =
-  document.getElementById("drawer");
+const year = document.getElementById("year");
 
-const drawerBack =
-  document.getElementById("drawerBack");
+const searchBtn = document.getElementById("searchBtn");
+const searchPanel = document.getElementById("searchPanel");
+const closeSearch = document.getElementById("closeSearch");
 
-const closeCart =
-  document.getElementById("closeCart");
+const trackingWhatsapp = document.getElementById("trackingWhatsapp");
+const footerWhatsapp = document.getElementById("footerWhatsapp");
 
-const cartItems =
-  document.getElementById("cartItems");
-
-const cartTotal =
-  document.getElementById("cartTotal");
-
-const checkout =
-  document.getElementById("checkout");
-
-const modal =
-  document.getElementById("modal");
-
-const modalContent =
-  document.getElementById("modalContent");
-
-const year =
-  document.getElementById("year");
-
-const searchBtn =
-  document.getElementById("searchBtn");
-
-const searchPanel =
-  document.getElementById("searchPanel");
-
-const closeSearch =
-  document.getElementById("closeSearch");
-
-const trackingWhatsapp =
-  document.getElementById("trackingWhatsapp");
-
-const footerWhatsapp =
-  document.getElementById("footerWhatsapp");
-
-const emptyProducts =
-  document.getElementById("emptyProducts");
+const emptyProducts = document.getElementById("emptyProducts");
 
 
 /* =========================================================
@@ -122,8 +88,7 @@ const emptyProducts =
    ========================================================= */
 
 if (year) {
-  year.textContent =
-    new Date().getFullYear();
+  year.textContent = new Date().getFullYear();
 }
 
 
@@ -133,55 +98,77 @@ if (year) {
 
 async function api(endpoint, options = {}) {
 
-  const response = await fetch(
-    `${SUPABASE_URL}/rest/v1/${endpoint}`,
-    {
-      ...options,
+  const controller = new AbortController();
 
-      headers: {
-        apikey: SUPABASE_KEY,
-        Authorization:
-          `Bearer ${SUPABASE_KEY}`,
-        "Content-Type":
-          "application/json",
-        ...(options.headers || {})
-      }
-    }
-  );
-
-  if (!response.ok) {
-
-    let message =
-      "Erreur Supabase";
-
-    try {
-
-      const data =
-        await response.json();
-
-      message =
-        data.message ||
-        data.error_description ||
-        data.hint ||
-        data.error ||
-        message;
-
-    } catch (error) {}
-
-    throw new Error(message);
-  }
-
-  const text =
-    await response.text();
-
-  if (!text) {
-    return null;
-  }
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 12000);
 
   try {
-    return JSON.parse(text);
+
+    const response = await fetch(
+      `${SUPABASE_URL}/rest/v1/${endpoint}`,
+      {
+        ...options,
+
+        signal: controller.signal,
+
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+          ...(options.headers || {})
+        }
+      }
+    );
+
+    const text = await response.text();
+
+    if (!response.ok) {
+
+      let message = text;
+
+      try {
+        const data = JSON.parse(text);
+
+        message =
+          data.message ||
+          data.error_description ||
+          data.details ||
+          data.hint ||
+          text;
+
+      } catch (error) {
+        // réponse non JSON
+      }
+
+      throw new Error(
+        `Supabase ${response.status}: ${message}`
+      );
+    }
+
+    if (!text) {
+      return null;
+    }
+
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      return text;
+    }
+
   } catch (error) {
-    return text;
+
+    if (error.name === "AbortError") {
+      throw new Error(
+        "Supabase ne répond pas. Vérifie la connexion internet."
+      );
+    }
+
+    throw error;
+
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -192,39 +179,61 @@ async function api(endpoint, options = {}) {
 
 async function init() {
 
+  console.log("DH Shop : démarrage...");
+
+  /*
+   * IMPORTANT :
+   * Les produits sont chargés indépendamment
+   * des paramètres de la boutique.
+   */
+
   try {
 
-    await loadSettings();
-
     await loadProducts();
-
-    renderCategories();
-
-    renderProducts();
-
-    updateCart();
-
-    setupWhatsApp();
 
   } catch (error) {
 
     console.error(
-      "Erreur initialisation :",
+      "Erreur produits :",
       error
     );
 
-    if (grid) {
+    showProductsError(error);
 
-      grid.innerHTML = `
-        <div class="loading">
-          Impossible de charger les produits.
-          <br><br>
-          Vérifiez votre connexion puis
-          actualisez la page.
-        </div>
-      `;
-    }
   }
+
+
+  /*
+   * Les paramètres ne doivent jamais empêcher
+   * les produits de s'afficher.
+   */
+
+  try {
+
+    await loadSettings();
+
+  } catch (error) {
+
+    console.warn(
+      "Paramètres non chargés :",
+      error
+    );
+
+  }
+
+
+  renderCategories();
+  renderProducts();
+
+  updateCart();
+
+  setupWhatsApp();
+
+  setupEvents();
+
+  console.log(
+    "DH Shop : initialisation terminée."
+  );
 }
 
 
@@ -234,31 +243,26 @@ async function init() {
 
 async function loadSettings() {
 
-  try {
+  const data = await api(
+    "shop_settings?id=eq.1&select=*"
+  );
 
-    const data =
-      await api(
-        "shop_settings?id=eq.1&select=*"
-      );
+  if (
+    Array.isArray(data) &&
+    data.length > 0
+  ) {
 
-    if (
-      Array.isArray(data) &&
-      data.length
-    ) {
+    shopSettings = {
+      ...shopSettings,
+      ...data[0]
+    };
 
-      shopSettings = {
-        ...shopSettings,
-        ...data[0]
-      };
-    }
-
-  } catch (error) {
-
-    console.warn(
-      "Paramètres non chargés :",
-      error
-    );
   }
+
+  console.log(
+    "Paramètres boutique :",
+    shopSettings
+  );
 }
 
 
@@ -268,35 +272,124 @@ async function loadSettings() {
 
 async function loadProducts() {
 
-  const data =
-    await api(
-      "products?select=*&order=created_at.desc"
+  console.log(
+    "DH Shop : chargement des produits..."
+  );
+
+  const data = await api(
+    "products?select=*&order=created_at.desc"
+  );
+
+  if (!Array.isArray(data)) {
+
+    throw new Error(
+      "La réponse de Supabase n'est pas une liste de produits."
     );
 
-  products =
-    Array.isArray(data)
-      ? data
-      : [];
+  }
 
-  products =
-    products.filter(product => {
+  products = data.filter(product => {
 
-      if (
-        product.available === false
-      ) {
-        return false;
-      }
+    if (
+      product.available === false
+    ) {
+      return false;
+    }
 
-      if (
-        product.stock !== null &&
-        product.stock !== undefined &&
-        Number(product.stock) <= 0
-      ) {
-        return false;
-      }
+    if (
+      product.stock !== null &&
+      product.stock !== undefined &&
+      Number(product.stock) <= 0
+    ) {
+      return false;
+    }
 
-      return true;
-    });
+    return true;
+  });
+
+  console.log(
+    "DH Shop : produits reçus :",
+    products
+  );
+
+  if (products.length === 0) {
+
+    if (grid) {
+      grid.innerHTML = `
+        <div class="loading" style="
+          grid-column:1/-1;
+          padding:40px 20px;
+          text-align:center;
+          color:#777;
+        ">
+          Aucun produit disponible pour le moment.
+        </div>
+      `;
+    }
+
+  }
+
+}
+
+
+/* =========================================================
+   ERREUR PRODUITS
+   ========================================================= */
+
+function showProductsError(error) {
+
+  if (!grid) {
+    return;
+  }
+
+  grid.innerHTML = `
+    <div style="
+      grid-column:1/-1;
+      padding:30px 20px;
+      text-align:center;
+      background:#fff;
+      border:1px solid #ddd;
+      border-radius:12px;
+    ">
+
+      <div style="
+        font-size:38px;
+        margin-bottom:12px;
+      ">
+        ⚠️
+      </div>
+
+      <h3 style="
+        margin:0 0 10px;
+      ">
+        Impossible de charger les produits
+      </h3>
+
+      <p style="
+        margin:0 0 15px;
+        color:#777;
+      ">
+        ${escapeHtml(error?.message || "Erreur inconnue")}
+      </p>
+
+      <button
+        type="button"
+        onclick="location.reload()"
+        style="
+          padding:12px 18px;
+          border:0;
+          border-radius:8px;
+          background:#111;
+          color:#fff;
+          font-weight:700;
+        "
+      >
+        Réessayer
+      </button>
+
+    </div>
+  `;
+
 }
 
 
@@ -306,7 +399,7 @@ async function loadProducts() {
 
 function renderCategories() {
 
-  if (!categoryCards || !category) {
+  if (!category) {
     return;
   }
 
@@ -318,11 +411,13 @@ function renderCategories() {
     )
   ];
 
+
   category.innerHTML = `
     <option value="all">
       Toutes les catégories
     </option>
   `;
+
 
   categories.forEach(cat => {
 
@@ -335,7 +430,13 @@ function renderCategories() {
       formatCategory(cat);
 
     category.appendChild(option);
+
   });
+
+
+  if (!categoryCards) {
+    return;
+  }
 
 
   categoryCards.innerHTML = "";
@@ -367,7 +468,9 @@ function renderCategories() {
     "click",
     () => {
 
-      category.value = "all";
+      if (category) {
+        category.value = "all";
+      }
 
       renderProducts();
 
@@ -376,12 +479,11 @@ function renderCategories() {
         ?.scrollIntoView({
           behavior: "smooth"
         });
+
     }
   );
 
-  categoryCards.appendChild(
-    allCard
-  );
+  categoryCards.appendChild(allCard);
 
 
   categories.forEach(cat => {
@@ -394,15 +496,19 @@ function renderCategories() {
 
     card.type = "button";
 
+
     const product =
       products.find(
-        p => p.category === cat
+        item => item.category === cat
       );
+
 
     const image =
       getProductImage(product);
 
+
     card.innerHTML = `
+
       <div class="category-image">
 
         ${
@@ -410,9 +516,7 @@ function renderCategories() {
             ? `
               <img
                 src="${escapeAttribute(image)}"
-                alt="${escapeAttribute(
-                  formatCategory(cat)
-                )}"
+                alt="${escapeAttribute(formatCategory(cat))}"
                 style="
                   width:100%;
                   height:100%;
@@ -432,9 +536,7 @@ function renderCategories() {
       </div>
 
       <strong>
-        ${escapeHtml(
-          formatCategory(cat)
-        )}
+        ${escapeHtml(formatCategory(cat))}
       </strong>
 
       <small>
@@ -442,11 +544,14 @@ function renderCategories() {
       </small>
     `;
 
+
     card.addEventListener(
       "click",
       () => {
 
-        category.value = cat;
+        if (category) {
+          category.value = cat;
+        }
 
         renderProducts();
 
@@ -455,16 +560,20 @@ function renderCategories() {
           ?.scrollIntoView({
             behavior: "smooth"
           });
+
       }
     );
 
+
     categoryCards.appendChild(card);
+
   });
+
 }
 
 
 /* =========================================================
-   PRODUITS
+   AFFICHAGE PRODUITS
    ========================================================= */
 
 function renderProducts() {
@@ -473,19 +582,22 @@ function renderProducts() {
     return;
   }
 
+
   const selectedCategory =
     category?.value || "all";
 
+
   const searchTerm =
     getSearchTerm();
+
 
   const filtered =
     products.filter(product => {
 
       const categoryMatch =
         selectedCategory === "all" ||
-        product.category ===
-          selectedCategory;
+        product.category === selectedCategory;
+
 
       const text = `
         ${product.name || ""}
@@ -493,18 +605,21 @@ function renderProducts() {
         ${product.category || ""}
       `.toLowerCase();
 
+
       const searchMatch =
         !searchTerm ||
         text.includes(searchTerm);
+
 
       return (
         categoryMatch &&
         searchMatch
       );
+
     });
 
 
-  if (!filtered.length) {
+  if (filtered.length === 0) {
 
     grid.innerHTML = "";
 
@@ -530,7 +645,9 @@ function renderProducts() {
       .map(createProductCard)
       .join("");
 
+
   attachProductEvents();
+
 }
 
 
@@ -543,23 +660,22 @@ function createProductCard(product) {
   const image =
     getProductImage(product);
 
+
   const badge =
     product.badge
       ? `
         <span class="product-badge">
-          ${escapeHtml(
-            product.badge
-          )}
+          ${escapeHtml(product.badge)}
         </span>
       `
       : "";
 
+
   return `
+
     <article
       class="product-card"
-      data-id="${escapeAttribute(
-        product.id
-      )}"
+      data-id="${escapeAttribute(product.id)}"
     >
 
       <div class="product-image">
@@ -572,25 +688,22 @@ function createProductCard(product) {
               <img
                 src="${escapeAttribute(image)}"
                 alt="${escapeAttribute(
-                  product.name ||
-                  "Produit DH"
+                  product.name || "Produit DH"
                 )}"
                 loading="lazy"
               >
             `
             : `
-              <div
-                style="
-                  width:100%;
-                  height:100%;
-                  display:grid;
-                  place-items:center;
-                  background:#111;
-                  color:#d4af37;
-                  font-size:42px;
-                  font-weight:900;
-                "
-              >
+              <div style="
+                width:100%;
+                height:100%;
+                display:grid;
+                place-items:center;
+                background:#111;
+                color:#d4af37;
+                font-size:42px;
+                font-weight:900;
+              ">
                 DH
               </div>
             `
@@ -598,22 +711,22 @@ function createProductCard(product) {
 
       </div>
 
+
       <div class="product-info">
 
         <div class="product-category">
           ${escapeHtml(
-            formatCategory(
-              product.category
-            )
+            formatCategory(product.category)
           )}
         </div>
 
+
         <h3>
           ${escapeHtml(
-            product.name ||
-            "Produit DH"
+            product.name || "Produit DH"
           )}
         </h3>
+
 
         ${
           product.description
@@ -627,30 +740,27 @@ function createProductCard(product) {
             : ""
         }
 
+
         <div class="product-price">
-          ${formatPrice(
-            product.price
-          )}
+          ${formatPrice(product.price)}
         </div>
+
 
         <div class="product-actions">
 
           <button
             type="button"
             class="details-btn"
-            data-id="${escapeAttribute(
-              product.id
-            )}"
+            data-id="${escapeAttribute(product.id)}"
           >
             Détails
           </button>
 
+
           <button
             type="button"
             class="add-btn"
-            data-id="${escapeAttribute(
-              product.id
-            )}"
+            data-id="${escapeAttribute(product.id)}"
           >
             Ajouter
           </button>
@@ -660,6 +770,7 @@ function createProductCard(product) {
       </div>
 
     </article>
+
   `;
 }
 
@@ -681,8 +792,10 @@ function attachProductEvents() {
           addToCart(
             button.dataset.id
           );
+
         }
       );
+
     });
 
 
@@ -697,9 +810,12 @@ function attachProductEvents() {
           openProduct(
             button.dataset.id
           );
+
         }
       );
+
     });
+
 }
 
 
@@ -714,15 +830,15 @@ function getSearchTerm() {
       ?.trim()
       .toLowerCase() || "";
 
+
   const desktopValue =
     desktopSearch?.value
       ?.trim()
       .toLowerCase() || "";
 
-  return (
-    desktopValue ||
-    mobileValue
-  );
+
+  return mobileValue || desktopValue;
+
 }
 
 
@@ -737,6 +853,7 @@ function syncSearch(value) {
   }
 
   renderProducts();
+
 }
 
 
@@ -748,6 +865,7 @@ if (search) {
       syncSearch(search.value);
     }
   );
+
 }
 
 
@@ -756,11 +874,10 @@ if (desktopSearch) {
   desktopSearch.addEventListener(
     "input",
     () => {
-      syncSearch(
-        desktopSearch.value
-      );
+      syncSearch(desktopSearch.value);
     }
   );
+
 }
 
 
@@ -770,6 +887,7 @@ if (category) {
     "change",
     renderProducts
   );
+
 }
 
 
@@ -788,26 +906,25 @@ if (searchBtn) {
       }
 
       const visible =
-        searchPanel.style.display ===
-        "block";
+        searchPanel.style.display === "block";
+
 
       searchPanel.style.display =
-        visible
-          ? "none"
-          : "block";
+        visible ? "none" : "block";
 
-      if (
-        !visible &&
-        search
-      ) {
+
+      if (!visible && search) {
 
         setTimeout(
           () => search.focus(),
           100
         );
+
       }
+
     }
   );
+
 }
 
 
@@ -821,8 +938,10 @@ if (closeSearch) {
         searchPanel.style.display =
           "none";
       }
+
     }
   );
+
 }
 
 
@@ -836,6 +955,7 @@ function saveCart() {
     "dhCart",
     JSON.stringify(cart)
   );
+
 }
 
 
@@ -848,9 +968,11 @@ function addToCart(id) {
         String(id)
     );
 
+
   if (!product) {
     return;
   }
+
 
   const existing =
     cart.find(
@@ -859,14 +981,16 @@ function addToCart(id) {
         String(id)
     );
 
+
+  const stock =
+    Number(product.stock);
+
+
   if (existing) {
 
-    const maxStock =
-      Number(product.stock);
-
     if (
-      maxStock > 0 &&
-      existing.qty >= maxStock
+      stock > 0 &&
+      existing.qty >= stock
     ) {
 
       alert(
@@ -884,13 +1008,14 @@ function addToCart(id) {
       id: product.id,
       qty: 1
     });
+
   }
 
+
   saveCart();
-
   updateCart();
-
   openCart();
+
 }
 
 
@@ -898,14 +1023,16 @@ function changeQty(id, change) {
 
   const item =
     cart.find(
-      product =>
-        String(product.id) ===
+      item =>
+        String(item.id) ===
         String(id)
     );
+
 
   if (!item) {
     return;
   }
+
 
   const product =
     products.find(
@@ -914,32 +1041,44 @@ function changeQty(id, change) {
         String(id)
     );
 
-  item.qty += change;
+
+  if (!product) {
+    return;
+  }
+
+
+  item.qty += Number(change);
+
+
+  const stock =
+    Number(product.stock);
+
 
   if (
-    product &&
-    Number(product.stock) > 0 &&
-    item.qty >
-      Number(product.stock)
+    stock > 0 &&
+    item.qty > stock
   ) {
 
-    item.qty =
-      Number(product.stock);
+    item.qty = stock;
+
   }
+
 
   if (item.qty <= 0) {
 
     cart =
       cart.filter(
-        product =>
-          String(product.id) !==
+        item =>
+          String(item.id) !==
           String(id)
       );
+
   }
 
-  saveCart();
 
+  saveCart();
   updateCart();
+
 }
 
 
@@ -952,45 +1091,87 @@ function removeItem(id) {
         String(id)
     );
 
-  saveCart();
 
+  saveCart();
   updateCart();
+
 }
 
 
+/* =========================================================
+   MISE À JOUR PANIER
+   ========================================================= */
+
 function updateCart() {
 
-  const totalQuantity =
-    cart.reduce(
-      (total, item) =>
-        total +
-        Number(item.qty || 0),
-      0
-    );
+  let totalQuantity = 0;
+  let total = 0;
+
+
+  cart.forEach(item => {
+
+    const product =
+      products.find(
+        p =>
+          String(p.id) ===
+          String(item.id)
+      );
+
+
+    if (!product) {
+      return;
+    }
+
+
+    const qty =
+      Number(item.qty) || 0;
+
+
+    const price =
+      Number(product.price) || 0;
+
+
+    totalQuantity += qty;
+
+    total +=
+      price * qty;
+
+  });
+
 
   if (cartCount) {
     cartCount.textContent =
       totalQuantity;
   }
 
+
+  if (cartTotal) {
+
+    cartTotal.textContent =
+      formatPrice(total);
+
+  }
+
+
   if (!cartItems) {
     return;
   }
 
-  if (!cart.length) {
+
+  if (cart.length === 0) {
 
     cartItems.innerHTML = `
-      <div
-        style="
-          padding:50px 10px;
-          text-align:center;
-          color:#888;
-        "
-      >
-        <div
-          style="font-size:45px;"
-        >
-          🛍️
+      <div style="
+        padding:50px 10px;
+        text-align:center;
+        color:#888;
+      ">
+
+        <div style="
+          font-size:45px;
+          margin-bottom:12px;
+        ">
+          🛒
         </div>
 
         <h3>
@@ -998,22 +1179,14 @@ function updateCart() {
         </h3>
 
         <p>
-          Ajoutez des produits
-          pour commencer.
+          Ajoutez des produits pour commencer.
         </p>
+
       </div>
     `;
 
-    if (cartTotal) {
-      cartTotal.textContent =
-        "0 FCFA";
-    }
-
     return;
   }
-
-
-  let total = 0;
 
 
   cartItems.innerHTML =
@@ -1027,138 +1200,46 @@ function updateCart() {
               String(item.id)
           );
 
+
         if (!product) {
           return "";
         }
 
+
         const price =
           Number(product.price) || 0;
+
 
         const subtotal =
           price *
           Number(item.qty);
 
-        total += subtotal;
 
         const image =
           getProductImage(product);
 
-        return `
-          <div
-            style="
-              display:flex;
-              gap:12px;
-              padding:13px 0;
-              border-bottom:
-                1px solid #eee;
-            "
-          >
 
-            <div
-              style="
-                width:70px;
-                height:70px;
-                flex-shrink:0;
-                border-radius:10px;
-                overflow:hidden;
-                background:#f2f2f2;
-              "
-            >
+        return `
+
+          <div style="
+            display:flex;
+            gap:12px;
+            padding:12px 0;
+            border-bottom:1px solid #eee;
+          ">
+
+            <div style="
+              width:70px;
+              height:70px;
+              flex-shrink:0;
+              overflow:hidden;
+              border-radius:10px;
+              background:#111;
+            ">
 
               ${
                 image
                   ? `
                     <img
-                      src="${escapeAttribute(
-                        image
-                      )}"
-                      alt=""
-                      style="
-                        width:100%;
-                        height:100%;
-                        object-fit:cover;
-                      "
-                    >
-                  `
-                  : `
-                    <div
-                      style="
-                        height:100%;
-                        display:grid;
-                        place-items:center;
-                        background:#111;
-                        color:#d4af37;
-                        font-weight:900;
-                      "
-                    >
-                      DH
-                    </div>
-                  `
-              }
-
-            </div>
-
-
-            <div style="flex:1;">
-
-              <strong>
-                ${escapeHtml(
-                  product.name
-                )}
-              </strong>
-
-              <div
-                style="
-                  margin-top:4px;
-                  color:#777;
-                  font-size:12px;
-                "
-              >
-                ${formatPrice(price)}
-              </div>
-
-
-              <div
-                style="
-                  margin-top:9px;
-                  display:flex;
-                  align-items:center;
-                  gap:8px;
-                "
-              >
-
-                <button
-                  type="button"
-                  onclick="
-                    changeQty(
-                      '${escapeAttribute(
-                        product.id
-                      )}',
-                      -1
-                    )
-                  "
-                  style="
-                    width:30px;
-                    height:30px;
-                    border:1px solid #ddd;
-                    background:#fff;
-                    border-radius:5px;
-                  "
-                >
-                  −
-                </button>
-
-                <b>
-                  ${item.qty}
-                </b>
-
-                <button
-                  type="button"
-                  onclick="
-                    changeQty(
-                      '${escapeAttribute(
-                        product.id
-                      )}',
-                      1
-                    )
-     init();             
+                      src="${escapeAttribute(image)}"
+                     
