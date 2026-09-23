@@ -6,7 +6,15 @@
 <meta name="theme-color" content="#0b0b0b">
 <title>DH Shop & Delivery</title>
 <link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css?v=100">
+<link rel="stylesheet" href="style.css?v=101">
+<style>
+.variant-label{display:block;margin:12px 0;font-weight:700;color:#111}
+.variant-label select{display:block;width:100%;margin-top:6px;padding:12px;border:1px solid #d8d8d8;border-radius:10px;background:#fff;font-size:15px}
+.variant-label select:focus{outline:2px solid #d4af37;border-color:#d4af37}
+.shopShortcut{position:fixed;right:14px;bottom:14px;z-index:9990;background:#d4af37;color:#111;text-decoration:none;font-weight:800;padding:12px 17px;border-radius:999px;box-shadow:0 8px 24px rgba(0,0,0,.22)}
+.shopShortcut:hover{transform:translateY(-2px)}
+@media(max-width:600px){.shopShortcut{right:10px;bottom:10px;padding:11px 14px;font-size:14px}}
+</style>
 </head>
 <body>
 <header class="header">
@@ -18,7 +26,7 @@
 <div id="mobileNav" class="mobileNav"><a href="#accueil">Accueil</a><a href="#boutique">Boutique</a><a href="#categories">Catégories</a><a href="#apropos">À propos</a><a href="#suivi">Suivi de commande</a></div>
 </header>
 
-<section id="accueil" class="hero"><div class="wrap heroGrid"><div><em>DH SHOP & DELIVERY</em><h1>Votre style.<br><span>Votre choix.</span><br>Votre livraison.</h1><p>Découvrez nos produits et commandez simplement depuis votre téléphone.</p><a class="btn gold" href="#boutique">Découvrir la boutique</a></div><div class="heroCircle"><small>SHOP</small><strong>DH</strong><small>DELIVERY • NIGER</small></div></div></section>
+<section id="accueil" class="hero"><div class="wrap heroGrid"><div><em>DH SHOP & DELIVERY</em><h1>Votre style.<br><span>Votre choix.</span><br>Votre livraison.</h1><p>Découvrez nos produits et commandez simplement depuis votre téléphone.</p><a class="btn gold" href="#boutique">🛍️ Découvrir la boutique</a></div><div class="heroCircle"><small>SHOP</small><strong>DH</strong><small>DELIVERY • NIGER</small></div></div></section>
 
 <section class="trust"><div class="wrap trustGrid"><div>🚚 <span><b>Livraison</b><small>À domicile au Niger</small></span></div><div>💵 <span><b>Paiement</b><small>À la livraison</small></span></div><div>📱 <span><b>Commande</b><small>Par WhatsApp</small></span></div><div>✨ <span><b>Qualité</b><small>Produits sélectionnés</small></span></div></div></section>
 
@@ -32,12 +40,14 @@
 
 <footer><div class="wrap footerGrid"><div class="logo"><b>DH</b><span>DH SHOP<small>& DELIVERY</small></span></div><div><h3>Boutique</h3><a href="#boutique">Produits</a><a href="#categories">Catégories</a></div><div><h3>Service</h3><a href="#apropos">À propos</a><a id="footerWhatsapp" href="#">WhatsApp</a></div></div><div class="bottom">© <span id="year"></span> DH Shop & Delivery</div></footer>
 
+<a class="shopShortcut" href="#boutique">🛍️ Boutique</a>
+
 <div id="overlay" class="overlay"></div>
 <aside id="cartDrawer" class="drawer"><div class="drawerHead"><h2>Votre panier</h2><button id="closeCart">✕</button></div><div id="cartItems" class="cartItems"></div><div class="drawerFoot"><div class="total"><span>Total</span><b id="cartTotal">0 FCFA</b></div><button id="checkoutBtn" class="btn gold full">Commander</button><button id="continueBtn" class="btn dark full">Continuer mes achats</button></div></aside>
 
 <div id="productModal" class="modal"><div class="modalCard"><button id="closeProductModal" class="close">✕</button><div id="modalContent"></div></div></div>
 <div id="checkoutModal" class="modal"><div class="modalCard"><button id="closeCheckoutModal" class="close">✕</button><em>COMMANDE</em><h2>Finaliser la commande</h2><form id="checkoutForm"><label>Nom complet<input id="customerName" required></label><label>Téléphone<input id="customerPhone" type="tel" required></label><label>Adresse<textarea id="customerAddress" rows="3" required></textarea></label><label>Paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label><p>Total : <b id="checkoutTotal">0 FCFA</b></p><button class="btn gold full">Envoyer la commande</button><div id="checkoutMessage"></div></form></div></div>
 
-<script src="app.js?v=100" defer></script>
+<script src="app.js?v=101" defer></script>
 </body>
 </html>
