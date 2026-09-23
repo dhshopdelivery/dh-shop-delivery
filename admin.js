@@ -1248,3 +1248,331 @@ async function saveWhatsappNumber() {
   }
 
    }
+/* =========================
+   GESTION DES COMMANDES
+========================= */
+
+async function loadOrders() {
+
+  const loadingElement = findOrdersLoadingElement();
+
+  if (!loadingElement) {
+    console.error("Zone des commandes introuvable.");
+    return;
+  }
+
+  loadingElement.textContent = "⏳ Chargement des commandes...";
+
+  try {
+
+    const orders = await api(
+      "orders?select=id,customer_name,phone,address,items,total,payment_method,status,created_at&order=created_at.desc"
+    );
+
+    console.log("COMMANDES RECUES :", orders);
+
+    const orderCount =
+      document.getElementById("orderCount");
+
+    if (orderCount) {
+      orderCount.textContent = orders.length;
+    }
+
+    renderOrders(orders);
+
+  } catch (error) {
+
+    console.error("ERREUR COMMANDES :", error);
+
+    loadingElement.innerHTML = `
+      <p class="error">
+        ❌ Impossible de charger les commandes.<br>
+        ${escapeHtml(error.message)}
+      </p>
+    `;
+  }
+}
+
+
+/* =========================
+   TROUVER LA ZONE COMMANDES
+========================= */
+
+function findOrdersLoadingElement() {
+
+  const knownIds = [
+    "ordersList",
+    "orderList",
+    "ordersContainer",
+    "orders",
+    "commandesList",
+    "commandesContainer"
+  ];
+
+  for (const id of knownIds) {
+
+    const element =
+      document.getElementById(id);
+
+    if (element) {
+      return element;
+    }
+  }
+
+
+  /* Recherche du texte actuel */
+
+  const elements =
+    document.querySelectorAll("*");
+
+  for (const element of elements) {
+
+    if (
+      element.children.length === 0 &&
+      element.textContent.trim() ===
+      "Chargement des commandes..."
+    ) {
+
+      return element;
+    }
+  }
+
+  return null;
+}
+
+
+/* =========================
+   AFFICHER LES COMMANDES
+========================= */
+
+function renderOrders(orders) {
+
+  const container =
+    findOrdersLoadingElement();
+
+  if (!container) {
+    return;
+  }
+
+
+  if (
+    !orders ||
+    orders.length === 0
+  ) {
+
+    container.innerHTML = `
+      <div style="
+        padding:20px;
+        text-align:center;
+        color:#666;
+      ">
+        📦 Aucune commande pour le moment.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    orders.map(order => {
+
+      let itemsText = "";
+
+      try {
+
+        const items =
+          typeof order.items === "string"
+            ? JSON.parse(order.items)
+            : order.items;
+
+        if (Array.isArray(items)) {
+
+          itemsText =
+            items.map(item => `
+              <div>
+                ${escapeHtml(
+                  item.name ||
+                  item.product_name ||
+                  "Produit"
+                )}
+                × ${Number(
+                  item.quantity || 1
+                )}
+              </div>
+            `).join("");
+
+        } else if (items) {
+
+          itemsText =
+            escapeHtml(
+              JSON.stringify(items)
+            );
+        }
+
+      } catch {
+
+        itemsText =
+          escapeHtml(
+            String(order.items || "")
+          );
+      }
+
+
+      const date =
+        order.created_at
+          ? new Date(
+              order.created_at
+            ).toLocaleString(
+              "fr-FR",
+              {
+                dateStyle: "short",
+                timeStyle: "short"
+              }
+            )
+          : "";
+
+
+      const status =
+        order.status ||
+        "nouvelle";
+
+
+      return `
+        <div class="admin-order" style="
+          background:#fff;
+          border-radius:14px;
+          padding:18px;
+          margin:12px 0;
+          box-shadow:0 3px 12px rgba(0,0,0,.08);
+        ">
+
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:12px;
+          ">
+
+            <strong>
+              🧾 Commande #${escapeHtml(
+                String(order.id)
+              )}
+            </strong>
+
+            <span>
+              ${escapeHtml(status)}
+            </span>
+
+          </div>
+
+
+          <p>
+            👤 <strong>
+              ${escapeHtml(
+                order.customer_name || ""
+              )}
+            </strong>
+          </p>
+
+
+          <p>
+            📞 ${escapeHtml(
+              order.phone || ""
+            )}
+          </p>
+
+
+          <p>
+            📍 ${escapeHtml(
+              order.address || ""
+            )}
+          </p>
+
+
+          <p>
+            💳 ${escapeHtml(
+              order.payment_method ||
+              "À la livraison"
+            )}
+          </p>
+
+
+          <div style="
+            background:#f7f7f7;
+            border-radius:10px;
+            padding:10px;
+            margin:10px 0;
+          ">
+
+            <strong>🛍 Produits :</strong>
+
+            <div style="margin-top:6px;">
+              ${itemsText}
+            </div>
+
+          </div>
+
+
+          <p>
+            💰 <strong>
+              ${Number(
+                order.total || 0
+              ).toLocaleString("fr-FR")}
+              FCFA
+            </strong>
+          </p>
+
+
+          <small style="color:#777;">
+            ${escapeHtml(date)}
+          </small>
+
+        </div>
+      `;
+
+    }).join("");
+}
+
+
+/* =========================
+   CHARGER LES COMMANDES
+   APRÈS LA CONNEXION
+========================= */
+
+const ancienLoadDashboard =
+  loadDashboard;
+
+loadDashboard =
+  async function () {
+
+    await ancienLoadDashboard();
+
+    await loadOrders();
+
+  };
+
+
+/* =========================
+   BOUTON ACTUALISER
+========================= */
+
+document
+  .querySelectorAll("button")
+  .forEach(button => {
+
+    if (
+      button.textContent
+        .toLowerCase()
+        .includes("actualiser")
+    ) {
+
+      button.addEventListener(
+        "click",
+        loadOrders
+      );
+
+    }
+
+  });
