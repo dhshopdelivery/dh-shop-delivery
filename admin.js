@@ -21,11 +21,8 @@ const productBadge = document.getElementById("productBadge");
 const productDescription = document.getElementById("productDescription");
 const productAvailable = document.getElementById("productAvailable");
 
-/* =========================
-   TAILLES ET COULEURS
-========================= */
-
-function ensureVariantFields() {
+/* DH - Tailles et couleurs */
+function ensureDHVariantFields() {
   if (!productFormCard || document.getElementById("dhVariantFields")) return;
 
   const box = document.createElement("div");
@@ -34,58 +31,36 @@ function ensureVariantFields() {
     "margin:15px 0;padding:15px;border:1px solid #ddd;border-radius:12px;background:#fafafa;";
 
   box.innerHTML = `
-    <div style="font-weight:bold;margin-bottom:12px;">🛍️ Tailles et couleurs</div>
-
-    <label style="display:block;margin-bottom:6px;font-weight:bold;">
-      Tailles
-    </label>
-    <input
-      id="productSizes"
-      type="text"
-      placeholder="Ex : M, L, XL, XXL ou 32, 34, 36, 38"
-      style="width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;margin-bottom:6px;"
-    >
-    <small style="display:block;margin-bottom:14px;color:#666;">
-      Sépare les tailles par des virgules. Aucune taille fixe imposée.
+    <strong style="display:block;margin-bottom:12px;">🛍️ Tailles et couleurs</strong>
+    <label style="display:block;font-weight:bold;margin-bottom:6px;">Tailles</label>
+    <input id="dhProductSizes" type="text"
+      placeholder="M, L, XL, XXL ou 32, 34, 36, 38"
+      style="width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;margin-bottom:6px;">
+    <small style="display:block;color:#666;margin-bottom:12px;">
+      Sépare les tailles par des virgules. Laisse vide si aucune taille.
     </small>
 
-    <label style="display:block;margin-bottom:6px;font-weight:bold;">
-      Couleurs
-    </label>
-    <input
-      id="productColors"
-      type="text"
-      placeholder="Ex : Noir, Blanc, Rouge, Bleu"
-      style="width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;"
-    >
-    <small style="display:block;margin-top:6px;color:#666;">
-      Laisse vide si le produit n'a pas de couleur.
-    </small>
+    <label style="display:block;font-weight:bold;margin-bottom:6px;">Couleurs</label>
+    <input id="dhProductColors" type="text"
+      placeholder="Noir, Blanc, Rouge, Bleu"
+      style="width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;">
   `;
 
-  if (productDescription && productDescription.parentNode) {
-    productDescription.parentNode.insertBefore(box, productDescription);
-  } else if (productFormCard) {
-    productFormCard.appendChild(box);
-  }
+  const parent = productDescription?.parentNode || productFormCard;
+  parent.insertBefore(box, productDescription || null);
 }
 
-function readVariantInput(id) {
+function dhVariants(id) {
   const el = document.getElementById(id);
-  if (!el) return [];
-  return el.value
-    .split(",")
-    .map(v => v.trim())
-    .filter(Boolean);
+  return el ? el.value.split(",").map(x => x.trim()).filter(Boolean) : [];
 }
 
-function setVariantInput(id, values) {
+function dhSetVariants(id, value) {
   const el = document.getElementById(id);
-  if (!el) return;
-  el.value = Array.isArray(values) ? values.join(", ") : "";
+  if (el) el.value = Array.isArray(value) ? value.join(", ") : "";
 }
 
-ensureVariantFields();
+ensureDHVariantFields();
 
 
 const saveProductBtn = document.getElementById("saveProductBtn");
@@ -607,8 +582,8 @@ async function editProduct(id) {
         ? "true"
         : "false";
 
-    setVariantInput("productSizes", product.sizes);
-    setVariantInput("productColors", product.colors);
+    dhSetVariants("dhProductSizes", product.sizes);
+    dhSetVariants("dhProductColors", product.colors);
 
 
     productFormCard.classList.remove(
@@ -665,10 +640,10 @@ async function saveProduct() {
       productAvailable.value === "true",
 
     sizes:
-      readVariantInput("productSizes"),
+      dhVariants("dhProductSizes"),
 
     colors:
-      readVariantInput("productColors")
+      dhVariants("dhProductColors")
   };
 
 
@@ -863,8 +838,8 @@ function clearForm() {
   productAvailable.value =
     "true";
 
-  setVariantInput("productSizes", []);
-  setVariantInput("productColors", []);
+  dhSetVariants("dhProductSizes", []);
+  dhSetVariants("dhProductColors", []);
 }
 
 
@@ -1133,4 +1108,530 @@ function escapeHtml(value) {
                   file.type,
 
                 "x-upsert":
-             
+                  "false"
+              },
+
+              body: file
+            }
+          );
+
+
+        const text =
+          await response.text();
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            text ||
+            `Erreur HTTP ${response.status}`
+          );
+        }
+
+
+        /* URL publique */
+
+        const imageUrl =
+          `${SUPABASE_URL}/storage/v1/object/public/product-images/${fileName}`;
+
+
+        /*
+          On remplit automatiquement
+          le champ existant
+          "Lien de l'image du produit".
+        */
+
+        productImage.value =
+          imageUrl;
+
+
+        status.textContent =
+          "✅ Photo envoyée avec succès";
+
+
+      } catch (error) {
+
+        console.error(
+          "ERREUR UPLOAD PHOTO :",
+          error
+        );
+
+        status.textContent =
+          "❌ Erreur : " +
+          error.message;
+
+      } finally {
+
+        chooseBtn.disabled =
+          false;
+
+      }
+
+    }
+  );
+
+})();
+/* =========================
+   TAILLE DES PHOTOS PRODUITS
+========================= */
+
+const productImageStyle = document.createElement("style");
+
+productImageStyle.textContent = `
+  #productsList .admin-product {
+    overflow: hidden;
+  }
+
+  #productsList .admin-product img {
+    width: 100px !important;
+    height: 100px !important;
+    max-width: 100px !important;
+    max-height: 100px !important;
+    object-fit: cover !important;
+    display: block;
+    flex-shrink: 0;
+    border-radius: 12px;
+  }
+
+  @media (max-width: 700px) {
+    #productsList .admin-product img {
+      width: 120px !important;
+      height: 120px !important;
+      max-width: 120px !important;
+      max-height: 120px !important;
+    }
+  }
+`;
+
+document.head.appendChild(productImageStyle);
+/* =========================
+   NUMÉRO WHATSAPP
+========================= */
+
+const whatsappNumberInput =
+  document.getElementById("whatsappNumber");
+
+const saveWhatsappBtn =
+  document.getElementById("saveWhatsappBtn");
+
+const whatsappMessage =
+  document.getElementById("whatsappMessage");
+
+
+if (
+  whatsappNumberInput &&
+  saveWhatsappBtn
+) {
+
+  saveWhatsappBtn.addEventListener(
+    "click",
+    saveWhatsappNumber
+  );
+
+}
+
+
+async function saveWhatsappNumber() {
+
+  const number =
+    whatsappNumberInput.value
+      .trim()
+      .replace(/\s+/g, "");
+
+
+  if (!number) {
+
+    whatsappMessage.textContent =
+      "❌ Veuillez entrer un numéro.";
+
+    return;
+  }
+
+
+  if (!/^[0-9]{8,15}$/.test(number)) {
+
+    whatsappMessage.textContent =
+      "❌ Numéro invalide. Exemple : 22792617092";
+
+    return;
+  }
+
+
+  saveWhatsappBtn.disabled = true;
+
+  whatsappMessage.textContent =
+    "⏳ Enregistrement...";
+
+
+  try {
+
+    await api(
+      "shop_settings?id=eq.1",
+      {
+        method: "PATCH",
+
+        headers: {
+          "Prefer": "return=minimal"
+        },
+
+        body: JSON.stringify({
+          whatsapp_number: number
+        })
+      }
+    );
+
+
+    whatsappMessage.textContent =
+      "✅ Numéro WhatsApp enregistré avec succès.";
+
+  } catch (error) {
+
+    console.error(
+      "ERREUR WHATSAPP :",
+      error
+    );
+
+    whatsappMessage.textContent =
+      "❌ Erreur : " +
+      error.message;
+
+  } finally {
+
+    saveWhatsappBtn.disabled = false;
+
+  }
+
+   }
+/* =========================
+   GESTION DES COMMANDES
+========================= */
+
+async function loadOrders() {
+
+  const loadingElement = findOrdersLoadingElement();
+
+  if (!loadingElement) {
+    console.error("Zone des commandes introuvable.");
+    return;
+  }
+
+  loadingElement.textContent = "⏳ Chargement des commandes...";
+
+  try {
+
+    const orders = await api(
+      "orders?select=id,customer_name,phone,address,items,total,payment_method,status,created_at&order=created_at.desc"
+    );
+
+    console.log("COMMANDES RECUES :", orders);
+
+    const orderCount =
+      document.getElementById("orderCount");
+
+    if (orderCount) {
+      orderCount.textContent = orders.length;
+    }
+
+    renderOrders(orders);
+
+  } catch (error) {
+
+    console.error("ERREUR COMMANDES :", error);
+
+    loadingElement.innerHTML = `
+      <p class="error">
+        ❌ Impossible de charger les commandes.<br>
+        ${escapeHtml(error.message)}
+      </p>
+    `;
+  }
+}
+
+
+/* =========================
+   TROUVER LA ZONE COMMANDES
+========================= */
+
+function findOrdersLoadingElement() {
+
+  const knownIds = [
+    "ordersList",
+    "orderList",
+    "ordersContainer",
+    "orders",
+    "commandesList",
+    "commandesContainer"
+  ];
+
+  for (const id of knownIds) {
+
+    const element =
+      document.getElementById(id);
+
+    if (element) {
+      return element;
+    }
+  }
+
+
+  /* Recherche du texte actuel */
+
+  const elements =
+    document.querySelectorAll("*");
+
+  for (const element of elements) {
+
+    if (
+      element.children.length === 0 &&
+      element.textContent.trim() ===
+      "Chargement des commandes..."
+    ) {
+
+      return element;
+    }
+  }
+
+  return null;
+}
+
+
+/* =========================
+   AFFICHER LES COMMANDES
+========================= */
+
+function renderOrders(orders) {
+
+  const container =
+    findOrdersLoadingElement();
+
+  if (!container) {
+    return;
+  }
+
+
+  if (
+    !orders ||
+    orders.length === 0
+  ) {
+
+    container.innerHTML = `
+      <div style="
+        padding:20px;
+        text-align:center;
+        color:#666;
+      ">
+        📦 Aucune commande pour le moment.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  container.innerHTML =
+    orders.map(order => {
+
+      let itemsText = "";
+
+      try {
+
+        const items =
+          typeof order.items === "string"
+            ? JSON.parse(order.items)
+            : order.items;
+
+        if (Array.isArray(items)) {
+
+          itemsText =
+            items.map(item => `
+              <div>
+                ${escapeHtml(
+                  item.name ||
+                  item.product_name ||
+                  "Produit"
+                )}
+                × ${Number(
+                  item.quantity || 1
+                )}
+              </div>
+            `).join("");
+
+        } else if (items) {
+
+          itemsText =
+            escapeHtml(
+              JSON.stringify(items)
+            );
+        }
+
+      } catch {
+
+        itemsText =
+          escapeHtml(
+            String(order.items || "")
+          );
+      }
+
+
+      const date =
+        order.created_at
+          ? new Date(
+              order.created_at
+            ).toLocaleString(
+              "fr-FR",
+              {
+                dateStyle: "short",
+                timeStyle: "short"
+              }
+            )
+          : "";
+
+
+      const status =
+        order.status ||
+        "nouvelle";
+
+
+      return `
+        <div class="admin-order" style="
+          background:#fff;
+          border-radius:14px;
+          padding:18px;
+          margin:12px 0;
+          box-shadow:0 3px 12px rgba(0,0,0,.08);
+        ">
+
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            gap:10px;
+            flex-wrap:wrap;
+            margin-bottom:12px;
+          ">
+
+            <strong>
+              🧾 Commande #${escapeHtml(
+                String(order.id)
+              )}
+            </strong>
+
+            <select
+              class="dh-order-status"
+              data-order-id="${escapeHtml(String(order.id))}"
+              data-current-status="${escapeHtml(status)}"
+              style="padding:8px 10px;border:1px solid #ddd;border-radius:8px;font-weight:bold;background:#fff;"
+            >
+              ${dhStatusOptions(status)}
+            </select>
+
+          </div>
+
+
+          <p>
+            👤 <strong>
+              ${escapeHtml(
+                order.customer_name || ""
+              )}
+            </strong>
+          </p>
+
+
+          <p>
+            📞 ${escapeHtml(
+              order.phone || ""
+            )}
+          </p>
+
+
+          <p>
+            📍 ${escapeHtml(
+              order.address || ""
+            )}
+          </p>
+
+
+          <p>
+            💳 ${escapeHtml(
+              order.payment_method ||
+              "À la livraison"
+            )}
+          </p>
+
+
+          <div style="
+            background:#f7f7f7;
+            border-radius:10px;
+            padding:10px;
+            margin:10px 0;
+          ">
+
+            <strong>🛍 Produits :</strong>
+
+            <div style="margin-top:6px;">
+              ${itemsText}
+            </div>
+
+          </div>
+
+
+          <p>
+            💰 <strong>
+              ${Number(
+                order.total || 0
+              ).toLocaleString("fr-FR")}
+              FCFA
+            </strong>
+          </p>
+
+
+          <small style="color:#777;">
+            ${escapeHtml(date)}
+          </small>
+
+        </div>
+      `;
+
+    }).join("");
+}
+
+
+/* =========================
+   CHARGER LES COMMANDES
+   APRÈS LA CONNEXION
+========================= */
+
+const ancienLoadDashboard =
+  loadDashboard;
+
+loadDashboard =
+  async function () {
+
+    await ancienLoadDashboard();
+
+    await loadOrders();
+
+  };
+
+
+/* =========================
+   BOUTON ACTUALISER
+========================= */
+
+document
+  .querySelectorAll("button")
+  .forEach(button => {
+
+    if (
+      button.textContent
+        .toLowerCase()
+        .includes("actualiser")
+    ) {
+
+      button.addEventListener(
+        "click",
+        loadOrders
+      );
+
+    }
+
+  });
