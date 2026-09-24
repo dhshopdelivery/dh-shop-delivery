@@ -21,10 +21,6 @@ const productBadge = document.getElementById("productBadge");
 const productDescription = document.getElementById("productDescription");
 const productAvailable = document.getElementById("productAvailable");
 
-// Récupération dynamique des éléments Tailles et Couleurs (si présent dans le HTML)
-const productSizes = document.getElementById("productSizes");
-const productColors = document.getElementById("productColors");
-
 const saveProductBtn = document.getElementById("saveProductBtn");
 const cancelProductBtn = document.getElementById("cancelProductBtn");
 const productMessage = document.getElementById("productMessage");
@@ -76,15 +72,18 @@ if (loginBtn) {
 }
 
 async function login() {
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
+
+  const email = emailInput ? emailInput.value.trim() : "";
+  const password = passwordInput ? passwordInput.value : "";
 
   if (!email || !password) {
-    loginMessage.textContent = "Veuillez remplir les deux champs.";
+    if (loginMessage) loginMessage.textContent = "Veuillez remplir les deux champs.";
     return;
   }
 
-  loginMessage.textContent = "Connexion...";
+  if (loginMessage) loginMessage.textContent = "Connexion...";
 
   try {
     const response = await fetch(
@@ -115,18 +114,18 @@ async function login() {
 
     try {
       const payload = JSON.parse(atob(accessToken.split(".")[1]));
-      loginMessage.textContent = "Session active — rôle : " + payload.role;
+      if (loginMessage) loginMessage.textContent = "Session active — rôle : " + payload.role;
     } catch {
-      loginMessage.textContent = "Connexion réussie — session active ✅";
+      if (loginMessage) loginMessage.textContent = "Connexion réussie — session active ✅";
     }
 
-    loginBox.classList.add("hidden");
-    dashboard.classList.remove("hidden");
+    if (loginBox) loginBox.classList.add("hidden");
+    if (dashboard) dashboard.classList.remove("hidden");
 
     await loadDashboard();
 
   } catch (error) {
-    loginMessage.textContent = "Erreur : " + error.message;
+    if (loginMessage) loginMessage.textContent = "Erreur : " + error.message;
   }
 }
 
@@ -141,10 +140,12 @@ if (logoutBtn) {
 
 function logout() {
   accessToken = null;
-  dashboard.classList.add("hidden");
-  loginBox.classList.remove("hidden");
-  document.getElementById("password").value = "";
-  loginMessage.textContent = "";
+  if (dashboard) dashboard.classList.add("hidden");
+  if (loginBox) loginBox.classList.remove("hidden");
+  
+  const passEl = document.getElementById("password");
+  if (passEl) passEl.value = "";
+  if (loginMessage) loginMessage.textContent = "";
 }
 
 
@@ -158,8 +159,8 @@ async function loadDashboard() {
       "products?select=id,name,category,price,description,image_url,stock,available,badge,sizes,colors&order=id.asc"
     );
 
-    const productCountEl = document.getElementById("productCount");
-    if (productCountEl) productCountEl.textContent = products.length;
+    const countEl = document.getElementById("productCount");
+    if (countEl) countEl.textContent = products.length;
 
     const availableProducts = products.filter(
       product => product.available === true && Number(product.stock) > 0
@@ -169,22 +170,16 @@ async function loadDashboard() {
       product => product.available === false || Number(product.stock) <= 0
     );
 
-    const availableCountEl = document.getElementById("availableCount");
-    if (availableCountEl) availableCountEl.textContent = availableProducts.length;
+    const availEl = document.getElementById("availableCount");
+    if (availEl) availEl.textContent = availableProducts.length;
 
-    const outCountEl = document.getElementById("outCount");
-    if (outCountEl) outCountEl.textContent = outProducts.length;
+    const outEl = document.getElementById("outCount");
+    if (outEl) outEl.textContent = outProducts.length;
 
     renderProducts(products);
 
-    try {
-      const orders = await api("orders?select=id");
-      const orderCountEl = document.getElementById("orderCount");
-      if (orderCountEl) orderCountEl.textContent = orders.length;
-    } catch (error) {
-      const orderCountEl = document.getElementById("orderCount");
-      if (orderCountEl) orderCountEl.textContent = "0";
-    }
+    // Chargement automatique des commandes
+    await loadOrders();
 
   } catch (error) {
     console.error("ERREUR PRODUITS :", error);
@@ -209,10 +204,7 @@ function renderProducts(products) {
 
   productsList.innerHTML = products.map(product => {
     const availability = product.available && Number(product.stock) > 0 ? "Disponible" : "Indisponible";
-
-    const image = product.image_url
-      ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">`
-      : "";
+    const image = product.image_url ? `<img src="${escapeHtml(product.image_url)}" alt="${escapeHtml(product.name)}">` : "";
 
     return `
       <div class="admin-product">
@@ -226,7 +218,6 @@ function renderProducts(products) {
           ${product.colors ? `<p>Couleurs : <strong>${escapeHtml(product.colors)}</strong></p>` : ""}
           ${product.badge ? `<p>Badge : ${escapeHtml(product.badge)}</p>` : ""}
         </div>
-
         <div class="admin-product-actions">
           <button type="button" onclick="editProduct(${product.id})">Modifier</button>
           <button type="button" onclick="deleteProduct(${product.id})">Supprimer</button>
@@ -247,10 +238,10 @@ if (addProductBtn) {
 
 function openAddForm() {
   editingProductId = null;
-  productFormTitle.textContent = "Ajouter un produit";
+  if (productFormTitle) productFormTitle.textContent = "Ajouter un produit";
   clearForm();
-  productFormCard.classList.remove("hidden");
-  productMessage.textContent = "";
+  if (productFormCard) productFormCard.classList.remove("hidden");
+  if (productMessage) productMessage.textContent = "";
 }
 
 
@@ -270,7 +261,7 @@ async function editProduct(id) {
     const product = products[0];
     editingProductId = id;
 
-    productFormTitle.textContent = "Modifier le produit";
+    if (productFormTitle) productFormTitle.textContent = "Modifier le produit";
 
     if (productName) productName.value = product.name || "";
     if (productCategory) productCategory.value = product.category || "";
@@ -281,14 +272,14 @@ async function editProduct(id) {
     if (productDescription) productDescription.value = product.description || "";
     if (productAvailable) productAvailable.value = product.available ? "true" : "false";
 
-    const sizesInput = document.getElementById("productSizes");
-    if (sizesInput) sizesInput.value = product.sizes || "";
+    const sizesEl = document.getElementById("productSizes");
+    if (sizesEl) sizesEl.value = product.sizes || "";
 
-    const colorsInput = document.getElementById("productColors");
-    if (colorsInput) colorsInput.value = product.colors || "";
+    const colorsEl = document.getElementById("productColors");
+    if (colorsEl) colorsEl.value = product.colors || "";
 
-    productFormCard.classList.remove("hidden");
-    productMessage.textContent = "";
+    if (productFormCard) productFormCard.classList.remove("hidden");
+    if (productMessage) productMessage.textContent = "";
 
   } catch (error) {
     alert("Erreur : " + error.message);
@@ -305,8 +296,8 @@ if (saveProductBtn) {
 }
 
 async function saveProduct() {
-  const sizesInput = document.getElementById("productSizes");
-  const colorsInput = document.getElementById("productColors");
+  const sizesEl = document.getElementById("productSizes");
+  const colorsEl = document.getElementById("productColors");
 
   const body = {
     name: productName ? productName.value.trim() : "",
@@ -317,26 +308,16 @@ async function saveProduct() {
     badge: productBadge ? productBadge.value.trim() : "",
     description: productDescription ? productDescription.value.trim() : "",
     available: productAvailable ? productAvailable.value === "true" : true,
-    sizes: sizesInput ? sizesInput.value.trim() : "",
-    colors: colorsInput ? colorsInput.value.trim() : ""
+    sizes: sizesEl ? sizesEl.value.trim() : "",
+    colors: colorsEl ? colorsEl.value.trim() : ""
   };
 
   if (!body.name) {
-    productMessage.textContent = "Veuillez entrer le nom du produit.";
+    if (productMessage) productMessage.textContent = "Veuillez entrer le nom du produit.";
     return;
   }
 
-  if (!body.price || body.price < 0) {
-    productMessage.textContent = "Veuillez entrer un prix valide.";
-    return;
-  }
-
-  if (body.stock < 0 || Number.isNaN(body.stock)) {
-    productMessage.textContent = "Veuillez entrer un stock valide.";
-    return;
-  }
-
-  saveProductBtn.disabled = true;
+  if (saveProductBtn) saveProductBtn.disabled = true;
 
   try {
     if (editingProductId) {
@@ -345,26 +326,23 @@ async function saveProduct() {
         headers: { "Prefer": "return=minimal" },
         body: JSON.stringify(body)
       });
-      productMessage.textContent = "Produit modifié avec succès ✅";
+      if (productMessage) productMessage.textContent = "Produit modifié avec succès ✅";
     } else {
       await api("products", {
         method: "POST",
         headers: { "Prefer": "return=minimal" },
         body: JSON.stringify(body)
       });
-      productMessage.textContent = "Produit ajouté avec succès ✅";
+      if (productMessage) productMessage.textContent = "Produit ajouté avec succès ✅";
     }
 
     await loadDashboard();
-
-    setTimeout(() => {
-      closeProductForm();
-    }, 800);
+    setTimeout(() => { closeProductForm(); }, 800);
 
   } catch (error) {
-    productMessage.textContent = "Erreur : " + error.message;
+    if (productMessage) productMessage.textContent = "Erreur : " + error.message;
   } finally {
-    saveProductBtn.disabled = false;
+    if (saveProductBtn) saveProductBtn.disabled = false;
   }
 }
 
@@ -394,8 +372,8 @@ if (cancelProductBtn) {
 }
 
 function closeProductForm() {
-  productFormCard.classList.add("hidden");
-  productMessage.textContent = "";
+  if (productFormCard) productFormCard.classList.add("hidden");
+  if (productMessage) productMessage.textContent = "";
   editingProductId = null;
   clearForm();
 }
@@ -410,11 +388,11 @@ function clearForm() {
   if (productDescription) productDescription.value = "";
   if (productAvailable) productAvailable.value = "true";
 
-  const sizesInput = document.getElementById("productSizes");
-  if (sizesInput) sizesInput.value = "";
+  const sizesEl = document.getElementById("productSizes");
+  if (sizesEl) sizesEl.value = "";
 
-  const colorsInput = document.getElementById("productColors");
-  if (colorsInput) colorsInput.value = "";
+  const colorsEl = document.getElementById("productColors");
+  if (colorsEl) colorsEl.value = "";
 }
 
 
@@ -570,12 +548,12 @@ async function saveWhatsappNumber() {
   const number = whatsappNumberInput.value.trim().replace(/\s+/g, "");
 
   if (!number || !/^[0-9]{8,15}$/.test(number)) {
-    whatsappMessage.textContent = "❌ Numéro invalide. Exemple : 22792617092";
+    if (whatsappMessage) whatsappMessage.textContent = "❌ Numéro invalide. Exemple : 22792617092";
     return;
   }
 
   saveWhatsappBtn.disabled = true;
-  whatsappMessage.textContent = "⏳ Enregistrement...";
+  if (whatsappMessage) whatsappMessage.textContent = "⏳ Enregistrement...";
 
   try {
     await api("shop_settings?id=eq.1", {
@@ -583,10 +561,10 @@ async function saveWhatsappNumber() {
       headers: { "Prefer": "return=minimal" },
       body: JSON.stringify({ whatsapp_number: number })
     });
-    whatsappMessage.textContent = "✅ Numéro WhatsApp enregistré avec succès.";
+    if (whatsappMessage) whatsappMessage.textContent = "✅ Numéro WhatsApp enregistré avec succès.";
   } catch (error) {
     console.error("ERREUR WHATSAPP :", error);
-    whatsappMessage.textContent = "❌ Erreur : " + error.message;
+    if (whatsappMessage) whatsappMessage.textContent = "❌ Erreur : " + error.message;
   } finally {
     saveWhatsappBtn.disabled = false;
   }
@@ -599,9 +577,6 @@ async function saveWhatsappNumber() {
 
 async function loadOrders() {
   const loadingElement = findOrdersLoadingElement();
-  if (!loadingElement) return;
-
-  loadingElement.textContent = "⏳ Chargement des commandes...";
 
   try {
     const orders = await api(
@@ -615,7 +590,9 @@ async function loadOrders() {
 
   } catch (error) {
     console.error("ERREUR COMMANDES :", error);
-    loadingElement.innerHTML = `<p class="error">❌ Impossible de charger les commandes.<br>${escapeHtml(error.message)}</p>`;
+    if (loadingElement) {
+      loadingElement.innerHTML = `<p class="error">❌ Impossible de charger les commandes.<br>${escapeHtml(error.message)}</p>`;
+    }
   }
 }
 
@@ -624,13 +601,6 @@ function findOrdersLoadingElement() {
   for (const id of knownIds) {
     const el = document.getElementById(id);
     if (el) return el;
-  }
-
-  const elements = document.querySelectorAll("*");
-  for (const el of elements) {
-    if (el.children.length === 0 && el.textContent.trim() === "Chargement des commandes...") {
-      return el;
-    }
   }
   return null;
 }
@@ -654,4 +624,17 @@ function renderOrders(orders) {
         itemsText = items.map(item => `
           <div>
             ${escapeHtml(item.name || item.product_name || "Produit")}
-            ${item.size ? `(Taille: ${escapeHtml(i
+            ${item.size ? `(Taille: ${escapeHtml(item.size)})` : ""}
+            ${item.color ? `(Couleur: ${escapeHtml(item.color)})` : ""}
+            × ${Number(item.quantity || 1)}
+          </div>
+        `).join("");
+      } else if (items) {
+        itemsText = escapeHtml(JSON.stringify(items));
+      }
+    } catch {
+      itemsText = escapeHtml(String(order.items || ""));
+    }
+
+    const date = order.created_at
+      ? new Date(order.created_at).toLocaleString("fr-FR", { dateStyle: "short", timeStyle: "sho
