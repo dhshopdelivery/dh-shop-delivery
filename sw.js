@@ -1,20 +1,21 @@
-const C = "dh-shop-v6";
+const CACHE_NAME = "dh-shop-v6";
+
+const APP_SHELL = [
+  "./",
+  "./index.html",
+  "./style.css?v=2",
+  "./app.js?v=301",
+  "./manifest.json",
+  "./assets/dh-icon-192.png",
+  "./assets/dh-icon-512.png"
+];
 
 self.addEventListener("install", event => {
   event.waitUntil(
-    caches.open(C).then(cache =>
-      cache.addAll([
-        "./",
-        "./index.html",
-        "./style.css?v=2",
-        "./app.js?v=5",
-        "./manifest.json",
-        "./assets/dh-icon-192.png",
-        "./assets/dh-icon-512.png"
-      ])
-    )
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(APP_SHELL))
+      .catch(() => {})
   );
-
   self.skipWaiting();
 });
 
@@ -23,19 +24,22 @@ self.addEventListener("activate", event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(key => key !== C)
+          .filter(key => key !== CACHE_NAME)
           .map(key => caches.delete(key))
       )
     )
   );
-
   self.clients.claim();
 });
 
 self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
+
   event.respondWith(
-    fetch(event.request).catch(() =>
-      caches.match(event.request)
-    )
+    fetch(event.request)
+      .then(response => {
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

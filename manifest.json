@@ -1,15 +1,18 @@
 {
-  "id": "./",
+  "id": "/dh-shop-delivery/",
   "name": "DH Shop & Delivery",
   "short_name": "DH Shop",
   "description": "DH Shop & Delivery — Boutique en ligne avec livraison à domicile et paiement à la livraison.",
-  "start_url": "./",
-  "scope": "./",
+  "start_url": "/dh-shop-delivery/",
+  "scope": "/dh-shop-delivery/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#080808",
   "theme_color": "#080808",
   "lang": "fr",
+  "categories": [
+    "shopping"
+  ],
   "icons": [
     {
       "src": "assets/dh-icon-192.png",
