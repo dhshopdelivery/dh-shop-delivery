@@ -25,9 +25,11 @@ function closeCart(){$("cartDrawer").classList.remove("open");$("overlay").class
 function view(id){const p=find(id);if(!p)return;$("modalContent").innerHTML=`<div class="modalProduct"><div>${img(p)}</div><div><em>${esc(p.category||"PRODUIT")}</em><h2>${esc(p.name)}</h2><p>${esc(p.description||"Produit DH Shop & Delivery.")}</p><h3>${money(p.price)}</h3>${variantOptions(p)}<button class="btn gold full" id="modalAdd">Ajouter au panier</button></div></div>`;$("modalAdd").onclick=()=>{const size=$("modalSize")?.value||"",color=$("modalColor")?.value||"";if($("modalSize")&&!size)return alert("Veuillez choisir une taille.");if($("modalColor")&&!color)return alert("Veuillez choisir une couleur.");$("productModal").classList.remove("open");add(id,size,color)};$("productModal").classList.add("open")}
 
 let dhInstallPrompt=null;
+function dhIsInstalled(){
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true;
+}
 function dhInstallButton(){
-  if(document.getElementById("dhInstallBtn"))return;
-  if(window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true)return;
+  if(document.getElementById("dhInstallBtn") || dhIsInstalled())return;
   const b=document.createElement("button");
   b.id="dhInstallBtn";
   b.type="button";
@@ -36,25 +38,37 @@ function dhInstallButton(){
   b.style.cssText="position:fixed;right:16px;bottom:18px;z-index:99999;border:0;border-radius:999px;padding:13px 18px;background:#e5b93f;color:#080808;font-weight:800;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.28);cursor:pointer";
   b.onclick=async()=>{
     if(!dhInstallPrompt){
-      alert("L’installation n’est pas encore disponible dans Chrome pour cette page. Rechargez la boutique puis réessayez.");
+      alert("Chrome n’a pas encore proposé l’installation pour cette page. Ouvrez le menu ⋮ de Chrome et choisissez « Installer l’application » ou « Ajouter à l’écran d’accueil » si cette option apparaît.");
       return;
     }
-    dhInstallPrompt.prompt();
-    const r=await dhInstallPrompt.userChoice;
-    if(r.outcome==="accepted")b.remove();
-    dhInstallPrompt=null;
+    try{
+      dhInstallPrompt.prompt();
+      const choice=await dhInstallPrompt.userChoice;
+      console.log("DH Shop — résultat installation :",choice.outcome);
+    }catch(err){
+      console.error("DH Shop — installation :",err);
+    }finally{
+      dhInstallPrompt=null;
+      b.remove();
+    }
   };
   document.body.appendChild(b);
 }
-window.addEventListener("beforeinstallprompt",e=>{
-  e.preventDefault();
-  dhInstallPrompt=e;
-  dhInstallButton();
-});
+
+// Chrome/Chromium : conserver l'événement officiel avant de proposer l'installation.
+if("BeforeInstallPromptEvent" in window){
+  window.addEventListener("beforeinstallprompt",e=>{
+    e.preventDefault();
+    dhInstallPrompt=e;
+    dhInstallButton();
+  });
+}
+
 window.addEventListener("appinstalled",()=>{
   dhInstallPrompt=null;
   document.getElementById("dhInstallBtn")?.remove();
 });
+
 function makeRef(){return"DH-"+Date.now().toString().slice(-8)}
 async function order(e){e.preventDefault();if(!S.cart.length)return alert("Votre panier est vide.");const m=$("checkoutMessage"),btn=e.submitter;btn.disabled=true;m.textContent="Enregistrement…";const ref=makeRef(),o={customer_name:$("customerName").value.trim(),phone:$("customerPhone").value.trim(),address:$("customerAddress").value.trim(),items:S.cart,total:total(),payment_method:$("paymentMethod").value,status:"Nouvelle",reference:ref};try{await api("orders",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(o)});const lines=S.cart.map(i=>`• ${i.name}${i.size?` — Taille ${i.size}`:""}${i.color?` — ${i.color}`:""} x${i.qty} — ${money(i.price*i.qty)}`).join("\n"),text=`🛍️ *NOUVELLE COMMANDE — DH SHOP & DELIVERY*\n\nRéférence : *${ref}*\nNom : ${o.customer_name}\nTéléphone : ${o.phone}\nAdresse : ${o.address}\nPaiement : ${o.payment_method}\n\n${lines}\n\n*TOTAL : ${money(o.total)}*`,wa=`https://wa.me/${S.wa}?text=${encodeURIComponent(text)}`;S.cart=[];save();cart();$("checkoutForm").reset();m.innerHTML=`✅ Commande enregistrée : <b>${ref}</b><br><small>Conservez cette référence pour suivre votre commande.</small><br><a class="btn gold" target="_blank" href="${wa}">Continuer sur WhatsApp</a>`}catch(x){m.textContent="❌ "+(x.message||"Erreur")}finally{btn.disabled=false}}
 async function track(e){e.preventDefault();const v=$("trackingInput").value.trim().toUpperCase(),r=$("trackingResult");r.textContent="Recherche…";if(!/^DH-[A-Z0-9]+$/.test(v))return void(r.textContent="Entrez une référence comme DH-07048624.");try{const a=await api(`orders?reference=eq.${encodeURIComponent(v)}&select=reference,status,created_at`);r.innerHTML=a?.length?`<strong>Commande ${esc(a[0].reference)}</strong><br>Statut : <b>${esc(a[0].status||"En traitement")}</b><br><small>${new Date(a[0].created_at).toLocaleString("fr-FR")}</small>`:"Commande introuvable."; }catch(x){r.textContent="Impossible de vérifier la commande."}}
