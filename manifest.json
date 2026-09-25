@@ -1,1 +1,1 @@
-{"name":"DH Shop & Delivery","short_name":"DH Shop","start_url":"./index.html","display":"standalone","background_color":"#fff","theme_color":"#111","description":"Boutique en ligne DH Shop & Delivery"}
+{"name":"DH Shop & Delivery","short_name":"DH Shop","start_url":"./","display":"standalone","background_color":"#080808","theme_color":"#080808","lang":"fr","icons":[{"src":"assets/dh-logo.png","sizes":"1536x1024","type":"image/png","purpose":"any maskable"}]}
