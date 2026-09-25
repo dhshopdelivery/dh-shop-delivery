@@ -54,7 +54,7 @@
 <aside id="cartDrawer" class="drawer"><div class="drawerHead"><h2>Votre panier</h2><button id="closeCart">✕</button></div><div id="cartItems" class="cartItems"></div><div class="drawerFoot"><div class="total"><span>Total</span><b id="cartTotal">0 FCFA</b></div><button id="checkoutBtn" class="btn gold full">Commander</button><button id="continueBtn" class="btn dark full">Continuer mes achats</button></div></aside>
 <div id="productModal" class="modal"><div class="modalCard"><button id="closeProductModal" class="close">✕</button><div id="modalContent"></div></div></div>
 <div id="checkoutModal" class="modal"><div class="modalCard"><button id="closeCheckoutModal" class="close">✕</button><span class="eyebrow dark">COMMANDE</span><h2>Finaliser la commande</h2><form id="checkoutForm"><label>Nom complet<input id="customerName" required></label><label>Téléphone<input id="customerPhone" type="tel" required></label><label>Adresse<textarea id="customerAddress" rows="3" required></textarea></label><label>Paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label><p>Total : <b id="checkoutTotal">0 FCFA</b></p><button class="btn gold full">Envoyer la commande</button><div id="checkoutMessage"></div></form></div></div>
-<script src="app.js?v=300" defer></script>
+<script src="app.js?v=301" defer></script>
   <script>
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js")
