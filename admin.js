@@ -21,6 +21,37 @@ const productBadge = document.getElementById("productBadge");
 const productDescription = document.getElementById("productDescription");
 const productAvailable = document.getElementById("productAvailable");
 
+/* DH — TAILLES ET COULEURS */
+function dhEnsureVariants() {
+  if (!productFormCard || document.getElementById("dhProductVariants")) return;
+  const box = document.createElement("div");
+  box.id = "dhProductVariants";
+  box.style.cssText = "margin:14px 0;padding:14px;border:1px solid #ddd;border-radius:12px;background:#fafafa;";
+  box.innerHTML = `
+    <strong style="display:block;margin-bottom:12px;">🛍️ Tailles et couleurs</strong>
+    <label style="display:block;font-weight:bold;margin-bottom:6px;">Tailles</label>
+    <input id="dhProductSizes" type="text" placeholder="M, L, XL, XXL ou 32, 34, 36, 38"
+      style="width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;margin-bottom:5px;">
+    <small style="display:block;color:#666;margin-bottom:12px;">Sépare les tailles par des virgules. Laisse vide si aucune taille.</small>
+    <label style="display:block;font-weight:bold;margin-bottom:6px;">Couleurs</label>
+    <input id="dhProductColors" type="text" placeholder="Noir, Blanc, Rouge, Bleu"
+      style="width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;">
+    <small style="display:block;color:#666;margin-top:5px;">Sépare les couleurs par des virgules. Laisse vide si aucune couleur.</small>
+  `;
+  const parent = productDescription && productDescription.parentNode ? productDescription.parentNode : productFormCard;
+  parent.insertBefore(box, productDescription || null);
+}
+function dhVariants(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.split(",").map(v => v.trim()).filter(Boolean) : [];
+}
+function dhSetVariants(id, values) {
+  const el = document.getElementById(id);
+  if (el) el.value = Array.isArray(values) ? values.join(", ") : "";
+}
+dhEnsureVariants();
+
+
 const saveProductBtn = document.getElementById("saveProductBtn");
 const cancelProductBtn = document.getElementById("cancelProductBtn");
 const productMessage = document.getElementById("productMessage");
@@ -225,7 +256,7 @@ async function loadDashboard() {
 
     const products =
       await api(
-        "products?select=id,name,category,price,description,image_url,stock,available,badge&order=id.asc"
+        "products?select=id,name,category,price,description,image_url,stock,available,badge,sizes,colors&order=id.asc"
       );
 
     console.log(
@@ -292,13 +323,15 @@ async function loadDashboard() {
 
       const orders =
         await api(
-          "orders?select=id"
+          "orders?select=id,reference,customer_name,phone,address,items,total,payment_method,status,created_at&order=created_at.desc"
         );
 
       document.getElementById(
         "orderCount"
       ).textContent =
         orders.length;
+
+      renderDHOrders(orders);
 
     } catch (error) {
 
@@ -540,6 +573,9 @@ async function editProduct(id) {
         ? "true"
         : "false";
 
+    dhSetVariants("dhProductSizes", product.sizes);
+    dhSetVariants("dhProductColors", product.colors);
+
 
     productFormCard.classList.remove(
       "hidden"
@@ -592,7 +628,11 @@ async function saveProduct() {
       productDescription.value.trim(),
 
     available:
-      productAvailable.value === "true"
+      productAvailable.value === "true",
+    sizes:
+      dhVariants("dhProductSizes"),
+    colors:
+      dhVariants("dhProductColors")
   };
 
 
@@ -786,6 +826,8 @@ function clearForm() {
 
   productAvailable.value =
     "true";
+  dhSetVariants("dhProductSizes", []);
+  dhSetVariants("dhProductColors", []);
 }
 
 
@@ -1150,6 +1192,47 @@ productImageStyle.textContent = `
 `;
 
 document.head.appendChild(productImageStyle);
+
+const dhAdminHorizontalLayout = document.createElement("style");
+dhAdminHorizontalLayout.id = "dhAdminHorizontalLayout";
+dhAdminHorizontalLayout.textContent = `
+#productsList .admin-product {
+  display:grid !important;
+  grid-template-columns:110px minmax(0,1fr) auto !important;
+  align-items:center !important;
+  gap:18px !important;
+  width:100% !important;
+}
+#productsList .admin-product-info { min-width:0 !important; }
+#productsList .admin-product-actions {
+  display:flex !important;
+  gap:10px !important;
+  align-items:center !important;
+  justify-content:flex-end !important;
+  flex-wrap:wrap !important;
+}
+#productsList .admin-product img {
+  width:100px !important;
+  height:100px !important;
+  object-fit:cover !important;
+  border-radius:12px !important;
+}
+@media (max-width:700px) {
+  #productsList .admin-product {
+    grid-template-columns:90px minmax(0,1fr) !important;
+    gap:12px !important;
+  }
+  #productsList .admin-product img {
+    width:85px !important;
+    height:85px !important;
+  }
+  #productsList .admin-product-actions {
+    grid-column:1 / -1 !important;
+    justify-content:flex-start !important;
+  }
+}`;
+document.head.appendChild(dhAdminHorizontalLayout);
+
 /* =========================
    NUMÉRO WHATSAPP
 ========================= */
@@ -1248,3 +1331,103 @@ async function saveWhatsappNumber() {
   }
 
    }
+
+
+/* DH — COMMANDES COMPLÈTES ET STATUT */
+function dhStatusOptions(current) {
+  const list = ["Nouvelle","En préparation","En livraison","Livrée","Annulée"];
+  const value = String(current || "Nouvelle");
+  return list.map(s => `<option value="${escapeHtml(s)}" ${s === value ? "selected" : ""}>${escapeHtml(s)}</option>`).join("");
+}
+
+function dhOrderItems(items) {
+  let data = items;
+  try { if (typeof data === "string") data = JSON.parse(data); } catch {}
+  if (!Array.isArray(data)) return escapeHtml(JSON.stringify(data || ""));
+  if (!data.length) return "Aucun produit";
+  return data.map(item => {
+    const name = item.name || item.product_name || "Produit";
+    const qty = Number(item.quantity || 1);
+    const size = item.size ? ` — Taille : ${item.size}` : "";
+    const color = item.color ? ` — Couleur : ${item.color}` : "";
+    return `<div style="padding:5px 0;border-bottom:1px solid #eee;">🛍️ <strong>${escapeHtml(name)}</strong> × ${qty}${escapeHtml(size)}${escapeHtml(color)}</div>`;
+  }).join("");
+}
+
+function dhFindOrdersContainer() {
+  const ids = ["ordersList","orderList","ordersContainer","orders","commandesList","commandesContainer"];
+  for (const id of ids) {
+    const el = document.getElementById(id);
+    if (el) return el;
+  }
+  for (const el of document.querySelectorAll("*")) {
+    if (el.children.length === 0 && el.textContent.trim() === "Chargement des commandes...") return el;
+  }
+  return null;
+}
+
+function renderDHOrders(orders) {
+  const container = dhFindOrdersContainer();
+  if (!container) return;
+
+  if (!orders || !orders.length) {
+    container.innerHTML = `<div style="padding:20px;text-align:center;color:#666;">📦 Aucune commande pour le moment.</div>`;
+    return;
+  }
+
+  container.innerHTML = orders.map(order => {
+    const status = order.status || "Nouvelle";
+    const reference = order.reference || `#${order.id}`;
+    const date = order.created_at
+      ? new Date(order.created_at).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"})
+      : "";
+
+    return `
+      <div class="dh-admin-order" style="background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:16px;margin:12px 0;box-shadow:0 2px 8px rgba(0,0,0,.06);">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;">
+          <strong>🧾 Commande ${escapeHtml(reference)}</strong>
+          <select class="dh-order-status" data-order-id="${escapeHtml(String(order.id))}" data-current-status="${escapeHtml(status)}"
+            style="padding:8px 10px;border:1px solid #ccc;border-radius:8px;font-weight:700;background:#fff;">
+            ${dhStatusOptions(status)}
+          </select>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;">
+          <p>👤 <strong>Client :</strong> ${escapeHtml(order.customer_name || "")}</p>
+          <p>📞 <strong>Téléphone :</strong> ${escapeHtml(order.phone || "")}</p>
+          <p style="grid-column:1/-1;">📍 <strong>Adresse :</strong> ${escapeHtml(order.address || "")}</p>
+          <p>💳 <strong>Paiement :</strong> ${escapeHtml(order.payment_method || "À la livraison")}</p>
+          <p>💰 <strong>Total :</strong> ${Number(order.total || 0).toLocaleString("fr-FR")} FCFA</p>
+        </div>
+        <div style="background:#f7f7f7;border-radius:10px;padding:10px;margin:10px 0;">
+          <strong>🛍️ Produits commandés</strong>
+          <div style="margin-top:7px;">${dhOrderItems(order.items)}</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <small style="color:#777;">📅 ${escapeHtml(date)}</small>
+          <small style="color:#777;">Réf. : ${escapeHtml(reference)}</small>
+        </div>
+      </div>`;
+  }).join("");
+
+  document.querySelectorAll(".dh-order-status").forEach(select => {
+    select.addEventListener("change", async function() {
+      const previous = this.dataset.currentStatus || "Nouvelle";
+      this.disabled = true;
+      try {
+        await api(`orders?id=eq.${encodeURIComponent(this.dataset.orderId)}`, {
+          method:"PATCH",
+          headers:{"Prefer":"return=minimal"},
+          body:JSON.stringify({status:this.value})
+        });
+        this.dataset.currentStatus = this.value;
+        this.style.borderColor = "#16a34a";
+        setTimeout(() => { this.style.borderColor = "#ccc"; }, 1000);
+      } catch (error) {
+        this.value = previous;
+        alert("Erreur lors du changement de statut : " + error.message);
+      } finally {
+        this.disabled = false;
+      }
+    });
+  });
+}
