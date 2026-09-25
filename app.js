@@ -23,16 +23,41 @@ function remove(key){S.cart=S.cart.filter(x=>x.key!==key);save();cart()}
 function openCart(){$("cartDrawer").classList.add("open");$("overlay").classList.add("open")}
 function closeCart(){$("cartDrawer").classList.remove("open");$("overlay").classList.remove("open")}
 function view(id){const p=find(id);if(!p)return;$("modalContent").innerHTML=`<div class="modalProduct"><div>${img(p)}</div><div><em>${esc(p.category||"PRODUIT")}</em><h2>${esc(p.name)}</h2><p>${esc(p.description||"Produit DH Shop & Delivery.")}</p><h3>${money(p.price)}</h3>${variantOptions(p)}<button class="btn gold full" id="modalAdd">Ajouter au panier</button></div></div>`;$("modalAdd").onclick=()=>{const size=$("modalSize")?.value||"",color=$("modalColor")?.value||"";if($("modalSize")&&!size)return alert("Veuillez choisir une taille.");if($("modalColor")&&!color)return alert("Veuillez choisir une couleur.");$("productModal").classList.remove("open");add(id,size,color)};$("productModal").classList.add("open")}
+
+let dhInstallPrompt=null;
+function dhInstallButton(){
+  if(document.getElementById("dhInstallBtn"))return;
+  if(window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone===true)return;
+  const b=document.createElement("button");
+  b.id="dhInstallBtn";
+  b.type="button";
+  b.textContent="📱 Installer l’application";
+  b.setAttribute("aria-label","Installer DH Shop & Delivery");
+  b.style.cssText="position:fixed;right:16px;bottom:18px;z-index:99999;border:0;border-radius:999px;padding:13px 18px;background:#e5b93f;color:#080808;font-weight:800;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.28);cursor:pointer";
+  b.onclick=async()=>{
+    if(!dhInstallPrompt){
+      alert("L’installation n’est pas encore disponible dans Chrome pour cette page. Rechargez la boutique puis réessayez.");
+      return;
+    }
+    dhInstallPrompt.prompt();
+    const r=await dhInstallPrompt.userChoice;
+    if(r.outcome==="accepted")b.remove();
+    dhInstallPrompt=null;
+  };
+  document.body.appendChild(b);
+}
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault();
+  dhInstallPrompt=e;
+  dhInstallButton();
+});
+window.addEventListener("appinstalled",()=>{
+  dhInstallPrompt=null;
+  document.getElementById("dhInstallBtn")?.remove();
+});
 function makeRef(){return"DH-"+Date.now().toString().slice(-8)}
 async function order(e){e.preventDefault();if(!S.cart.length)return alert("Votre panier est vide.");const m=$("checkoutMessage"),btn=e.submitter;btn.disabled=true;m.textContent="Enregistrement…";const ref=makeRef(),o={customer_name:$("customerName").value.trim(),phone:$("customerPhone").value.trim(),address:$("customerAddress").value.trim(),items:S.cart,total:total(),payment_method:$("paymentMethod").value,status:"Nouvelle",reference:ref};try{await api("orders",{method:"POST",headers:{"Prefer":"return=minimal"},body:JSON.stringify(o)});const lines=S.cart.map(i=>`• ${i.name}${i.size?` — Taille ${i.size}`:""}${i.color?` — ${i.color}`:""} x${i.qty} — ${money(i.price*i.qty)}`).join("\n"),text=`🛍️ *NOUVELLE COMMANDE — DH SHOP & DELIVERY*\n\nRéférence : *${ref}*\nNom : ${o.customer_name}\nTéléphone : ${o.phone}\nAdresse : ${o.address}\nPaiement : ${o.payment_method}\n\n${lines}\n\n*TOTAL : ${money(o.total)}*`,wa=`https://wa.me/${S.wa}?text=${encodeURIComponent(text)}`;S.cart=[];save();cart();$("checkoutForm").reset();m.innerHTML=`✅ Commande enregistrée : <b>${ref}</b><br><small>Conservez cette référence pour suivre votre commande.</small><br><a class="btn gold" target="_blank" href="${wa}">Continuer sur WhatsApp</a>`}catch(x){m.textContent="❌ "+(x.message||"Erreur")}finally{btn.disabled=false}}
-async function track(e){e.preventDefault();const v=$("trackingInput").value.trim().toUpperCase(),r=$("trackingResult");r.textContent="Recherche…";if(!/^DH-[A-Z0-9]+$/.test(v))return void(r.textContent="Entrez une référence comme DH-07048624.");try{const a=await api("rpc/track_order",{method:"POST",body:JSON.stringify({p_reference:v})});const o=Array.isArray(a)?a[0]:a;r.innerHTML=o?.reference?`<strong>Commande ${esc(o.reference)}</strong><br>Statut : <b>${esc(o.status||"En traitement")}</b><br><small>${o.created_at?new Date(o.created_at).toLocaleString("fr-FR"):""}</small>`:"Commande introuvable."}catch(x){console.error(x);r.textContent="Impossible de vérifier la commande pour le moment."}}
-async function init(){$("year").textContent=new Date().getFullYear();$("cartBtn").onclick=openCart;$("closeCart").onclick=closeCart;$("continueBtn").onclick=closeCart;$("overlay").onclick=closeCart;$("closeProductModal").onclick=()=>$("productModal").classList.remove("open");$("closeCheckoutModal").onclick=()=>$("checkoutModal").classList.remove("open");$("checkoutBtn").onclick=()=>{if(!S.cart.length)return alert("Votre panier est vide.");closeCart();$("checkoutModal").classList.add("open")};$("checkoutForm").onsubmit=order;$("trackingForm").onsubmit=track;$("searchInput").oninput=e=>{S.q=e.target.value;filter()};$("sortSelect").onchange=e=>{S.sort=e.target.value;filter()};$("searchBtn").onclick=()=>{document.querySelector("#boutique").scrollIntoView({behavior:"smooth"});setTimeout(()=>$("searchInput").focus(),300)};$("menuBtn").onclick=()=>$("mobileNav").classList.toggle("open");document.querySelectorAll("#mobileNav a").forEach(a=>a.onclick=()=>$("mobileNav").classList.remove("open"));$("footerWhatsapp").onclick=e=>{e.preventDefault();open(`https://wa.me/${S.wa}`,"_blank")};cart();try{await settings();await products();$("productStatus").textContent=S.products.length?`${S.products.length} produit(s) disponibles`:"Aucun produit disponible pour le moment."}catch(e){console.error(e);$("productStatus").className="status error";$("productStatus").innerHTML=`<b>Impossible de charger les produits.</b><br><small>${esc(e.message)}</small><br><button class="btn gold" id="retry">Réessayer</button>`;$("retry").onclick=init}}
+async function track(e){e.preventDefault();const v=$("trackingInput").value.trim().toUpperCase(),r=$("trackingResult");r.textContent="Recherche…";if(!/^DH-[A-Z0-9]+$/.test(v))return void(r.textContent="Entrez une référence comme DH-07048624.");try{const a=await api(`orders?reference=eq.${encodeURIComponent(v)}&select=reference,status,created_at`);r.innerHTML=a?.length?`<strong>Commande ${esc(a[0].reference)}</strong><br>Statut : <b>${esc(a[0].status||"En traitement")}</b><br><small>${new Date(a[0].created_at).toLocaleString("fr-FR")}</small>`:"Commande introuvable."; }catch(x){r.textContent="Impossible de vérifier la commande."}}
+async function init(){dhInstallButton();$("year").textContent=new Date().getFullYear();$("cartBtn").onclick=openCart;$("closeCart").onclick=closeCart;$("continueBtn").onclick=closeCart;$("overlay").onclick=closeCart;$("closeProductModal").onclick=()=>$("productModal").classList.remove("open");$("closeCheckoutModal").onclick=()=>$("checkoutModal").classList.remove("open");$("checkoutBtn").onclick=()=>{if(!S.cart.length)return alert("Votre panier est vide.");closeCart();$("checkoutModal").classList.add("open")};$("checkoutForm").onsubmit=order;$("trackingForm").onsubmit=track;$("searchInput").oninput=e=>{S.q=e.target.value;filter()};$("sortSelect").onchange=e=>{S.sort=e.target.value;filter()};$("searchBtn").onclick=()=>{document.querySelector("#boutique").scrollIntoView({behavior:"smooth"});setTimeout(()=>$("searchInput").focus(),300)};$("menuBtn").onclick=()=>$("mobileNav").classList.toggle("open");document.querySelectorAll("#mobileNav a").forEach(a=>a.onclick=()=>$("mobileNav").classList.remove("open"));$("footerWhatsapp").onclick=e=>{e.preventDefault();open(`https://wa.me/${S.wa}`,"_blank")};cart();try{await settings();await products();$("productStatus").textContent=S.products.length?`${S.products.length} produit(s) disponibles`:"Aucun produit disponible pour le moment."}catch(e){console.error(e);$("productStatus").className="status error";$("productStatus").innerHTML=`<b>Impossible de charger les produits.</b><br><small>${esc(e.message)}</small><br><button class="btn gold" id="retry">Réessayer</button>`;$("retry").onclick=init}}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
-      if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js")
-      .then(() => console.log("DH Shop PWA : Service Worker actif"))
-      .catch(err => console.error("Service Worker :", err));
-  });
-      }
 })();
