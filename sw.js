@@ -1,4 +1,4 @@
-const C = "dh-shop-v5";
+const C = "dh-shop-v6";
 
 self.addEventListener("install", event => {
   event.waitUntil(
@@ -8,7 +8,9 @@ self.addEventListener("install", event => {
         "./index.html",
         "./style.css?v=2",
         "./app.js?v=5",
-        "./manifest.json"
+        "./manifest.json",
+        "./assets/dh-icon-192.png",
+        "./assets/dh-icon-512.png"
       ])
     )
   );
