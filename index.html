@@ -2,96 +2,146 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#050505">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111111">
 <title>DH Shop & Delivery</title>
-<meta name="description" content="DH Shop & Delivery — Boutique en ligne">
-<link rel="stylesheet" href="style.css?v=400">
+<meta name="description" content="DH Shop & Delivery — Mode, sport, accessoires et plus.">
+<link rel="stylesheet" href="style.css?v=500">
 </head>
 <body>
-<header class="top">
-  <a class="brand" href="#accueil" aria-label="DH Shop & Delivery"><span class="logo">DH</span><span><b>SHOP & DELIVERY</b><small>Plus proche de vous !</small></span></a>
-  <div class="top-actions">
-    <button id="searchBtn" class="icon" aria-label="Rechercher">⌕</button>
-    <button id="cartBtn" class="icon cart-icon" aria-label="Panier">🛒<i id="cartCount">0</i></button>
-    <button id="menuBtn" class="icon" aria-label="Menu">☰</button>
+<header class="topbar">
+  <button id="menuBtn" class="head-icon" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
+  <a href="#accueil" class="head-logo" aria-label="DH Shop & Delivery">DH</a>
+  <div class="head-right">
+    <a href="admin.html" class="head-icon gear" aria-label="Administration">⚙</a>
+    <button id="cartBtn" class="head-icon cart" aria-label="Panier">🛒<b id="cartCount">0</b></button>
   </div>
 </header>
 
-<nav id="mobileNav" class="nav">
-  <a href="#accueil">Accueil</a>
-  <a href="#categories">Catégories</a>
-  <a href="#boutique">Boutique</a>
-  <a href="#suivi">Suivi de commande</a>
-  <a href="#contact">Contact</a>
-  <a class="admin-link" href="admin.html">🔐 Administration</a>
-</nav>
+<div id="drawerBackdrop" class="drawer-backdrop"></div>
+<aside id="sideMenu" class="side-menu" aria-hidden="true">
+  <div class="side-head"><div class="side-logo">DH</div><button id="closeMenu" class="close-menu" aria-label="Fermer">×</button></div>
+  <nav class="side-nav">
+    <a href="#accueil" data-close-menu><span>⌂</span>Accueil</a>
+    <a href="#boutique" data-close-menu><span>▣</span>Boutique</a>
+    <div id="sideCategories"></div>
+    <a href="#panier" data-open-cart><span>🛒</span>Panier</a>
+    <a href="#contact" data-close-menu><span>☎</span>Contact</a>
+    <a href="admin.html" class="admin-menu"><span>⚙</span>Administration</a>
+  </nav>
+  <div class="side-foot">
+    <div><b>WhatsApp</b><small id="sideWhatsApp">Commandez directement</small></div>
+    <div><b>DH Shop & Delivery</b><small>Votre boutique en ligne</small></div>
+  </div>
+</aside>
 
 <main>
-<section id="accueil" class="hero">
-  <div class="hero-copy">
-    <span class="eyebrow">DH SHOP & DELIVERY</span>
-    <h1>Le style du moment,<br><strong>livré chez vous.</strong></h1>
-    <p>Découvrez les produits actuellement disponibles dans notre boutique.</p>
-    <a href="#boutique" class="btn gold">Découvrir la boutique →</a>
+<section id="accueil" class="home">
+  <div id="hero" class="hero">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <span class="hero-mini">DH SHOP & DELIVERY</span>
+      <h1>ÉQUIPEZ VOTRE<br><strong>STYLE & VOTRE SPORT</strong></h1>
+      <p>Des articles tendance, disponibles et livrés chez vous.</p>
+      <a href="#boutique" class="red-btn hero-btn">Découvrir la boutique <span>→</span></a>
+    </div>
   </div>
-  <div class="hero-card"><div class="hero-logo">DH</div><span>Vos achats, livrés avec confiance.</span></div>
-</section>
 
-<section id="categories" class="section">
-  <div class="section-head"><div><span class="eyebrow">EXPLORER</span><h2>Nos catégories</h2></div></div>
-  <div id="categoryGrid" class="categories"></div>
-</section>
-
-<section id="boutique" class="section shop">
-  <div class="section-head">
-    <div><span class="eyebrow">BOUTIQUE</span><h2>Nos produits</h2><p id="productStatus" class="status">Chargement…</p></div>
-    <div class="tools"><input id="searchInput" type="search" placeholder="Rechercher un produit…"><select id="sortSelect"><option value="newest">Nouveautés</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option><option value="name">Nom</option></select></div>
+  <div class="trust-row">
+    <div><span class="trust-icon">◆</span><b>Qualité</b></div>
+    <div><span class="trust-icon">▣</span><b>Livraison</b></div>
+    <div><span class="trust-icon">▤</span><b>Paiement</b></div>
+    <div><span class="trust-icon">◔</span><b>Service client</b></div>
   </div>
-  <div id="productGrid" class="grid"></div>
+
+  <section class="home-section">
+    <div class="section-title"><h2>Nos <strong>catégories</strong></h2><a href="#boutique">Voir toutes →</a></div>
+    <div id="homeCategories" class="home-categories"></div>
+  </section>
+
+  <section class="home-section featured">
+    <div class="section-title"><h2>Produits <strong>vedettes</strong></h2><a href="#boutique">Voir tous →</a></div>
+    <div id="featuredGrid" class="product-grid compact"></div>
+  </section>
 </section>
 
-<section id="suivi" class="section tracking">
-  <div class="track-box">
-    <span class="eyebrow">SUIVI</span><h2>Suivre ma commande</h2>
+<section id="boutique" class="page-section shop-page">
+  <div class="page-heading"><h2>Notre <strong>Boutique</strong></h2></div>
+  <div id="categoryTabs" class="category-tabs"></div>
+  <div class="shop-tools">
+    <input id="searchInput" type="search" placeholder="Rechercher un produit…" aria-label="Rechercher">
+    <select id="sortSelect" aria-label="Trier">
+      <option value="newest">Nouveautés</option>
+      <option value="price-asc">Prix croissant</option>
+      <option value="price-desc">Prix décroissant</option>
+      <option value="name">Nom</option>
+    </select>
+  </div>
+  <p id="productStatus" class="product-status">Chargement…</p>
+  <div id="productGrid" class="product-grid"></div>
+</section>
+
+<section id="suivi" class="page-section tracking-page">
+  <div class="page-heading"><h2>Suivre ma <strong>commande</strong></h2></div>
+  <div class="tracking-card">
     <p>Entrez votre référence de commande pour connaître son statut.</p>
-    <form id="trackingForm"><input id="trackingInput" placeholder="Ex. DH-07048624" autocomplete="off"><button class="btn gold">Rechercher</button></form>
+    <form id="trackingForm">
+      <input id="trackingInput" placeholder="Ex. DH-78770955" autocomplete="off">
+      <button class="red-btn">Rechercher</button>
+    </form>
     <div id="trackingResult" class="result"></div>
   </div>
 </section>
 
-<section id="contact" class="section contact">
-  <div><span class="eyebrow">CONTACT</span><h2>Besoin d'aide ?</h2><p>Commandez facilement et contactez-nous directement sur WhatsApp.</p></div>
-  <a id="footerWhatsapp" class="btn whatsapp" href="#">💬 WhatsApp</a>
+<section id="contact" class="page-section contact-page">
+  <div class="page-heading"><h2>Nous <strong>contacter</strong></h2></div>
+  <div class="contact-banner">
+    <div><b>DH Shop & Delivery</b><span>Votre boutique en ligne</span></div>
+  </div>
+  <div class="contact-list">
+    <a id="contactWhatsapp" href="#" class="contact-card"><span class="contact-round wa">◔</span><div><b>WhatsApp</b><small>Commandez directement</small></div><i>›</i></a>
+    <a id="contactPhone" href="#" class="contact-card"><span class="contact-round phone">☎</span><div><b>Téléphone</b><small id="contactPhoneText">—</small></div><i>›</i></a>
+    <div class="contact-card"><span class="contact-round fb">f</span><div><b>Facebook</b><small>Page DH Shop & Delivery</small></div><i>›</i></div>
+    <div class="contact-card"><span class="contact-round ig">◎</span><div><b>Instagram</b><small>@dhshopdelivery</small></div><i>›</i></div>
+    <div class="contact-card"><span class="contact-round addr">●</span><div><b>Adresse</b><small>Niamey, Niger</small></div><i>›</i></div>
+  </div>
+  <div class="map-card"><div><span>📍</span><b>Nous trouver</b></div><small>Niamey, Niger</small><a href="https://www.google.com/maps/search/?api=1&query=Niamey%2C%20Niger" target="_blank" rel="noopener">Ouvrir dans Maps</a></div>
 </section>
 </main>
 
-<footer>
-  <div class="footer-brand"><span class="logo">DH</span><div><b>DH SHOP & DELIVERY</b><small>Vos achats, livrés avec confiance.</small></div></div>
-  <div class="trust"><span>🚚 Livraison à domicile</span><span>💵 Paiement à la livraison</span><span>✓ Produits disponibles</span></div>
-  <small>© <span id="year"></span> DH Shop & Delivery</small>
-</footer>
+<nav class="bottom-nav">
+  <a href="#accueil" data-nav="accueil"><span>⌂</span><b>Accueil</b></a>
+  <a href="#boutique" data-nav="boutique"><span>▣</span><b>Boutique</b></a>
+  <a href="#panier" id="bottomCart" data-nav="panier"><span>🛒</span><b>Panier</b></a>
+  <a href="#contact" data-nav="contact"><span>☎</span><b>Contact</b></a>
+</nav>
 
-<div id="overlay" class="overlay"></div>
-<aside id="cartDrawer" class="drawer">
-  <div class="drawer-head"><h2>Mon panier</h2><button id="closeCart" class="close">×</button></div>
+<div id="overlay" class="modal-overlay"></div>
+<aside id="cartDrawer" class="cart-drawer">
+  <div class="drawer-title"><h2>Mon panier</h2><button id="closeCart">×</button></div>
   <div id="cartItems"></div>
-  <div class="cart-foot"><div>Total <strong id="cartTotal">0 FCFA</strong></div><button id="checkoutBtn" class="btn gold full">Commander →</button><button id="continueBtn" class="btn ghost full">Continuer mes achats</button></div>
+  <div class="cart-summary"><div><span>Sous-total</span><b id="cartTotal">0 FCFA</b></div><small>Livraison selon la zone.</small><button id="checkoutBtn" class="red-btn full">Passer la commande</button></div>
 </aside>
 
-<div id="productModal" class="modal"><div class="modal-box"><button id="closeProductModal" class="close">×</button><div id="modalContent"></div></div></div>
+<div id="productModal" class="modal">
+  <div class="modal-box product-modal"><button id="closeProductModal" class="modal-close">×</button><div id="modalContent"></div></div>
+</div>
 
-<div id="checkoutModal" class="modal"><div class="modal-box checkout"><button id="closeCheckoutModal" class="close">×</button><span class="eyebrow">COMMANDE</span><h2>Informations de livraison</h2>
-<form id="checkoutForm">
-<label>Nom et prénom *<input id="customerName" required placeholder="Ex. Mohamed Issa"></label>
-<label>Téléphone *<input id="customerPhone" required inputmode="tel" placeholder="Ex. 96 12 34 56"></label>
-<label>Adresse exacte *<textarea id="customerAddress" required placeholder="Ville, quartier, rue, repère…"></textarea></label>
-<label>Mode de paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label>
-<div class="summary">Total : <strong id="checkoutTotal">0 FCFA</strong></div>
-<button class="btn gold full">Confirmer la commande</button>
-<div id="checkoutMessage" class="result"></div>
-</form></div></div>
+<div id="checkoutModal" class="modal">
+  <div class="modal-box checkout-modal"><button id="closeCheckoutModal" class="modal-close">×</button>
+    <div class="page-heading"><h2>Finaliser la <strong>commande</strong></h2></div>
+    <form id="checkoutForm">
+      <label>Nom et prénom *<input id="customerName" required placeholder="Votre nom"></label>
+      <label>Téléphone *<input id="customerPhone" required inputmode="tel" placeholder="Votre numéro"></label>
+      <label>Adresse exacte *<textarea id="customerAddress" required placeholder="Ville, quartier, rue, repère…"></textarea></label>
+      <label>Mode de paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label>
+      <div class="checkout-total">Total <b id="checkoutTotal">0 FCFA</b></div>
+      <button class="red-btn full">Confirmer la commande</button>
+      <div id="checkoutMessage" class="result"></div>
+    </form>
+  </div>
+</div>
 
-<script src="app.js?v=400"></script>
+<script src="app.js?v=500"></script>
 </body>
 </html>
