@@ -20,3 +20,5 @@ CORRECTIONS
 IMPORTANT
 Remplacer seulement index.html, style.css, app.js et README.txt dans le dépôt actif.
 Ne pas remplacer admin.js.
+
+V5 : espacement compact, suivi avec recherche verticale, adresse/Maps retirés, fiche produit compacte, palette noir + doré DH, cache v=700.
