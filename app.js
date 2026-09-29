@@ -14,7 +14,27 @@ function filter(){let a=[...S.products];if(S.cat!=="all")a=a.filter(p=>String(p.
 function img(p){return p.image_url?`<img src="${esc(p.image_url)}" alt="${esc(p.name)}" onerror="this.style.display='none'">`:`<span class="placeholder">✦</span>`}
 function render(){const g=$("productGrid");if(!S.filtered.length){g.innerHTML='<div class="empty">Aucun produit ne correspond à votre recherche.</div>';return}g.innerHTML=S.filtered.map(p=>`<article class="card">${p.badge?`<span class="badge">${esc(p.badge)}</span>`:""}<div class="pic" data-view="${p.id}">${img(p)}</div><div class="info"><h3>${esc(p.name)}</h3><p>${esc(p.description||"Produit DH Shop & Delivery.")}</p><div class="price">${money(p.price)}</div><div class="cardBtns"><button class="view" data-view="${p.id}">Voir</button><button class="add" data-add="${p.id}">Ajouter</button></div></div></article>`).join("");g.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>view(b.dataset.add));g.querySelectorAll("[data-view]").forEach(b=>b.onclick=()=>view(b.dataset.view))}
 function find(id){return S.products.find(p=>String(p.id)===String(id))}
-function variantList(v){if(Array.isArray(v))return v.map(x=>String(x)).filter(Boolean);if(typeof v==="string"){try{const a=JSON.parse(v);if(Array.isArray(a))return a}catch{}return v.split(",").map(x=>x.trim()).filter(Boolean)}return[]}
+function variantList(v){
+  if(Array.isArray(v)){
+    return v.flatMap(x=>variantList(String(x))).filter(Boolean);
+  }
+  if(typeof v==="string"){
+    const s=v.trim();
+    if(!s)return[];
+    try{
+      const a=JSON.parse(s);
+      if(Array.isArray(a))return a.flatMap(x=>variantList(String(x))).filter(Boolean);
+    }catch{}
+    // Accepte les formats : M,L,XL | M;L;XL | M/L/XL | une valeur par ligne
+    let parts=s.split(/[,;\n|/]+/).map(x=>x.trim()).filter(Boolean);
+    // Cas fréquent pour les tailles numériques : "38.40.45" ou "38. 40. 45"
+    if(parts.length===1 && /^\d+(?:\s*\.\s*\d+)+$/.test(s)){
+      parts=s.split(/\s*\.\s*/).map(x=>x.trim()).filter(Boolean);
+    }
+    return parts;
+  }
+  return[];
+}
 function variantOptions(p){const sizes=variantList(p.sizes),colors=variantList(p.colors);let h="";if(sizes.length)h+=`<label class="variant-label">Taille<select id="modalSize"><option value="">Choisir</option>${sizes.map(x=>`<option>${esc(x)}</option>`).join("")}</select></label>`;if(colors.length)h+=`<label class="variant-label">Couleur<select id="modalColor"><option value="">Choisir</option>${colors.map(x=>`<option>${esc(x)}</option>`).join("")}</select></label>`;return h}
 function add(id,size="",color=""){const p=find(id);if(!p)return;const key=`${p.id}|${size}|${color}`,i=S.cart.find(x=>x.key===key);if(i)i.qty++;else S.cart.push({key,id:p.id,name:p.name,price:Number(p.price),image_url:p.image_url||"",qty:1,size,color});save();cart();openCart()}
 function cart(){const b=$("cartItems");if(!S.cart.length)b.innerHTML='<div class="empty">Votre panier est vide.</div>';else b.innerHTML=S.cart.map(i=>`<div class="row"><div class="thumb">${i.image_url?`<img src="${esc(i.image_url)}">`:"✦"}</div><div><h4>${esc(i.name)}</h4><small>${money(i.price)}${i.size?`<br>Taille : ${esc(i.size)}`:""}${i.color?`<br>Couleur : ${esc(i.color)}`:""}</small><div class="qty"><button data-m="${esc(i.key)}">−</button><b>${i.qty}</b><button data-p="${esc(i.key)}">+</button></div></div><button class="remove" data-r="${esc(i.key)}">Supprimer</button></div>`).join("");b.querySelectorAll("[data-m]").forEach(x=>x.onclick=()=>qty(x.dataset.m,-1));b.querySelectorAll("[data-p]").forEach(x=>x.onclick=()=>qty(x.dataset.p,1));b.querySelectorAll("[data-r]").forEach(x=>x.onclick=()=>remove(x.dataset.r));badge()}
@@ -28,101 +48,4 @@ async function order(e){e.preventDefault();if(!S.cart.length)return alert("Votre
 async function track(e){e.preventDefault();const v=$("trackingInput").value.trim().toUpperCase(),r=$("trackingResult");r.textContent="Recherche…";if(!/^DH-[A-Z0-9]+$/.test(v))return void(r.textContent="Entrez une référence comme DH-07048624.");try{const a=await api(`orders?reference=eq.${encodeURIComponent(v)}&select=reference,status,created_at`);r.innerHTML=a?.length?`<strong>Commande ${esc(a[0].reference)}</strong><br>Statut : <b>${esc(a[0].status||"En traitement")}</b><br><small>${new Date(a[0].created_at).toLocaleString("fr-FR")}</small>`:"Commande introuvable."; }catch(x){r.textContent="Impossible de vérifier la commande."}}
 async function init(){$("year").textContent=new Date().getFullYear();$("cartBtn").onclick=openCart;$("closeCart").onclick=closeCart;$("continueBtn").onclick=closeCart;$("overlay").onclick=closeCart;$("closeProductModal").onclick=()=>$("productModal").classList.remove("open");$("closeCheckoutModal").onclick=()=>$("checkoutModal").classList.remove("open");$("checkoutBtn").onclick=()=>{if(!S.cart.length)return alert("Votre panier est vide.");closeCart();$("checkoutModal").classList.add("open")};$("checkoutForm").onsubmit=order;$("trackingForm").onsubmit=track;$("searchInput").oninput=e=>{S.q=e.target.value;filter()};$("sortSelect").onchange=e=>{S.sort=e.target.value;filter()};$("searchBtn").onclick=()=>{document.querySelector("#boutique").scrollIntoView({behavior:"smooth"});setTimeout(()=>$("searchInput").focus(),300)};$("menuBtn").onclick=()=>$("mobileNav").classList.toggle("open");document.querySelectorAll("#mobileNav a").forEach(a=>a.onclick=()=>$("mobileNav").classList.remove("open"));$("footerWhatsapp").onclick=e=>{e.preventDefault();open(`https://wa.me/${S.wa}`,"_blank")};cart();try{await settings();await products();$("productStatus").textContent=S.products.length?`${S.products.length} produit(s) disponibles`:"Aucun produit disponible pour le moment."}catch(e){console.error(e);$("productStatus").className="status error";$("productStatus").innerHTML=`<b>Impossible de charger les produits.</b><br><small>${esc(e.message)}</small><br><button class="btn gold" id="retry">Réessayer</button>`;$("retry").onclick=init}}
 if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init);else init();
-})();
-
-
-/* =========================================================
-   DH SHOP & DELIVERY — PWA INSTALL MANAGER
-   ========================================================= */
-(function () {
-  let deferredInstallPrompt = null;
-  const INSTALL_BUTTON_SELECTOR = '[data-install-app], #installApp, #installBtn, .install-app';
-
-  function getInstallButtons() {
-    return Array.from(document.querySelectorAll(INSTALL_BUTTON_SELECTOR));
-  }
-
-  function setInstallButtonsVisible(visible) {
-    getInstallButtons().forEach(btn => {
-      btn.style.display = visible ? "" : "none";
-      btn.removeAttribute("aria-hidden");
-      if (!visible) btn.setAttribute("aria-hidden", "true");
-    });
-  }
-
-  function setInstallButtonLabel() {
-    getInstallButtons().forEach(btn => {
-      if (!btn.dataset.originalText) btn.dataset.originalText = btn.textContent.trim();
-      btn.textContent = "📲 Installer l’application";
-    });
-  }
-
-  function showInstallFallback() {
-    alert(
-      "L’installation n’est pas encore proposée par Chrome pour cette page. " +
-      "Rechargez la boutique puis vérifiez le menu ⋮ de Chrome."
-    );
-  }
-
-  async function installApp() {
-    if (!deferredInstallPrompt) {
-      showInstallFallback();
-      return;
-    }
-
-    const promptEvent = deferredInstallPrompt;
-    deferredInstallPrompt = null;
-
-    try {
-      await promptEvent.prompt();
-      const result = await promptEvent.userChoice;
-      console.log("DH Shop — résultat installation :", result.outcome);
-    } catch (error) {
-      console.error("DH Shop — installation :", error);
-    }
-
-    setInstallButtonsVisible(false);
-  }
-
-  function bindInstallButtons() {
-    setInstallButtonLabel();
-
-    getInstallButtons().forEach(btn => {
-      if (btn.dataset.dhInstallBound === "1") return;
-      btn.dataset.dhInstallBound = "1";
-      btn.addEventListener("click", installApp);
-    });
-
-    // Ne pas afficher un bouton inutile tant que Chrome n'a pas fourni
-    // l'événement beforeinstallprompt.
-    setInstallButtonsVisible(Boolean(deferredInstallPrompt));
-  }
-
-  window.addEventListener("beforeinstallprompt", function (event) {
-    event.preventDefault();
-    deferredInstallPrompt = event;
-    bindInstallButtons();
-    setInstallButtonsVisible(true);
-    console.log("DH Shop — installation PWA disponible.");
-  });
-
-  window.addEventListener("appinstalled", function () {
-    deferredInstallPrompt = null;
-    setInstallButtonsVisible(false);
-    console.log("DH Shop — PWA installée.");
-  });
-
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", function () {
-      navigator.serviceWorker.register("./sw.js")
-        .then(function (registration) {
-          console.log("DH Shop — Service Worker actif :", registration.scope);
-        })
-        .catch(function (error) {
-          console.error("DH Shop — Service Worker :", error);
-        });
-    });
-  }
-
-  document.addEventListener("DOMContentLoaded", bindInstallButtons);
 })();
