@@ -1402,17 +1402,9 @@ function renderDHOrders(orders) {
           <strong>🛍️ Produits commandés</strong>
           <div style="margin-top:7px;">${dhOrderItems(order.items)}</div>
         </div>
-        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;">
-          <div>
-            <small style="color:#777;">📅 ${escapeHtml(date)}</small><br>
-            <small style="color:#777;">Réf. : ${escapeHtml(reference)}</small>
-          </div>
-          <button
-            type="button"
-            class="dh-delete-order"
-            data-order-id="${escapeHtml(String(order.id))}"
-            style="background:#b91c1c;color:#fff;border:none;border-radius:8px;padding:9px 12px;font-weight:700;cursor:pointer;"
-          >🗑️ Supprimer</button>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+          <small style="color:#777;">📅 ${escapeHtml(date)}</small>
+          <small style="color:#777;">Réf. : ${escapeHtml(reference)}</small>
         </div>
       </div>`;
   }).join("");
@@ -1439,36 +1431,3 @@ function renderDHOrders(orders) {
     });
   });
 }
-
-
-/* =========================
-   SUPPRESSION DES COMMANDES
-   ========================= */
-
-async function dhDeleteOrder(id) {
-  if (!confirm("Supprimer définitivement cette commande ?")) return;
-
-  try {
-    await api(`orders?id=eq.${encodeURIComponent(id)}`, {
-      method: "DELETE",
-      headers: {
-        "Prefer": "return=minimal"
-      }
-    });
-
-    alert("✅ Commande supprimée.");
-    await loadDashboard();
-
-  } catch (error) {
-    console.error("ERREUR SUPPRESSION COMMANDE :", error);
-    alert("❌ Impossible de supprimer la commande : " + error.message);
-  }
-}
-
-document.addEventListener("click", function(event) {
-  const button = event.target.closest(".dh-delete-order");
-  if (!button) return;
-
-  const id = button.dataset.orderId;
-  if (id) dhDeleteOrder(id);
-});
