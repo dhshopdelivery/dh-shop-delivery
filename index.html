@@ -1,66 +1,97 @@
 <!doctype html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#090909">
-<meta name="description" content="DH Shop & Delivery — Mode, beauté, accessoires et plus. Livraison à domicile au Niger, paiement à la livraison.">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#050505">
 <title>DH Shop & Delivery</title>
-<link rel="manifest" href="manifest.json">
-<link rel="icon" type="image/png" href="assets/dh-logo.png">
-<link rel="stylesheet" href="style.css?v=300">
+<meta name="description" content="DH Shop & Delivery — Boutique en ligne">
+<link rel="stylesheet" href="style.css?v=400">
 </head>
 <body>
-<header class="header">
-  <div class="wrap nav">
-    <a class="brand" href="#accueil" aria-label="DH Shop & Delivery"><img src="assets/dh-logo.png" alt="DH Shop & Delivery"></a>
-    <div class="topSearch"><button id="searchBtn" aria-label="Rechercher">⌕</button><input id="headerSearch" type="search" placeholder="Rechercher un produit…" aria-label="Rechercher un produit"></div>
-    <nav><a href="#accueil">Accueil</a><a href="#boutique">Boutique</a><a href="#categories">Catégories</a><a href="#apropos">À propos</a><a href="#suivi">Suivi</a></nav>
-    <div class="actions"><button id="cartBtn" aria-label="Panier">🛒 <i id="cartCount">0</i></button><button id="menuBtn" aria-label="Menu">☰</button></div>
+<header class="top">
+  <a class="brand" href="#accueil" aria-label="DH Shop & Delivery"><span class="logo">DH</span><span><b>SHOP & DELIVERY</b><small>Plus proche de vous !</small></span></a>
+  <div class="top-actions">
+    <button id="searchBtn" class="icon" aria-label="Rechercher">⌕</button>
+    <button id="cartBtn" class="icon cart-icon" aria-label="Panier">🛒<i id="cartCount">0</i></button>
+    <button id="menuBtn" class="icon" aria-label="Menu">☰</button>
   </div>
-  <div id="mobileNav" class="mobileNav"><a href="#accueil">Accueil</a><a href="#boutique">Boutique</a><a href="#categories">Catégories</a><a href="#apropos">À propos</a><a href="#suivi">Suivi de commande</a></div>
 </header>
 
+<nav id="mobileNav" class="nav">
+  <a href="#accueil">Accueil</a>
+  <a href="#categories">Catégories</a>
+  <a href="#boutique">Boutique</a>
+  <a href="#suivi">Suivi de commande</a>
+  <a href="#contact">Contact</a>
+  <a class="admin-link" href="admin.html">🔐 Administration</a>
+</nav>
+
+<main>
 <section id="accueil" class="hero">
-  <img class="heroImage" src="assets/dh-hero.png" alt="DH Shop & Delivery">
-  <div class="heroBottom"><div class="wrap heroActions"><div class="heroCaption"><span>DH SHOP & DELIVERY</span><strong>Le shopping simple, livré chez vous.</strong></div><a class="btn gold" href="#boutique">🛍️ Découvrir la boutique</a></div></div>
+  <div class="hero-copy">
+    <span class="eyebrow">DH SHOP & DELIVERY</span>
+    <h1>Le style du moment,<br><strong>livré chez vous.</strong></h1>
+    <p>Découvrez les produits actuellement disponibles dans notre boutique.</p>
+    <a href="#boutique" class="btn gold">Découvrir la boutique →</a>
+  </div>
+  <div class="hero-card"><div class="hero-logo">DH</div><span>Vos achats, livrés avec confiance.</span></div>
 </section>
 
-<section class="trust"><div class="wrap trustGrid">
-  <div><b>✓</b><span><strong>Produits de qualité</strong><small>Sélectionnés avec soin</small></span></div>
-  <div><b>🚚</b><span><strong>Livraison rapide</strong><small>Partout au Niger</small></span></div>
-  <div><b>💳</b><span><strong>Paiement à la livraison</strong><small>Simple et sécurisé</small></span></div>
-  <div><b>◉</b><span><strong>Service client</strong><small>Toujours à votre écoute</small></span></div>
-</div></section>
-
-<section id="categories" class="section categoriesSection"><div class="wrap">
-  <div class="sectionTitle"><div><span class="eyebrow dark">EXPLORER</span><h2>Nos catégories</h2></div><span class="titleLine"></span></div>
+<section id="categories" class="section">
+  <div class="section-head"><div><span class="eyebrow">EXPLORER</span><h2>Nos catégories</h2></div></div>
   <div id="categoryGrid" class="categories"></div>
-</div></section>
+</section>
 
-<section id="boutique" class="section shop"><div class="wrap">
-  <div class="shopHead"><div><span class="eyebrow dark">DH SHOP</span><h2>Produits vedettes</h2><p>Découvrez nos articles disponibles.</p></div></div>
-  <div class="tools"><div class="shopSearch"><span>⌕</span><input id="searchInput" type="search" placeholder="Rechercher un produit..."></div><select id="sortSelect"><option value="newest">Plus récents</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option><option value="name">Nom A-Z</option></select></div>
-  <div id="productStatus" class="status">Chargement des produits…</div><div id="productGrid" class="products"></div>
-</div></section>
+<section id="boutique" class="section shop">
+  <div class="section-head">
+    <div><span class="eyebrow">BOUTIQUE</span><h2>Nos produits</h2><p id="productStatus" class="status">Chargement…</p></div>
+    <div class="tools"><input id="searchInput" type="search" placeholder="Rechercher un produit…"><select id="sortSelect"><option value="newest">Nouveautés</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option><option value="name">Nom</option></select></div>
+  </div>
+  <div id="productGrid" class="grid"></div>
+</section>
 
-<section id="apropos" class="section aboutSection"><div class="wrap about"><div><span class="eyebrow">NOTRE ENGAGEMENT</span><h2>DH Shop & Delivery</h2><p>Le meilleur est toujours à portée de main. Nous sélectionnons des produits utiles, tendance et accessibles, avec une livraison simple au Niger.</p><div class="aboutChecks"><span>✓ Qualité</span><span>✓ Livraison</span><span>✓ Paiement à la livraison</span></div></div><div class="stats"><div><b>100%</b><small>Mobile</small></div><div><b>24/7</b><small>Catalogue</small></div><div><b>FCFA</b><small>Paiement à la livraison</small></div></div></div></section>
+<section id="suivi" class="section tracking">
+  <div class="track-box">
+    <span class="eyebrow">SUIVI</span><h2>Suivre ma commande</h2>
+    <p>Entrez votre référence de commande pour connaître son statut.</p>
+    <form id="trackingForm"><input id="trackingInput" placeholder="Ex. DH-07048624" autocomplete="off"><button class="btn gold">Rechercher</button></form>
+    <div id="trackingResult" class="result"></div>
+  </div>
+</section>
 
-<section id="suivi" class="section tracking"><div class="wrap trackBox"><div><span class="eyebrow dark">SUIVI</span><h2>Suivre une commande</h2><p>Entrez votre numéro de commande pour connaître son statut.</p></div><form id="trackingForm"><input id="trackingInput" placeholder="Ex : DH-12345678" required><button class="btn gold">Rechercher</button></form><div id="trackingResult"></div></div></section>
+<section id="contact" class="section contact">
+  <div><span class="eyebrow">CONTACT</span><h2>Besoin d'aide ?</h2><p>Commandez facilement et contactez-nous directement sur WhatsApp.</p></div>
+  <a id="footerWhatsapp" class="btn whatsapp" href="#">💬 WhatsApp</a>
+</section>
+</main>
 
-<footer><div class="wrap footerGrid"><div class="footerBrand"><img src="assets/dh-logo.png" alt="DH Shop & Delivery"><p>Votre satisfaction, notre priorité.</p></div><div><h3>Boutique</h3><a href="#boutique">Produits</a><a href="#categories">Catégories</a></div><div><h3>Service</h3><a href="#apropos">À propos</a><a id="footerWhatsapp" href="#">WhatsApp</a></div></div><div class="bottom">© <span id="year"></span> DH Shop & Delivery — Niger</div></footer>
+<footer>
+  <div class="footer-brand"><span class="logo">DH</span><div><b>DH SHOP & DELIVERY</b><small>Vos achats, livrés avec confiance.</small></div></div>
+  <div class="trust"><span>🚚 Livraison à domicile</span><span>💵 Paiement à la livraison</span><span>✓ Produits disponibles</span></div>
+  <small>© <span id="year"></span> DH Shop & Delivery</small>
+</footer>
 
 <div id="overlay" class="overlay"></div>
-<aside id="cartDrawer" class="drawer"><div class="drawerHead"><h2>Votre panier</h2><button id="closeCart">✕</button></div><div id="cartItems" class="cartItems"></div><div class="drawerFoot"><div class="total"><span>Total</span><b id="cartTotal">0 FCFA</b></div><button id="checkoutBtn" class="btn gold full">Commander</button><button id="continueBtn" class="btn dark full">Continuer mes achats</button></div></aside>
-<div id="productModal" class="modal"><div class="modalCard"><button id="closeProductModal" class="close">✕</button><div id="modalContent"></div></div></div>
-<div id="checkoutModal" class="modal"><div class="modalCard"><button id="closeCheckoutModal" class="close">✕</button><span class="eyebrow dark">COMMANDE</span><h2>Finaliser la commande</h2><form id="checkoutForm"><label>Nom complet<input id="customerName" required></label><label>Téléphone<input id="customerPhone" type="tel" required></label><label>Adresse<textarea id="customerAddress" rows="3" required></textarea></label><label>Paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label><p>Total : <b id="checkoutTotal">0 FCFA</b></p><button class="btn gold full">Envoyer la commande</button><div id="checkoutMessage"></div></form></div></div>
-<script src="app.js?v=303" defer></script>
-  <script>
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("./sw.js")
-    .then(() => console.log("DH Shop : Service Worker actif"))
-    .catch(err => console.error("DH Shop SW :", err));
-}
-  </script>
+<aside id="cartDrawer" class="drawer">
+  <div class="drawer-head"><h2>Mon panier</h2><button id="closeCart" class="close">×</button></div>
+  <div id="cartItems"></div>
+  <div class="cart-foot"><div>Total <strong id="cartTotal">0 FCFA</strong></div><button id="checkoutBtn" class="btn gold full">Commander →</button><button id="continueBtn" class="btn ghost full">Continuer mes achats</button></div>
+</aside>
+
+<div id="productModal" class="modal"><div class="modal-box"><button id="closeProductModal" class="close">×</button><div id="modalContent"></div></div></div>
+
+<div id="checkoutModal" class="modal"><div class="modal-box checkout"><button id="closeCheckoutModal" class="close">×</button><span class="eyebrow">COMMANDE</span><h2>Informations de livraison</h2>
+<form id="checkoutForm">
+<label>Nom et prénom *<input id="customerName" required placeholder="Ex. Mohamed Issa"></label>
+<label>Téléphone *<input id="customerPhone" required inputmode="tel" placeholder="Ex. 96 12 34 56"></label>
+<label>Adresse exacte *<textarea id="customerAddress" required placeholder="Ville, quartier, rue, repère…"></textarea></label>
+<label>Mode de paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label>
+<div class="summary">Total : <strong id="checkoutTotal">0 FCFA</strong></div>
+<button class="btn gold full">Confirmer la commande</button>
+<div id="checkoutMessage" class="result"></div>
+</form></div></div>
+
+<script src="app.js?v=400"></script>
 </body>
 </html>
