@@ -43,7 +43,11 @@ function dhEnsureVariants() {
 }
 function dhVariants(id) {
   const el = document.getElementById(id);
-  return el ? el.value.split(",").map(v => v.trim()).filter(Boolean) : [];
+  if (!el) return [];
+  const s = String(el.value || "").trim();
+  if (!s) return [];
+  if (/^\d+(?:\.\s*\d+)+$/.test(s)) return s.split(/\s*\.\s*/).map(v => v.trim()).filter(Boolean);
+  return s.split(/[,;\n|/]+/).map(v => v.trim()).filter(Boolean);
 }
 function dhSetVariants(id, values) {
   const el = document.getElementById(id);
@@ -1405,9 +1409,28 @@ function renderDHOrders(orders) {
         <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;">
           <small style="color:#777;">📅 ${escapeHtml(date)}</small>
           <small style="color:#777;">Réf. : ${escapeHtml(reference)}</small>
+          <button type="button" class="dh-delete-order" data-order-id="${escapeHtml(String(order.id))}" style="border:0;background:#111;color:#fff;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer;">Supprimer la commande</button>
         </div>
       </div>`;
   }).join("");
+
+  document.querySelectorAll(".dh-delete-order").forEach(button => {
+    button.addEventListener("click", async function() {
+      const id = this.dataset.orderId;
+      if (!confirm("Supprimer définitivement cette commande ?")) return;
+      this.disabled = true;
+      try {
+        await api(`orders?id=eq.${encodeURIComponent(id)}`, {
+          method: "DELETE",
+          headers: {"Prefer":"return=minimal"}
+        });
+        await loadDashboard();
+      } catch (error) {
+        this.disabled = false;
+        alert("Impossible de supprimer la commande : " + error.message);
+      }
+    });
+  });
 
   document.querySelectorAll(".dh-order-status").forEach(select => {
     select.addEventListener("change", async function() {
