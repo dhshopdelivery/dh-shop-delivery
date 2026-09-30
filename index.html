@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#111111">
+<meta name="theme-color" content="#0b0b0b">
 <title>DH Shop & Delivery</title>
-<meta name="description" content="DH Shop & Delivery — Mode, sport, accessoires et plus.">
+<meta name="description" content="DH Shop & Delivery — qualité, style, nouveautés, bons prix et livraison à domicile.">
 <link rel="stylesheet" href="style.css?v=900">
 </head>
 <body>
 <header class="topbar">
-  <button id="menuBtn" class="head-icon" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
+  <button id="menuBtn" class="head-icon menu-icon" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
   <a href="#accueil" class="head-logo" aria-label="DH Shop & Delivery">DH</a>
   <div class="head-right">
     <a href="admin.html" class="head-icon gear" aria-label="Administration">⚙</a>
@@ -20,127 +20,80 @@
 
 <div id="drawerBackdrop" class="drawer-backdrop"></div>
 <aside id="sideMenu" class="side-menu" aria-hidden="true">
-  <div class="side-head"><div class="side-logo">DH</div><button id="closeMenu" class="close-menu" aria-label="Fermer">×</button></div>
+  <div class="side-head"><div class="side-logo">DH</div><button id="closeMenu" class="close-menu">×</button></div>
   <nav class="side-nav">
-    <a href="#accueil" data-close-menu><span>⌂</span>Accueil</a>
-    <a href="#boutique" data-close-menu><span>▣</span>Boutique</a>
+    <a href="#accueil" data-route-link="accueil"><span>⌂</span>Accueil</a>
+    <a href="#boutique" data-route-link="boutique"><span>▣</span>Boutique</a>
     <div id="sideCategories"></div>
-    <a href="#panier" data-open-cart><span>🛒</span>Panier</a>
-    <a href="#contact" data-close-menu><span>☎</span>Contact</a>
+    <a href="#panier" data-route-link="panier"><span>🛒</span>Panier</a>
+    <a href="#suivi" data-route-link="suivi"><span>⌕</span>Suivi de commande</a>
+    <a href="#contact" data-route-link="contact"><span>☎</span>Contact</a>
     <a href="admin.html" class="admin-menu"><span>⚙</span>Administration</a>
   </nav>
-  <div class="side-foot">
-    <div><b>WhatsApp</b><small id="sideWhatsApp">Commandez directement</small></div>
-    <div><b>DH Shop & Delivery</b><small>Votre boutique en ligne</small></div>
-  </div>
+  <div class="side-foot"><b>DH Shop & Delivery</b><small id="sideWhatsApp">Commandez directement</small></div>
 </aside>
 
 <main>
-<section id="accueil" class="home">
-  <div id="hero" class="hero">
+<section id="accueil" class="route-section home">
+  <div class="hero">
     <div class="hero-overlay"></div>
     <div class="hero-content">
       <span class="hero-mini">DH SHOP & DELIVERY</span>
-      <h1>QUALITÉ • STYLE<br><strong>NOUVEAUTÉS • BONS PRIX</strong></h1>
-      <p>Qualité • Style • Nouveautés • Bons prix.<br>Commandez facilement et faites-vous livrer sans déplacement.</p>
-      <a href="#boutique" class="red-btn hero-btn">Découvrir la boutique <span>→</span></a>
+      <h1>QUALITÉ • STYLE<br>NOUVEAUTÉS • BONS PRIX</h1>
+      <p>Des articles sélectionnés au bon prix, commandés facilement et livrés chez vous sans déplacement.</p>
+      <a href="#boutique" class="gold-btn hero-btn">Découvrir la boutique <span>→</span></a>
     </div>
   </div>
-
   <div class="trust-row">
-    <div><span class="trust-icon">◆</span><b>Qualité garantie</b><small>Produits sélectionnés</small></div>
-    <div><span class="trust-icon">★</span><b>Nouveautés</b><small>Des tendances régulières</small></div>
-    <div><span class="trust-icon">◉</span><b>Bons prix</b><small>Un bon rapport qualité/prix</small></div>
-    <div><span class="trust-icon">▣</span><b>Livraison</b><small>Chez vous sans déplacement</small></div>
-    <div><span class="trust-icon">◔</span><b>Service client</b><small>À votre écoute</small></div>
+    <div><span class="trust-icon">◆</span><b>Qualité</b></div>
+    <div><span class="trust-icon">★</span><b>Nouveautés</b></div>
+    <div><span class="trust-icon">₣</span><b>Bons prix</b></div>
+    <div><span class="trust-icon">▣</span><b>Livraison</b></div>
   </div>
-
-  <section class="home-section">
-    <div class="section-title"><h2>Nos <strong>catégories</strong></h2><a href="#boutique">Voir toutes →</a></div>
-    <div id="homeCategories" class="home-categories"></div>
-  </section>
-
-  <section class="home-section featured">
-    <div class="section-title"><h2>Produits <strong>vedettes</strong></h2><a href="#boutique">Voir tous →</a></div>
-    <div id="featuredGrid" class="product-grid compact"></div>
-  </section>
+  <section class="home-section"><div class="section-title"><h2>Nos <strong>catégories</strong></h2><a href="#boutique">Voir toutes →</a></div><div id="homeCategories" class="home-categories"></div></section>
+  <section class="home-section featured"><div class="section-title"><h2>Nos <strong>nouveautés</strong></h2><a href="#boutique">Voir tous →</a></div><div id="featuredGrid" class="product-grid compact"></div></section>
 </section>
 
-<section id="boutique" class="page-section shop-page">
-  <div class="page-heading"><h2>Notre <strong>Boutique</strong></h2></div>
+<section id="boutique" class="route-section page-section shop-page">
+  <div class="page-heading"><h2>Notre <strong>Boutique</strong></h2><p>Choisissez une catégorie et découvrez nos articles disponibles.</p></div>
   <div id="categoryTabs" class="category-tabs"></div>
-  <div class="shop-tools">
-    <input id="searchInput" type="search" placeholder="Rechercher un produit…" aria-label="Rechercher">
-    <select id="sortSelect" aria-label="Trier">
-      <option value="newest">Nouveautés</option>
-      <option value="price-asc">Prix croissant</option>
-      <option value="price-desc">Prix décroissant</option>
-      <option value="name">Nom</option>
-    </select>
-  </div>
-  <p id="productStatus" class="product-status">Chargement…</p>
-  <div id="productGrid" class="product-grid"></div>
+  <div class="shop-tools"><input id="searchInput" type="search" placeholder="Rechercher un produit…"><select id="sortSelect"><option value="newest">Nouveautés</option><option value="price-asc">Prix croissant</option><option value="price-desc">Prix décroissant</option><option value="name">Nom</option></select></div>
+  <p id="productStatus" class="product-status">Chargement…</p><div id="productGrid" class="product-grid"></div>
 </section>
 
-<section id="suivi" class="page-section tracking-page">
-  <div class="page-heading"><h2>Suivre ma <strong>commande</strong></h2></div>
-  <div class="tracking-card">
-    <p>Entrez votre référence de commande pour connaître son statut.</p>
-    <form id="trackingForm">
-      <input id="trackingInput" placeholder="Ex. DH-78770955" autocomplete="off">
-      <button class="red-btn">Rechercher</button>
-    </form>
-    <div id="trackingResult" class="result"></div>
-  </div>
+<section id="panier" class="route-section page-section cart-page">
+  <div class="page-heading"><h2>Mon <strong>Panier</strong></h2><p>Vérifiez vos articles avant de passer votre commande.</p></div>
+  <div class="cart-page-box"><div id="cartPageItems"></div><div class="cart-page-summary"><div><span>Sous-total</span><b id="cartPageTotal">0 FCFA</b></div><small>Livraison selon la zone.</small><button id="cartPageCheckout" class="gold-btn full">Passer la commande</button></div></div>
 </section>
 
-<section id="contact" class="page-section contact-page">
-  <div class="page-heading"><h2>Nous <strong>contacter</strong></h2></div>
-  <div class="contact-banner">
-    <div><b>DH Shop & Delivery</b><span>Votre boutique en ligne</span></div>
-  </div>
+<section id="suivi" class="route-section page-section tracking-page">
+  <div class="page-heading"><h2>Suivre ma <strong>commande</strong></h2><p>Entrez votre référence pour connaître son statut.</p></div>
+  <div class="tracking-card"><form id="trackingForm"><input id="trackingInput" placeholder="Ex. DH-78770955" autocomplete="off"><button class="gold-btn">Rechercher</button></form><div id="trackingResult" class="result"></div></div>
+</section>
+
+<section id="contact" class="route-section page-section contact-page">
+  <div class="page-heading"><h2>Nous <strong>contacter</strong></h2><p>Une question ? Notre équipe est à votre écoute.</p></div>
+  <div class="contact-banner"><b>DH Shop & Delivery</b><span>Votre boutique en ligne</span></div>
   <div class="contact-list">
     <a id="contactWhatsapp" href="#" class="contact-card"><span class="contact-round wa">◔</span><div><b>WhatsApp</b><small>Commandez directement</small></div><i>›</i></a>
     <a id="contactPhone" href="#" class="contact-card"><span class="contact-round phone">☎</span><div><b>Téléphone</b><small id="contactPhoneText">—</small></div><i>›</i></a>
     <div class="contact-card"><span class="contact-round fb">f</span><div><b>Facebook</b><small>Page DH Shop & Delivery</small></div><i>›</i></div>
-    <div class="contact-card"><span class="contact-round ig">◎</span><div><b>Instagram</b><small>@dhshopdelivery</small></div><i>›</i></div><div class="contact-note"><b>Service client DH</b><small>Nous répondons à vos demandes et commandes directement par WhatsApp.</small></div></div>
+    <div class="contact-card"><span class="contact-round ig">◎</span><div><b>Instagram</b><small>@dhshopdelivery</small></div><i>›</i></div>
+  </div>
 </section>
 </main>
 
 <nav class="bottom-nav">
   <a href="#accueil" data-nav="accueil"><span>⌂</span><b>Accueil</b></a>
   <a href="#boutique" data-nav="boutique"><span>▣</span><b>Boutique</b></a>
-  <a href="#panier" id="bottomCart" data-nav="panier"><span>🛒</span><b>Panier</b></a>
-  <a href="#suivi" data-nav="suivi"><span>⌕</span><b>Suivi</b></a>
+  <a href="#panier" data-nav="panier"><span>🛒</span><b>Panier</b></a>
   <a href="#contact" data-nav="contact"><span>☎</span><b>Contact</b></a>
 </nav>
 
 <div id="overlay" class="modal-overlay"></div>
-<aside id="cartDrawer" class="cart-drawer">
-  <div class="drawer-title"><h2>Mon panier</h2><button id="closeCart">×</button></div>
-  <div id="cartItems"></div>
-  <div class="cart-summary"><div><span>Sous-total</span><b id="cartTotal">0 FCFA</b></div><button id="checkoutBtn" class="red-btn full">Passer la commande</button></div>
-</aside>
+<aside id="cartDrawer" class="cart-drawer"><div class="drawer-title"><h2>Mon panier</h2><button id="closeCart">×</button></div><div id="cartItems"></div><div class="cart-summary"><div><span>Sous-total</span><b id="cartTotal">0 FCFA</b></div><small>Livraison selon la zone.</small><button id="checkoutBtn" class="gold-btn full">Passer la commande</button></div></aside>
 
-<div id="productModal" class="modal">
-  <div class="modal-box product-modal"><button id="closeProductModal" class="modal-close">×</button><div id="modalContent"></div></div>
-</div>
-
-<div id="checkoutModal" class="modal">
-  <div class="modal-box checkout-modal"><button id="closeCheckoutModal" class="modal-close">×</button>
-    <div class="page-heading"><h2>Finaliser la <strong>commande</strong></h2></div>
-    <form id="checkoutForm">
-      <label>Nom et prénom *<input id="customerName" required placeholder="Votre nom"></label>
-      <label>Téléphone *<input id="customerPhone" required inputmode="tel" placeholder="Votre numéro"></label>
-      <label>Adresse exacte *<textarea id="customerAddress" required placeholder="Ville, quartier, rue, repère…"></textarea></label>
-      <label>Mode de paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label>
-      <div class="checkout-total">Total <b id="checkoutTotal">0 FCFA</b></div>
-      <button class="red-btn full">Confirmer la commande</button>
-      <div id="checkoutMessage" class="result"></div>
-    </form>
-  </div>
-</div>
-
+<div id="productModal" class="modal"><div class="modal-box product-modal"><button id="closeProductModal" class="modal-close">×</button><div id="modalContent"></div></div></div>
+<div id="checkoutModal" class="modal"><div class="modal-box checkout-modal"><button id="closeCheckoutModal" class="modal-close">×</button><div class="page-heading"><h2>Finaliser la <strong>commande</strong></h2></div><form id="checkoutForm"><label>Nom et prénom *<input id="customerName" required placeholder="Votre nom"></label><label>Téléphone *<input id="customerPhone" required inputmode="tel" placeholder="Votre numéro"></label><label>Adresse exacte *<textarea id="customerAddress" required placeholder="Ville, quartier, rue, repère…"></textarea></label><label>Mode de paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label><div class="checkout-total">Total <b id="checkoutTotal">0 FCFA</b></div><button class="gold-btn full">Confirmer la commande</button><div id="checkoutMessage" class="result"></div></form></div></div>
 <script src="app.js?v=900"></script>
-</body>
-</html>
+</body></html>
