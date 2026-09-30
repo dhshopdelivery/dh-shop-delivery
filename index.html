@@ -26,6 +26,7 @@
     <a href="#boutique" data-close-menu><span>▣</span>Boutique</a>
     <div id="sideCategories"></div>
     <a href="#panier" data-open-cart><span>🛒</span>Panier</a>
+    <a href="#suivi" data-close-menu><span>↻</span>Suivi de commande</a>
     <a href="#contact" data-close-menu><span>☎</span>Contact</a>
     <a href="admin.html" class="admin-menu"><span>⚙</span>Administration</a>
   </nav>
@@ -36,14 +37,15 @@
 </aside>
 
 <main>
-<section id="accueil" class="view home active-view">
-  <div id="hero" class="hero">
-    <div class="hero-overlay"></div>
-    <div class="hero-content">
+<section id="accueil" class="home">
+  <div id="hero" class="hero hero-final">
+    <img class="hero-image" src="assets/dh-hero.jpg" alt="DH Shop & Delivery — mode, sport et accessoires">
+    <div class="hero-shade"></div>
+    <div class="hero-copy">
       <span class="hero-mini">DH SHOP & DELIVERY</span>
-      <h1>QUALITÉ • STYLE • NOUVEAUTÉS<br><strong>AU BON PRIX, LIVRÉS CHEZ VOUS</strong></h1>
-      <p>Des nouveautés au bon prix, commandées facilement sans vous déplacer.</p>
-      <a href="#boutique" class="gold-btn hero-btn">Découvrir la boutique <span>→</span></a>
+      <h1>Qualité. Style.<br><strong>Nouveautés.</strong></h1>
+      <p>De beaux articles, de bons prix et la livraison chez vous, sans déplacement.</p>
+      <a href="#boutique" class="red-btn hero-btn">Découvrir la boutique <span>→</span></a>
     </div>
   </div>
 
@@ -65,7 +67,7 @@
   </section>
 </section>
 
-<section id="boutique" class="view page-section shop-page">
+<section id="boutique" class="page-section shop-page">
   <div class="page-heading"><h2>Notre <strong>Boutique</strong></h2></div>
   <div id="categoryTabs" class="category-tabs"></div>
   <div class="shop-tools">
@@ -81,10 +83,10 @@
   <div id="productGrid" class="product-grid"></div>
 </section>
 
-<section id="suivi" class="view page-section tracking-page">
+<section id="suivi" class="page-section tracking-page">
   <div class="page-heading"><h2>Suivre ma <strong>commande</strong></h2></div>
   <div class="tracking-card">
-    <p>Entrez votre référence de commande pour connaître son statut.</p>
+    <p>Entrez votre référence pour suivre votre commande en quelques secondes.</p>
     <form id="trackingForm">
       <input id="trackingInput" placeholder="Ex. DH-78770955" autocomplete="off">
       <button class="red-btn">Rechercher</button>
@@ -93,7 +95,7 @@
   </div>
 </section>
 
-<section id="contact" class="view page-section contact-page">
+<section id="contact" class="page-section contact-page">
   <div class="page-heading"><h2>Nous <strong>contacter</strong></h2></div>
   <div class="contact-banner">
     <div><b>DH Shop & Delivery</b><span>Votre boutique en ligne</span></div>
@@ -104,20 +106,13 @@
     <div class="contact-card"><span class="contact-round fb">f</span><div><b>Facebook</b><small>Page DH Shop & Delivery</small></div><i>›</i></div>
     <div class="contact-card"><span class="contact-round ig">◎</span><div><b>Instagram</b><small>@dhshopdelivery</small></div><i>›</i></div><div class="contact-note"><b>Service client DH</b><small>Nous répondons à vos demandes et commandes directement par WhatsApp.</small></div></div>
 </section>
-
-<section id="panier" class="view page-section cart-page">
-  <div class="page-heading"><h2>Mon <strong>Panier</strong></h2></div>
-  <div class="cart-page-inner">
-    <div id="cartPageItems"></div>
-    <div class="cart-page-summary"><div><span>Sous-total</span><b id="cartPageTotal">0 FCFA</b></div><small>Livraison selon la zone.</small><button id="cartPageCheckout" class="gold-btn full">Passer la commande</button></div>
-  </div>
-</section>
 </main>
 
 <nav class="bottom-nav">
   <a href="#accueil" data-nav="accueil"><span>⌂</span><b>Accueil</b></a>
   <a href="#boutique" data-nav="boutique"><span>▣</span><b>Boutique</b></a>
   <a href="#panier" id="bottomCart" data-nav="panier"><span>🛒</span><b>Panier</b></a>
+  <a href="#suivi" data-nav="suivi"><span>↻</span><b>Suivi</b></a>
   <a href="#contact" data-nav="contact"><span>☎</span><b>Contact</b></a>
 </nav>
 
@@ -125,7 +120,7 @@
 <aside id="cartDrawer" class="cart-drawer">
   <div class="drawer-title"><h2>Mon panier</h2><button id="closeCart">×</button></div>
   <div id="cartItems"></div>
-  <div class="cart-summary"><div><span>Sous-total</span><b id="cartTotal">0 FCFA</b></div><small>Livraison selon la zone.</small><button id="checkoutBtn" class="gold-btn full">Passer la commande</button></div>
+  <div class="cart-summary"><div><span>Sous-total</span><b id="cartTotal">0 FCFA</b></div><small>Livraison selon la zone.</small><button id="checkoutBtn" class="red-btn full">Passer la commande</button></div>
 </aside>
 
 <div id="productModal" class="modal">
@@ -141,7 +136,7 @@
       <label>Adresse exacte *<textarea id="customerAddress" required placeholder="Ville, quartier, rue, repère…"></textarea></label>
       <label>Mode de paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label>
       <div class="checkout-total">Total <b id="checkoutTotal">0 FCFA</b></div>
-      <button class="gold-btn full">Confirmer la commande</button>
+      <button class="red-btn full">Confirmer la commande</button>
       <div id="checkoutMessage" class="result"></div>
     </form>
   </div>
