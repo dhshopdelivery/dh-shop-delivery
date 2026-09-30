@@ -6,12 +6,12 @@
 <meta name="theme-color" content="#111111">
 <title>DH Shop & Delivery</title>
 <meta name="description" content="DH Shop & Delivery — Mode, sport, accessoires et plus.">
-<link rel="stylesheet" href="style.css?v=900">
+<link rel="stylesheet" href="style.css?v=1000">
 </head>
 <body>
 <header class="topbar">
   <button id="menuBtn" class="head-icon" aria-label="Ouvrir le menu"><span></span><span></span><span></span></button>
-  <a href="#accueil" class="head-logo" aria-label="DH Shop & Delivery">DH</a>
+  <a href="#accueil" data-page="accueil" class="head-logo" aria-label="DH Shop & Delivery">DH</a>
   <div class="head-right">
     <a href="admin.html" class="head-icon gear" aria-label="Administration">⚙</a>
     <button id="cartBtn" class="head-icon cart" aria-label="Panier">🛒<b id="cartCount">0</b></button>
@@ -22,12 +22,12 @@
 <aside id="sideMenu" class="side-menu" aria-hidden="true">
   <div class="side-head"><div class="side-logo">DH</div><button id="closeMenu" class="close-menu" aria-label="Fermer">×</button></div>
   <nav class="side-nav">
-    <a href="#accueil" data-close-menu><span>⌂</span>Accueil</a>
-    <a href="#boutique" data-close-menu><span>▣</span>Boutique</a>
+    <a href="#accueil" data-page="accueil" data-close-menu><span>⌂</span>Accueil</a>
+    <a href="#boutique" data-page="boutique" data-close-menu><span>▣</span>Boutique</a>
     <div id="sideCategories"></div>
     <a href="#panier" data-open-cart><span>🛒</span>Panier</a>
-    <a href="#suivi" data-close-menu><span>↻</span>Suivi de commande</a>
-    <a href="#contact" data-close-menu><span>☎</span>Contact</a>
+    <a href="#suivi" data-page="suivi" data-close-menu><span>↻</span>Suivi de commande</a>
+    <a href="#contact" data-page="contact" data-close-menu><span>☎</span>Contact</a>
     <a href="admin.html" class="admin-menu"><span>⚙</span>Administration</a>
   </nav>
   <div class="side-foot">
@@ -45,7 +45,7 @@
       <span class="hero-mini">DH SHOP & DELIVERY</span>
       <h1>Qualité. Style.<br><strong>Nouveautés.</strong></h1>
       <p>De beaux articles, de bons prix et la livraison chez vous, sans déplacement.</p>
-      <a href="#boutique" class="red-btn hero-btn">Découvrir la boutique <span>→</span></a>
+      <a href="#boutique" data-page="boutique" class="red-btn hero-btn">Découvrir la boutique <span>→</span></a>
     </div>
   </div>
 
@@ -57,12 +57,12 @@
   </div>
 
   <section class="home-section">
-    <div class="section-title"><h2>Nos <strong>catégories</strong></h2><a href="#boutique">Voir toutes →</a></div>
+    <div class="section-title"><h2>Nos <strong>catégories</strong></h2><a href="#boutique" data-page="boutique">Voir toutes →</a></div>
     <div id="homeCategories" class="home-categories"></div>
   </section>
 
   <section class="home-section featured">
-    <div class="section-title"><h2>Produits <strong>vedettes</strong></h2><a href="#boutique">Voir tous →</a></div>
+    <div class="section-title"><h2>Produits <strong>vedettes</strong></h2><a href="#boutique" data-page="boutique">Voir tous →</a></div>
     <div id="featuredGrid" class="product-grid compact"></div>
   </section>
 </section>
@@ -95,6 +95,12 @@
   </div>
 </section>
 
+<section id="panier" class="page-section cart-page-section">
+  <div class="page-heading"><h2>Mon <strong>Panier</strong></h2></div>
+  <div id="cartPageItems" class="cart-page-items"></div>
+  <div class="cart-page-summary"><div><span>Sous-total</span><b id="cartPageTotal">0 FCFA</b></div><small>Livraison selon la zone.</small><button id="cartPageCheckout" class="red-btn full">Passer la commande</button></div>
+</section>
+
 <section id="contact" class="page-section contact-page">
   <div class="page-heading"><h2>Nous <strong>contacter</strong></h2></div>
   <div class="contact-banner">
@@ -109,11 +115,11 @@
 </main>
 
 <nav class="bottom-nav">
-  <a href="#accueil" data-nav="accueil"><span>⌂</span><b>Accueil</b></a>
-  <a href="#boutique" data-nav="boutique"><span>▣</span><b>Boutique</b></a>
-  <a href="#panier" id="bottomCart" data-nav="panier"><span>🛒</span><b>Panier</b></a>
-  <a href="#suivi" data-nav="suivi"><span>↻</span><b>Suivi</b></a>
-  <a href="#contact" data-nav="contact"><span>☎</span><b>Contact</b></a>
+  <a href="#accueil" data-page="accueil" data-nav="accueil"><span>⌂</span><b>Accueil</b></a>
+  <a href="#boutique" data-page="boutique" data-nav="boutique"><span>▣</span><b>Boutique</b></a>
+  <a href="#panier" id="bottomCart" data-page="panier" data-nav="panier"><span>🛒</span><b>Panier</b></a>
+  <a href="#suivi" data-page="suivi" data-nav="suivi"><span>↻</span><b>Suivi</b></a>
+  <a href="#contact" data-page="contact" data-nav="contact"><span>☎</span><b>Contact</b></a>
 </nav>
 
 <div id="overlay" class="modal-overlay"></div>
@@ -142,6 +148,6 @@
   </div>
 </div>
 
-<script src="app.js?v=900"></script>
+<script src="app.js?v=1000"></script>
 </body>
 </html>
