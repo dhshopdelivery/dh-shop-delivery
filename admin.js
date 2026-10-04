@@ -70,8 +70,6 @@ let editingProductId = null;
 
 async function api(endpoint, options = {}) {
 
-  if (!accessToken) throw new Error("Session administrateur absente. Reconnectez-vous.");
-
   const response = await fetch(
     `${SUPABASE_URL}/rest/v1/${endpoint}`,
     {
@@ -754,21 +752,35 @@ async function saveProduct() {
 ========================= */
 
 async function deleteProduct(id) {
-  const p = (typeof products !== "undefined" && Array.isArray(products)) ? products.find(x => String(x.id) === String(id)) : null;
-  const name = p?.name || "ce produit";
-  if (!confirm(`Supprimer définitivement « ${name} » ?`)) return;
+
+  if (
+    !confirm(
+      "Voulez-vous vraiment supprimer ce produit ?"
+    )
+  ) {
+
+    return;
+  }
+
+
   try {
-    const deleted = await api(`products?id=eq.${encodeURIComponent(id)}&select=id`, {
-      method: "DELETE",
-      headers: { "Prefer": "return=representation" }
-    });
-    if (!Array.isArray(deleted) || deleted.length === 0) {
-      throw new Error("Aucun produit n'a été supprimé. Vérifiez la session administrateur et la règle RLS DELETE de products.");
-    }
-    alert("Produit supprimé avec succès ✅");
+
+    await api(
+      `products?id=eq.${id}`,
+      {
+        method: "DELETE"
+      }
+    );
+
+
     await loadDashboard();
+
   } catch (error) {
-    alert("Impossible de supprimer le produit : " + error.message);
+
+    alert(
+      "Erreur : " +
+      error.message
+    );
   }
 }
 
@@ -1408,14 +1420,10 @@ function renderDHOrders(orders) {
       if (!confirm("Supprimer définitivement cette commande ?")) return;
       this.disabled = true;
       try {
-        const deleted = await api(`orders?id=eq.${encodeURIComponent(id)}&select=id`, {
+        await api(`orders?id=eq.${encodeURIComponent(id)}`, {
           method: "DELETE",
-          headers: {"Prefer":"return=representation"}
+          headers: {"Prefer":"return=minimal"}
         });
-        if (!Array.isArray(deleted) || deleted.length === 0) {
-          throw new Error("Aucune commande n'a été supprimée. Vérifiez la session administrateur et la règle RLS DELETE de orders.");
-        }
-        alert("Commande supprimée avec succès ✅");
         await loadDashboard();
       } catch (error) {
         this.disabled = false;

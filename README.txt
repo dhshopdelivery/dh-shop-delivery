@@ -1,9 +1,5 @@
-DH SHOP & DELIVERY — V6 SIGNATURE
+DH Shop & Delivery — V7 FINAL POLISH
 
-Boutique mobile-first noir + doré, inspirée du système de catalogue montré par l’utilisateur, mais avec une identité DH propre.
+Remplacer index.html, style.css, app.js et admin.js. Ajouter le dossier assets avec dh-hero.jpg. Ne pas modifier Supabase.
 
-Fichiers : index.html, style.css, app.js, admin.js.
-
-IMPORTANT : admin.js est basé sur la version fonctionnelle connue. La connexion Supabase n’a pas été réécrite. Ajouts : tailles numériques séparées même si saisies sous la forme 38.40.42, et suppression des anciennes commandes depuis l’administration.
-
-Ne pas modifier les clés Supabase ni admin.html.
+Accueil: slogan « AFFIRMEZ VOTRE STYLE AVEC DH » + « Qualité • Nouveautés • Bons prix » + « Commandez facilement, nous livrons chez vous. ». Navigation: une page à la fois. Tailles: 38, 40, 42, etc., y compris si Supabase contient « 38.40.42 ».
