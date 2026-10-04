@@ -1,19 +1,9 @@
-DH SHOP & DELIVERY — V7 SIGNATURE
+DH SHOP & DELIVERY — V6 SIGNATURE
 
-Remplacer uniquement :
-- index.html
-- style.css
-- app.js
-- admin.js (la version actuelle avec suppression des commandes et tailles)
-- dossier assets/dh-hero.png
+Boutique mobile-first noir + doré, inspirée du système de catalogue montré par l’utilisateur, mais avec une identité DH propre.
 
-Ne pas modifier Supabase.
+Fichiers : index.html, style.css, app.js, admin.js.
 
-V7 :
-- navigation par vraies pages internes : Accueil / Boutique / Panier / Suivi / Contact
-- l'accueil disparaît quand une autre rubrique est ouverte
-- catégories dynamiques depuis les produits disponibles
-- tailles séparées même si saisies 38. 40. 45 ou 38.40.45
-- hero premium DH sans texte intégré dans l'image
-- bouton Découvrir la boutique cliquable
-- cache CSS/JS v900
+IMPORTANT : admin.js est basé sur la version fonctionnelle connue. La connexion Supabase n’a pas été réécrite. Ajouts : tailles numériques séparées même si saisies sous la forme 38.40.42, et suppression des anciennes commandes depuis l’administration.
+
+Ne pas modifier les clés Supabase ni admin.html.
