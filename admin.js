@@ -30,7 +30,7 @@ function dhEnsureVariants() {
   box.innerHTML = `
     <strong style="display:block;margin-bottom:12px;">🛍️ Tailles et couleurs</strong>
     <label style="display:block;font-weight:bold;margin-bottom:6px;">Tailles</label>
-    <input id="dhProductSizes" type="text" placeholder="M, L, XL, XXL ou 32, 34, 36, 38"
+    <input id="dhProductSizes" type="text" placeholder="38, 40, 42, 44 ou M, L, XL, XXL"
       style="width:100%;padding:11px;border:1px solid #ccc;border-radius:8px;margin-bottom:5px;">
     <small style="display:block;color:#666;margin-bottom:12px;">Sépare les tailles par des virgules. Laisse vide si aucune taille.</small>
     <label style="display:block;font-weight:bold;margin-bottom:6px;">Couleurs</label>
@@ -47,20 +47,11 @@ function dhVariants(id) {
   const s = String(el.value || "").trim();
   if (!s) return [];
   if (/^\d+(?:\.\s*\d+)+$/.test(s)) return s.split(/\s*\.\s*/).map(v => v.trim()).filter(Boolean);
-  return s.split(/[,;\n|/]+/).flatMap(v => {
-    const x = v.trim();
-    return /^\d+(?:\.\s*\d+)+$/.test(x) ? x.split(/\s*\.\s*/).map(y => y.trim()) : [x];
-  }).filter(Boolean);
+  return s.split(/[,;\n|/]+/).map(v => v.trim()).filter(Boolean);
 }
 function dhSetVariants(id, values) {
   const el = document.getElementById(id);
-  if (!el) return;
-  let arr = Array.isArray(values) ? values : [];
-  arr = arr.flatMap(v => {
-    const x = String(v || "").trim();
-    return /^\d+(?:\.\s*\d+)+$/.test(x) ? x.split(/\s*\.\s*/).map(y => y.trim()) : x.split(/[,;\n|/]+/).map(y => y.trim());
-  }).filter(Boolean);
-  el.value = arr.join(", ");
+  if (el) el.value = Array.isArray(values) ? values.join(", ") : "";
 }
 dhEnsureVariants();
 
@@ -761,20 +752,41 @@ async function saveProduct() {
 ========================= */
 
 async function deleteProduct(id) {
-  if (!confirm("Voulez-vous vraiment supprimer ce produit ?")) return;
+
+  if (
+    !confirm(
+      "Voulez-vous vraiment supprimer ce produit ?"
+    )
+  ) {
+
+    return;
+  }
+
+
   try {
-    const deleted = await api(`products?id=eq.${encodeURIComponent(id)}`, {
-      method: "DELETE",
-      headers: {"Prefer":"return=representation"}
-    });
+
+    const deleted = await api(
+      `products?id=eq.${id}`,
+      {
+        method: "DELETE",
+        headers: {"Prefer":"return=representation"}
+      }
+    );
     if (Array.isArray(deleted) && deleted.length === 0) {
-      throw new Error("Aucun produit supprimé. Vérifiez la politique d’administration DELETE dans Supabase.");
+      throw new Error("Le produit n'a pas pu être supprimé. Vérifiez la politique DELETE des produits dans Supabase.");
     }
+
     await loadDashboard();
+
   } catch (error) {
-    alert("Impossible de supprimer le produit : " + error.message);
+
+    alert(
+      "Erreur : " +
+      error.message
+    );
   }
 }
+
 
 /* =========================
    FERMER FORMULAIRE
@@ -1416,7 +1428,7 @@ function renderDHOrders(orders) {
           headers: {"Prefer":"return=representation"}
         });
         if (Array.isArray(deleted) && deleted.length === 0) {
-          throw new Error("Aucune commande supprimée. Vérifiez la politique d’administration DELETE dans Supabase.");
+          throw new Error("La commande n'a pas pu être supprimée. Vérifiez la politique DELETE des commandes dans Supabase.");
         }
         await loadDashboard();
       } catch (error) {
