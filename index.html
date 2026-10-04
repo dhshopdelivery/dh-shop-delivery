@@ -6,7 +6,7 @@
 <meta name="theme-color" content="#111111">
 <title>DH Shop & Delivery</title>
 <meta name="description" content="DH Shop & Delivery — Mode, sport, accessoires et plus.">
-<link rel="stylesheet" href="style.css?v=900">
+<link rel="stylesheet" href="style.css?v=800">
 </head>
 <body>
 <header class="topbar">
@@ -43,7 +43,7 @@
       <span class="hero-mini">DH SHOP & DELIVERY</span>
       <h1>ÉQUIPEZ VOTRE<br><strong>STYLE & VOTRE SPORT</strong></h1>
       <p>Des articles tendance, disponibles et livrés chez vous.</p>
-      <a href="#boutique" class="gold-btn hero-btn">Découvrir la boutique <span>→</span></a>
+      <a href="#boutique" class="red-btn hero-btn">Découvrir la boutique <span>→</span></a>
     </div>
   </div>
 
@@ -57,13 +57,6 @@
   <section class="home-section">
     <div class="section-title"><h2>Nos <strong>catégories</strong></h2><a href="#boutique">Voir toutes →</a></div>
     <div id="homeCategories" class="home-categories"></div>
-  </section>
-
-  <section class="home-section home-contact-teaser">
-    <div class="home-contact-card">
-      <div><span class="home-contact-kicker">BESOIN D’AIDE ?</span><h2>Commandez sans vous déplacer.</h2><p>Qualité, nouveautés, bons prix et livraison à domicile.</p></div>
-      <a href="#contact" class="gold-btn" data-home-contact>Nous contacter →</a>
-    </div>
   </section>
 
   <section class="home-section featured">
@@ -94,7 +87,7 @@
     <p>Entrez votre référence de commande pour connaître son statut.</p>
     <form id="trackingForm">
       <input id="trackingInput" placeholder="Ex. DH-78770955" autocomplete="off">
-      <button class="gold-btn">Rechercher</button>
+      <button class="red-btn">Rechercher</button>
     </form>
     <div id="trackingResult" class="result"></div>
   </div>
@@ -117,7 +110,6 @@
   <a href="#accueil" data-nav="accueil"><span>⌂</span><b>Accueil</b></a>
   <a href="#boutique" data-nav="boutique"><span>▣</span><b>Boutique</b></a>
   <a href="#panier" id="bottomCart" data-nav="panier"><span>🛒</span><b>Panier</b></a>
-  <a href="#suivi" data-nav="suivi"><span>⌕</span><b>Suivi</b></a>
   <a href="#contact" data-nav="contact"><span>☎</span><b>Contact</b></a>
 </nav>
 
@@ -125,7 +117,7 @@
 <aside id="cartDrawer" class="cart-drawer">
   <div class="drawer-title"><h2>Mon panier</h2><button id="closeCart">×</button></div>
   <div id="cartItems"></div>
-  <div class="cart-summary"><div><span>Sous-total</span><b id="cartTotal">0 FCFA</b></div><small>Livraison selon la zone.</small><button id="checkoutBtn" class="gold-btn full">Passer la commande</button></div>
+  <div class="cart-summary"><div><span>Sous-total</span><b id="cartTotal">0 FCFA</b></div><small>Livraison selon la zone.</small><button id="checkoutBtn" class="red-btn full">Passer la commande</button></div>
 </aside>
 
 <div id="productModal" class="modal">
@@ -141,12 +133,12 @@
       <label>Adresse exacte *<textarea id="customerAddress" required placeholder="Ville, quartier, rue, repère…"></textarea></label>
       <label>Mode de paiement<select id="paymentMethod"><option>Paiement à la livraison</option></select></label>
       <div class="checkout-total">Total <b id="checkoutTotal">0 FCFA</b></div>
-      <button class="gold-btn full">Confirmer la commande</button>
+      <button class="red-btn full">Confirmer la commande</button>
       <div id="checkoutMessage" class="result"></div>
     </form>
   </div>
 </div>
 
-<script src="app.js?v=900"></script>
+<script src="app.js?v=800"></script>
 </body>
 </html>
