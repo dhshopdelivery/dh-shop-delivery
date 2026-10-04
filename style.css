@@ -207,3 +207,23 @@ button,input,select,textarea{font:inherit}
   .tracking-card form{display:flex;flex-direction:column;gap:10px}
   .tracking-card form input,.tracking-card form button{width:100%;min-width:0}
 }
+
+/* DH APP DOWNLOAD — bouton officiel de téléchargement Android */
+.hero-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.app-download-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:52px;padding:10px 18px;border-radius:30px;
+  background:#fff;color:#111;border:1px solid #fff;
+  font-weight:800;box-shadow:0 6px 18px #0003;
+  transition:transform .18s ease,box-shadow .18s ease,background .18s ease;
+}
+.app-download-btn:hover{transform:translateY(-2px);box-shadow:0 9px 22px #0004;background:#f7f7f7}
+.app-download-icon{font-size:23px;line-height:1}
+.app-download-btn span:nth-child(2){display:flex;flex-direction:column;align-items:flex-start;line-height:1.15}
+.app-download-btn b{font-size:14px}
+.app-download-btn small{margin-top:4px;color:#666;font-size:11px;font-weight:600}
+@media(max-width:799px){
+  .hero-actions{width:100%;align-items:stretch;flex-direction:column}
+  .hero-btn,.app-download-btn{width:100%;max-width:355px}
+  .app-download-btn{min-height:54px}
+}
